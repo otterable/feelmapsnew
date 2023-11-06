@@ -1,0 +1,646 @@
+<div class="admintools-container color-111111 text-white" style="display:block;             color: #ffffff;  /* This makes the text color white */ ; margin-top: 15px;  margin-bottom: 15px; border-radius: 30px">
+<button class="button-s" id="aboutBtnEditor" onclick="toggleEditorMenu()" style="background-color: #35b7ff">Texteditor</button>
+<!-- Popup Container -->
+<div id="editor-menu" style="display:block;">
+<!-- TEXT EDITOR: WIE FUNKTIONIERTS ADMIN -->
+<div id="infoModalEditor" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background-color: rgba(0, 0, 0, 0.7); align-items:center; justify-content:center; z-index:100000;">
+<div class="info-field" id="conditionsField" style="overflow-y: auto; max-height: 100vh;">
+<div id="editor-container" style="height: 400px; overflow-y: auto;"></div>
+<button class="texteditor-button" id="prevAreaButton" onclick="prevArea()" style="margin-top:10px; text-align: center;">Vorheriger Teil</button>
+<button class="texteditor-button" id="nextAreaButton" onclick="nextArea()" style="margin-top:10px; text-align: center;">Nächster Teil</button>
+<button class="texteditor-button" id="saveButton" onclick="updateText()" style="margin-top:10px; text-align: center;">Änderungen speichern</button>
+</div>
+</div>
+<!-- TEXT EDITOR: WIE FUNKTIONIERTS ADMIN END -->
+</div>
+
+<!-- HEATMAPZ EDITOR ADMIN START -->
+
+
+
+
+
+ <!-- Heatmap settings menu -->
+ <button class="button-s" id="heatmap-menu-button" onclick="toggleHeatmapMenu()" style="background-color: #35b7ff">Heatmapeditor</button>
+  <div class ="heatmapsettings" id="heatmapSettings" style="display:none;">
+    
+<h2>Heatmap Settings</h2>
+<label>
+  Min Opacity: <input type="range" id="minOpacity" step="0.1" value="0.1" min="0" max="1">
+</label><br>
+<label>
+  Max Zoom: <input type="range" id="maxZoom" value="18" min="0" max="20">
+</label><br>
+<label>
+  Max Intensity: <input type="range" id="max" step="0.1" value="1.0" min="0" max="2">
+</label><br>
+<label>
+  Radius: <input type="range" id="radius" value="25" min="0" max="50">
+</label><br>
+<label>
+  Blur: <input type="range" id="blur" value="15" min="0" max="30">
+</label><br>
+ </label><br>
+    <label>
+      Gradient (JSON):
+      <textarea id="gradient" rows="4" cols="50">{"0.4": "blue", "0.65": "lime", "1": "red"}</textarea>
+    </label><br>
+	
+	  <!-- Buttons for import and export -->
+  <button class="delete-button"onclick="updateHeatmapSettings()">Update Settings</button>
+  <button class="delete-button" onclick="exportSettings()">Export Settings</button>
+  <input class="delete-button" type="file" id="importFile" style="display:none;" onchange="importSettings()" />
+  <button class="delete-button" onclick="document.getElementById('importFile').click()">Import Settings</button>
+  </div>
+
+
+
+
+
+
+<button class="button-s" id="titelbild-menu-button" onclick="toggletitelbildMenu()" style="background-color: #35b7ff">Titelbild</button>
+<div id="titelbild-menu" style="display:none;">
+<div id="hoverDiv" style="display: flex; justify-content: center; flex-direction: column; align-items: center; margin-top: 10px">
+<h3 style="margin-top: 2px; margin-bottom: 2px;">Titelbild ersetzen:</h3>
+<form action="/upload_overlay_image" enctype="multipart/form-data" method="post" style="text-align: left;">
+<label for="file"></label>
+<input accept="image/*" id="file" name="file" required="" type="file"/>
+<input class="delete-button" type="submit" value="Ändern"/>
+</form>
+</div>
+</div>
+
+
+<button class="button-s" id="pinsexport-menu-button" onclick="togglePinsExportMenu()" style="background-color: #35b7ff">Pins</button>
+
+<div id="pinsexport-menu" style="display:none;">
+
+
+
+<div class="admin-pinresize" id="adminpinresize" style="display: flex; justify-content: center; flex-direction: column; align-items: center; margin-top: 10px; background-color: 111111">
+<h3 style="margin-top: 2px; margin-bottom: 6px;">Größenänderung:</h3>
+</div>
+<div style="display: flex; justify-content: center; flex-direction: column; align-items: center; margin-top: 10px">
+
+<div style="display: flex; flex-direction: row; align-items: center; gap: 10px">
+<div id="resize-section" style="display: flex; flex-direction: row; align-items: center; gap: 10px;"></div>
+</div>
+</div>
+
+
+
+
+<div class="admin-pindelete" id="adminpindelete" style="display: flex; justify-content: center; flex-direction: column; align-items: center; margin-top: 10px; background-color: 111111">
+<h3 style="margin-top: 2px; margin-bottom: -2px;">Pins löschen:</h3>
+</div>
+
+<div style="display: flex; justify-content: center; flex-direction: column; align-items: center; margin-top: 10px">
+
+<select id="delete-pin-type-dropdown">
+<option value="all">Alle Pins</option> <!-- New option for all pins -->
+
+</select>
+<button class="delete-button" id="deletePinsByType" style="margin-left: 6px">Löschen</button>
+</div>
+
+<div style="display: flex; justify-content: center; flex-direction: column; align-items: center; margin-top: 10px">
+
+<h3 style="margin-top: 2px; margin-bottom: 1px;">Pins herunterladen:</h3>
+<div style="display: inline-block; text-align: left; margin-top: 6px;">
+<form action="/export_geojson" method="get" style="display: flex; flex-direction: row; align-items: center; gap: 10px;">
+<select id="pin-type-dropdown" name="pin_type">
+<option value="">Alle Pins</option>
+<!-- CATEGORY EDITING AREA START -->
+
+<!-- CATEGORY EDITING AREA END -->
+</select>
+<button class="delete-button" type="submit">GeoJSON herunterladen (Pins)</button>
+</form>
+</div>
+<h3 style="margin-top: 2px; margin-bottom: 1px;">Laden Sie eine GeoJSON Datei hoch:</h3>
+<div style="display: inline-block; text-align: left; margin-top: 6px;">
+<form action="/upload_geojson" enctype="multipart/form-data" method="post">
+<label for="geojson_file"></label>
+<input accept=".json,application/json" name="geojson_file" type="file"/>
+<button class="delete-button" type="submit">Hochladen</button>
+</form>
+</div>
+</div>
+</div>
+<button class="button-s" id="category2-menu-button" onclick="toggleCategory2Menu()" style="background-color: #35b7ff">Kategorien</button>
+<div id="category2-menu" style="display:none;">
+
+
+
+
+
+
+<div style="text-align: center;">
+  <div style="display: flex; flex-direction: column; align-items: center;">
+    <h3>Kategorien löschen:</h3>
+    <div style="display: flex; margin-top: 6px">
+      <select id="delete-category-dropdown"></select>
+      <button class="delete-button" id="deleteCategory" style="margin-left: 8px">Löschen</button>
+    </div>
+  </div>
+</div>
+
+<div style="text-align: center;">
+<!-- Form to add a new category -->
+<h3>Add New Category</h3>
+<form id="add-category-form">
+<input type="text" id="new-category-title" placeholder="Category Title">
+<input type="color" id="new-category-color" value="#000000">
+<button type="button" id="addCategory">Add Category</button>
+</form>
+</div>
+
+
+
+
+
+<div style="display: flex; justify-content: center; flex-direction: column; align-items: center; margin-top: 10px">
+  <h3>Kategorien umfärben:</h3>
+  <form id="recolor-form" style="text-align: left; margin-top: 6px">
+    <div style="display: flex; justify-content: center; gap: 10px;">
+      <select id="recolor-category-dropdown" name="category"></select>
+      <!-- This div will show the current color -->
+      <div id="current-color-display" style="width: 20px; height: 20px; border: 1px solid #000;"></div>
+      <input id="new-color" name="newColor" type="color" value="#ffffff"/>
+      <button class="delete-button" id="recolorCategory" type="button">Umfärben</button>
+    </div>
+  </form>
+</div>
+
+<div style="text-align: center;">
+<div style="display: flex; flex-direction: column; align-items: center;">
+<h3>Kategorien umbenennen:</h3>
+<div style="display: flex; margin-top: 6px">
+<select id="rename-category-dropdown"></select>
+<input id="new-category-name" placeholder="Neuer Name" type="text"/>
+<button class="delete-button" id="renameCategory" style="margin-left: 8px">Umbenennen</button>
+</div>
+</div>
+</div>
+
+</div>
+</div>
+
+
+
+<script>
+   // Event listener for the "Add Category" button
+    document.getElementById('addCategory').addEventListener('click', function() {
+        var categoryTitle = document.getElementById('new-category-title').value;
+        var categoryColor = document.getElementById('new-category-color').value.replace('#', '');
+
+        if (!categoryTitle || !categoryColor) {
+            console.error('Please enter a category title and select a color.');
+            return;
+        }
+
+        fetch('/add-category', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ title: categoryTitle, color: categoryColor })
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(result => {
+            console.log('New category added:', result);
+            document.getElementById('new-category-title').value = ''; // Reset the title input
+            document.getElementById('new-category-color').value = '#000000'; // Reset the color input
+            refreshCategoriesDisplay(); // Refresh the categories displayed on the page
+        })
+        .catch(error => {
+            console.error('Error adding new category:', error);
+        });
+    });
+	</script>
+
+<!-- RECOLORING FUNCTIONALITY START -->
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Make sure this is called when the admintools are loaded
+    if (document.getElementById('recolorCategory')) {
+        initializeRecolorFunctionality();
+    }
+});
+
+// Initialize recoloring functionality
+function initializeRecolorFunctionality() {
+    var dropdown = document.getElementById('recolor-category-dropdown');
+    var currentColorDisplay = document.getElementById('current-color-display');
+
+    // Event listener to the recolor button
+    document.getElementById('recolorCategory').addEventListener('click', function() {
+        var selectedCategory = dropdown.value;
+        var newColor = document.getElementById('new-color').value.replace('#', ''); // Make sure to replace '#' in color value
+
+        fetch('/recolor-category', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ categoryName: selectedCategory, newColor: newColor })
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(result => {
+            console.log('Category recolored:', result);
+            refreshCategoriesDisplay(); // Make sure this function is defined and updates the display
+            updateCurrentColorDisplay(selectedCategory); // Update the current color display
+        })
+        .catch(error => {
+            console.error('Error recoloring category:', error);
+        });
+    });
+}
+
+</script>
+
+<!-- RECOLORING FUNCTIONALITY END -->
+
+
+
+<!-- RENAMING FUNCTIONALITY START -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Make sure this is called when the admintools are loaded
+    if (document.getElementById('recolorCategory')) {
+        initializeRecolorFunctionality();
+    }
+});
+
+// Initialize recoloring functionality
+function initializeRecolorFunctionality() {
+    var dropdown = document.getElementById('recolor-category-dropdown');
+    var currentColorDisplay = document.getElementById('current-color-display');
+
+    // Event listener to the recolor button
+    document.getElementById('recolorCategory').addEventListener('click', function() {
+        var selectedCategory = dropdown.value;
+        var newColor = document.getElementById('new-color').value.replace('#', ''); // Make sure to replace '#' in color value
+
+        fetch('/recolor-category', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ categoryName: selectedCategory, newColor: newColor })
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(result => {
+            console.log('Category recolored:', result);
+            refreshCategoriesDisplay(); // Make sure this function is defined and updates the display
+            updateCurrentColorDisplay(selectedCategory); // Update the current color display
+        })
+        .catch(error => {
+            console.error('Error recoloring category:', error);
+        });
+    });
+}
+</script>
+<!-- RENAMING FUNCTIONALITY END -->
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<script>
+    function toggleCategory2Menu() {
+        var category2Menu = document.getElementById('category2-menu');
+        if (category2Menu.style.display === 'none') {
+            category2Menu.style.display = 'block';
+        } else {
+            category2Menu.style.display = 'none';
+        }
+    }
+</script>
+
+
+
+
+
+<script>
+function toggleMenu(menuId) {
+    var menu = document.getElementById(menuId);
+    if (menu.style.display === 'none' || menu.style.display === '') {
+        menu.style.display = 'block'; // Show the menu
+    } else {
+        menu.style.display = 'none'; // Hide the menu
+    }
+}
+
+function toggleHeatmapMenu() {
+    toggleMenu('heatmapSettings');
+}
+
+function toggleEditorMenu() {
+    toggleMenu('editor-menu');
+}
+
+function toggleCategory2Menu() {
+    toggleMenu('category2-menu');
+}
+
+function togglePinsExportMenu() {
+    toggleMenu('pinsexport-menu');
+}
+
+function toggletitelbildMenu() {
+    toggleMenu('titelbild-menu');
+}
+</script>
+
+<script>
+// Assuming you have a map object and a pinLayers object which stores each pin layer by id
+var pinLayers = {};
+
+// Call this function when hovering over a table row
+function highlightPinOnMap(pinId) {
+    var pinLayer = pinLayers[pinId];
+    if (pinLayer) {
+        // This is where you would define the style of your highlight
+        var highlightStyle = {
+            color: '#ffffff', // White color
+            weight: 4, // Thickness of the circle border
+            opacity: 1,
+            fillColor: '#ffffff',
+            fillOpacity: 0.7
+        };
+        
+        // Add a circle marker or change the existing layer's style
+        L.circle(pinLayer.getLatLng(), {radius: 20, ...highlightStyle}).addTo(map);
+    }
+}
+
+// Call this function when no longer hovering over a table row
+function unhighlightPinOnMap(pinId) {
+    var pinLayer = pinLayers[pinId];
+    if (pinLayer) {
+        // Here you would remove the highlight or reset the style
+        map.removeLayer(pinLayer); // Remove the highlight circle
+    }
+}
+</script>
+
+<script>
+function filterPins() {
+    var input, filter, table, tr, td, i, txtValue;
+    input = document.getElementById("search-box");
+    filter = input.value.toUpperCase();
+    table = document.getElementById("pins-list").getElementsByTagName("table")[0];
+    tr = table.getElementsByTagName("tr");
+
+    // Loop through all table rows, and hide those who don't match the search query
+    for (i = 1; i < tr.length; i++) { // Start from i = 1 to skip the table header
+        td = tr[i].getElementsByTagName("td")[1]; // Get the description column
+        if (td) {
+            txtValue = td.textContent || td.innerText;
+            if (txtValue.toUpperCase().indexOf(filter) > -1) {
+                tr[i].style.display = "";
+            } else {
+                tr[i].style.display = "none";
+            }
+        }
+    }
+}
+</script>
+
+<script>
+function initializeCategoryDropdown() {
+  // Fetch the categories from the Flask endpoint
+  fetch('/get-categories-renaming')
+  .then(response => {
+    if (!response.ok) {
+      throw new Error('Network response was not ok');
+    }
+    return response.json();
+  })
+  .then(categories => {
+    console.log('Categories:', categories); // Add this line for debugging
+    var dropdown = document.getElementById('rename-category-dropdown');
+    
+    // Clear existing options
+    dropdown.innerHTML = '';
+    
+    // Populate dropdown with categories fetched from the server
+    categories.forEach(function(category) {
+      var option = document.createElement('option');
+      option.value = option.text = category;
+      dropdown.appendChild(option);
+    });
+  })
+  .catch(error => {
+    console.error('Error fetching categories:', error);
+  });
+}
+
+// Function to refresh the categories displayed on the page
+function refreshCategoriesDisplay() {
+  // Make an AJAX request to the server for the updated categories content
+  fetch('/static/categories.html')
+  .then(response => {
+    if (!response.ok) {
+      throw new Error('Network response was not ok');
+    }
+    return response.text();
+  })
+  .then(categoriesHtml => {
+    // Insert the updated categories HTML into the page
+    document.getElementById('dynamicgeneration-categorypicker').innerHTML = categoriesHtml;
+  })
+  .catch(error => {
+    console.error('Error refreshing categories:', error);
+  });
+}
+
+// Update the initializeRenameCategoryButton function to call refreshCategoriesDisplay after a successful rename
+function initializeRenameCategoryButton() {
+  var renameButton = document.getElementById('renameCategory');
+  renameButton.addEventListener('click', function() {
+    var selectedCategory = document.getElementById('rename-category-dropdown').value;
+    var newCategoryName = document.getElementById('new-category-name').value;
+
+    if (!selectedCategory || !newCategoryName) {
+      console.error('Please select a category and enter a new name.');
+      return;
+    }
+
+    var data = {
+      oldName: selectedCategory,
+      newName: newCategoryName
+    };
+
+    fetch('/rename-category', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(data)
+    })
+    .then(response => {
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+      return response.text();
+    })
+    .then(result => {
+      console.log('Category renamed:', result);
+      refreshCategoriesDisplay(); // Refresh the categories in the display
+      initializeCategoryDropdown(); // Re-initialize the dropdown to reflect the new changes
+    })
+    .catch(error => {
+      console.error('Error renaming category:', error);
+    });
+  });
+}
+
+// Initializes the dropdown for recoloring categories
+function initializeRecolorDropdown() {
+  // Fetch categories and populate dropdown
+  fetch('/get-categories-renaming')
+    .then(response => {
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+      return response.json();
+    })
+    .then(categories => {
+      const recolorDropdown = document.getElementById('recolor-category-dropdown');
+      recolorDropdown.innerHTML = '';
+
+      categories.forEach(category => {
+        const option = document.createElement('option');
+        option.value = option.textContent = category;
+        recolorDropdown.appendChild(option);
+      });
+
+      // Add event listener to update current color display
+      recolorDropdown.addEventListener('change', function() {
+        updateCurrentColorDisplay(this.value);
+      });
+
+      // Update current color display when dropdown is initialized
+      updateCurrentColorDisplay(recolorDropdown.value);
+    })
+    .catch(error => {
+      console.error('Error fetching categories for recoloring:', error);
+    });
+}
+
+function updateCurrentColorDisplay(categoryName) {
+  fetch('/get-current-color', {
+      method: 'POST',
+      headers: {
+          'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ categoryName: categoryName })
+  })
+  .then(response => response.json())
+  .then(data => {
+      console.log('Current color fetched:', data.currentColor); // Log the color fetched from the server
+      var colorValue = '#' + data.currentColor;
+      console.log('Color value to be set:', colorValue); // Log the color value to be set
+      document.getElementById('current-color-display').style.backgroundColor = colorValue;
+  })
+  .catch(error => {
+      console.error('Error fetching current color:', error);
+  });
+}
+</script>
+<!-- ADMINTOOLS CATEGORY LOADING END-->
+
+<script>
+    // ... (existing script content)
+
+    // Function to initialize the "Add Category" button functionality
+    // Function to initialize the "Add Category" button functionality
+function initializeAddCategoryButton() {
+    const addCategoryButton = document.getElementById('addCategory');
+    if (addCategoryButton) {
+        console.log('Initializing the Add Category button.'); // Log initialization
+
+        addCategoryButton.addEventListener('click', function() {
+            var categoryTitle = document.getElementById('new-category-title').value;
+            var categoryColor = document.getElementById('new-category-color').value.replace('#', '');
+
+            console.log('Attempting to add new category:', categoryTitle, categoryColor); // Log attempt
+
+            if (!categoryTitle || !categoryColor) {
+                console.error('Please enter a category title and select a color.');
+                return;
+            }
+
+            fetch('/add-category', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ title: categoryTitle, color: categoryColor })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(result => {
+                console.log('New category added:', result);
+                document.getElementById('new-category-title').value = ''; // Reset the title input
+                document.getElementById('new-category-color').value = '#000000'; // Reset the color input
+                refreshCategoriesDisplay(); // Refresh the categories displayed on the page
+            })
+            .catch(error => {
+                console.error('Error adding new category:', error);
+            });
+        });
+    } else {
+        console.error('Add Category button not found.');
+    }
+}
+
+// Call this function after the dynamically loaded content is inserted into the DOM
+function dynamicContentLoaded() {
+    initializeAddCategoryButton();
+    // ... (initialize other dynamic content here if needed)
+}
+
+// Use DOMContentLoaded to ensure the button is available when the script runs
+document.addEventListener('DOMContentLoaded', function() {
+    // Only call this if 'addCategory' exists on initial page load
+    if (document.getElementById('addCategory')) {
+        initializeAddCategoryButton();
+    }
+    // ... (call other initialize functions here if needed)
+});
+
+// If the button is loaded dynamically, call dynamicContentLoaded()
+// after 
+</script>
