@@ -448,6 +448,36 @@ def delete_objects_by_object_type():
         db.session.rollback()
         return jsonify(success=False, error=str(e)), 500
 
+@app.route('/api/all-shapes', methods=['GET'])
+def get_all_shapes():
+    shapes = Shape.query.all()
+    shapes_data = [
+        {
+            'id': shape.id,
+            'shape_type': shape.shape_type,
+            'shape_color': shape.shape_color,
+            'shape_note': shape.shape_note
+        } for shape in shapes
+    ]
+    return jsonify(shapes=shapes_data)
+
+@app.route('/save-popup-content', methods=['POST'])
+def save_popup_content():
+    content = request.json.get('content')
+    # Save this content to a file or database
+    # For example, writing to a file:
+    with open('popup_content.html', 'w') as file:
+        file.write(content)
+    return jsonify(success=True)
+
+@app.route('/load-popup-content', methods=['GET'])
+def load_popup_content():
+    # Load the content from a file or database
+    # For example, reading from a file:
+    with open('popup_content.html', 'r') as file:
+        content = file.read()
+    return jsonify(content=content)
+
 
 if __name__ == '__main__':
     app.run(debug=True)
