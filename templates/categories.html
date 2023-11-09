@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Categories</title>
+<style>
+        .categorybutton {
+            font-weight: bold;
+            margin: 8px 0; /* Increased vertical margin for more gap between elements */
+            line-height: 1; /* Adjusted line-height */
+            cursor: pointer;
+            text-decoration: none;
+            display: flex; /* Changed to flexbox */
+            align-items: center; /* Vertically center content */
+            justify-content: center; /* Horizontally center content */
+            width: 100%;
+            height: auto;
+            box-sizing: border-box; /* Ensure padding and border are included in the width */
+            transition: background-color 0.2s ease-in-out;
+            border-radius: 30px;
+            text-align: center;
+            padding: 5px 5px; /* Adds padding to top and bottom */
+            border: none; /* Removes border */
+        }
+
+        .categorybutton:hover {
+            opacity: 0.9; /* Slight transparency on hover */
+        }
+
+        .categorybutton h3 {
+            margin: 0; /* Removes any default margin */
+            color: white;
+        }
+		
+    </style>
+</head>
+<body>
+<div id="category-choices">
+
+<button class="categorybutton" onclick="parent.setCategory('#2f1e1e')" style="background-color: #2f1e1e;"><h3>Hier fühle ich mich unsicher.</h3></button>
+<button class="categorybutton" onclick="parent.setCategory('#c115a1')" style="background-color: #c115a1;"><h3>Hier gibt es Probleme mit dem Parken.</h3></button>
+<button class="categorybutton" onclick="parent.setCategory('#4CAF50')" style="background-color: #4CAF50;"><h3>Hier verbringe ich gerne meine Freizeit.</h3></button>
+<button class="categorybutton" onclick="parent.setCategory('#4E342E')" style="background-color: #4E342E;"><h3>Dieser Ort braucht eine Verbesserung.</h3></button>
+<button class="categorybutton" onclick="parent.setCategory('#212121')" style="background-color: #212121;"><h3>An diesem Ort fehlt ein Service.</h3></button>
+</div>
+</body>
+</html>

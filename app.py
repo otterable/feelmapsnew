@@ -1,6 +1,6 @@
 from flask_caching import Cache
 from flask_cors import CORS
-from flask import Flask, Flask, render_template, request, jsonify, Response, session, redirect, url_for, send_from_directory, make_response, before_first_request
+from flask import Flask, Flask, render_template, request, jsonify, Response, session, redirect, url_for, send_from_directory, make_response, g, send_file
 from flask_sqlalchemy import SQLAlchemy
 from flask_session import Session
 from collections import Counter
@@ -9,6 +9,7 @@ from bs4 import BeautifulSoup
 from werkzeug.utils import secure_filename
 from datetime import datetime
 
+import io
 import json
 import os
 import re
@@ -19,72 +20,88 @@ import random
 import string
 from datetime import timedelta
 app = Flask(__name__)
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///s.db'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.secret_key = 'ZDlGoz5V4/CWj+OGx8h2vQ=='  # You should use a secure, random secret key.
 CORS(app)  # This is to allow cross-origin requests, if needed.
 
-from datetime import datetime
-
-app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///mapobjects.db'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
-class MapObject(db.Model):
+class Shape(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    geocoordinates = db.Column(db.String(100))
-    time_of_creation = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
-    written_note = db.Column(db.Text, nullable=False)
-    categoryid = db.Column(db.Integer, nullable=False)
-    hexColor = db.Column(db.String(6), nullable=False)
-    molenId = db.Column(db.String(20), nullable=False, unique=True)
-    objectId = db.Column(db.Integer, nullable=False)
-    highlightId = db.Column(db.Integer, nullable=False)
+    shape_data = db.Column(db.JSON, nullable=False)
+    shape_note = db.Column(db.String, nullable=True)
+    shape_type = db.Column(db.String, nullable=False)
+    shape_color = db.Column(db.String, nullable=True)  # Add a new column for color
+    molen_id = db.Column(db.String, nullable=True, default="null")
+    score = db.Column(db.String, nullable=True, default="null")
+    highlight_id = db.Column(db.String, nullable=True, default="null")
+    radius = db.Column(db.Float, nullable=True) 
 
-    def to_json(self):
-        return {
-            'id': self.id,
-            'geocoordinates': self.geocoordinates,
-            'time_of_creation': self.time_of_creation.isoformat(),
-            'written_note': self.written_note,
-            'categoryid': self.categoryid,
-            'hexColor': self.hexColor,
-            'molenId': self.molenId,
-            'objectId': self.objectId,
-            'highlightId': self.highlightId
-        }
+@app.before_request
+def before_request():
+    if not hasattr(g, 'db_initialized'):
+        db.create_all()
+        print("Database and tables created")
+        g.db_initialized = True
 
-@app.before_first_request
-def create_tables():
-    db.create_all()
-
-@app.route('/save_object', methods=['POST'])
-def save_object():
-    data = request.json
-    map_object = MapObject(
-        geocoordinates=data['geocoordinates'],
-        written_note=data['written_note'],
-        categoryid=data['categoryid'],
-        hexColor=data['hexColor'],
-        molenId=data['molenId'],
-        objectId=data['objectId'],
-        highlightId=data['highlightId']
-    )
-    db.session.add(map_object)
-    db.session.commit()
-    return jsonify({'message': 'Object saved successfully', 'id': map_object.id}), 201
-
-@app.route('/get_objects', methods=['GET'])
-def get_objects():
-    objects = MapObject.query.all()
-    return jsonify([obj.to_json() for obj in objects])
-    
 @app.route('/')
 def index():
-    return render_template('index.html')
+    total_objects, category_counts, color_counts = count_objects()  # Assuming count_objects is already defined as per your previous messages.
+    return render_template('index.html', category_counts=category_counts, color_counts=color_counts)
 
 @app.route('/categories')
 def categories():
-    return send_from_directory('.', 'static/categories.html')
+    return render_template('categories.html')
+    
+
+
+@app.route('/api/shapes', methods=['POST'])
+def add_shape():
+    data = request.json
+    shape_data_json = json.dumps(data['shape_data'])  # Ensuring JSON serialization
+    new_shape = Shape(
+        shape_data=shape_data_json,
+        shape_note=data.get('shape_note', ''),
+        shape_type=data['shape_type'],
+        shape_color=data.get('shape_color', 'yellow'),  # Save the color
+        radius=data.get('radius'),  # Save the radius if provided
+        molen_id=data.get('molen_id', 'null'),
+        score=data.get('score', 'null'),
+        highlight_id=data.get('highlight_id', 'null')
+    )
+    db.session.add(new_shape)
+    db.session.commit()
+    print('New shape added with ID:', new_shape.id)
+    return jsonify(success=True, id=new_shape.id)
+
+@app.route('/api/shapes', methods=['GET'])
+def get_shapes():
+    shapes = Shape.query.all()
+    shapes_data = [
+        {
+            'id': shape.id,
+            'shape_data': json.loads(shape.shape_data),  # Ensuring JSON deserialization
+            'shape_type': shape.shape_type,
+            'shape_color': shape.shape_color,
+            'radius': shape.radius,  # Include the radius in the response if it exists
+            'shape_note': shape.shape_note  # Include the note in the response
+        } for shape in shapes
+    ]
+    print('Shapes fetched:', len(shapes_data))
+    return jsonify(shapes=shapes_data)
+    
+@app.route('/api/shapes/<int:shape_id>', methods=['DELETE'])
+def delete_shape(shape_id):
+    shape = Shape.query.get(shape_id)
+    if shape:
+        db.session.delete(shape)
+        db.session.commit()
+        print('Shape deleted with ID:', shape_id)
+        return jsonify(success=True), 200
+    else:
+        print('Shape not found with ID:', shape_id)
+        return jsonify(success=False), 404
 
 
 # Hardcoded user credentials and OTP secret
@@ -152,140 +169,285 @@ def upload_overlay_image():
 # OVERLAY IMAGE REPLACEMENT (TITELBILD) END
 
 
+@app.route('/get-categories')
+def get_categories():
+    try:
+        with open('templates/categories.html') as file:
+            soup = BeautifulSoup(file, 'html.parser')  # Use BeautifulSoup directly
+            categories = [{'color': button['style'].split(': ')[1].replace(';', '').strip(), 'text': button.h3.text}
+                          for button in soup.find_all('button', {'class': 'categorybutton'})]
+        # Include "null" category in the response
+        categories.append({'color': 'null', 'text': 'Null Category'})
+        return jsonify(categories)
+    except Exception as e:
+        # Log the error for debugging
+        print(f"Error occurred: {e}")
+        # Return a 500 error to the client with the error message
+        return jsonify(error=str(e)), 500
 
-# RENAMING LOGIC BACKEND START
-@app.route('/get-categories-renaming', methods=['GET'])
-def get_categories_renaming():
-    # Read the static/categories.html file
-    with open('static/categories.html', 'r', encoding='utf-8') as file:
-        categories_html_content = file.read()
 
-    # Parse the HTML content using BeautifulSoup
-    soup = BeautifulSoup(categories_html_content, 'html.parser')
+@app.route('/update-category', methods=['POST'])
+def update_category():
+    color_to_update = request.json.get('oldColor')
+    new_color = request.json.get('newColor')
+    
+    with open('templates/categories.html', 'r+') as file:
+        content = file.read()
+        soup = BeautifulSoup(content, 'html.parser')
+        for button in soup.find_all('button', {'class': 'categorybutton'}):
+            if color_to_update in button['style']:
+                button['style'] = f"background-color: {new_color};"
+                button['onclick'] = f"parent.setCategory('{new_color}')"
+        file.seek(0)
+        file.write(str(soup))
+        file.truncate()
+    
+    return jsonify(success=True)
+    
+@app.route('/update-shape-colors', methods=['POST'])
+def update_shape_colors():
+    data = request.json
+    old_color = data.get('oldColor')
+    new_color = data.get('newColor')
 
-    # Extract category names from all <h3> tags within .categorybutton divs
-    category_names = [h3.get_text().strip() for h3 in soup.select('.categorybutton h3')]
-
-    # Return the list of category names as a JSON response
-    return jsonify(category_names)
-
+    try:
+        # Update the shapes with the old color to the new color
+        Shape.query.filter_by(shape_color=old_color).update({'shape_color': new_color})
+        db.session.commit()
+        return jsonify(success=True), 200
+    except Exception as e:
+        print(f"Error updating shape colors: {e}")
+        return jsonify(success=False, error=str(e)), 500
+        
 @app.route('/rename-category', methods=['POST'])
 def rename_category():
-    data = request.get_json()
-    old_name = data['oldName']
-    new_name = data['newName']
-
-    # Read the static/categories.html file
-    with open('static/categories.html', 'r+', encoding='utf-8') as file:
-        categories_html_content = file.read()
-        soup = BeautifulSoup(categories_html_content, 'html.parser')
-
-        # Find the category to rename
-        category_to_rename = soup.find('h3', text=old_name)
-        if category_to_rename:
-            category_to_rename.string = new_name
-            # Write the changes back to the file
-            file.seek(0)
-            file.write(str(soup))
-            file.truncate()
-
-            return 'Category renamed successfully', 200
-        else:
-            return 'Category not found', 404
-# RENAMING LOGIC BACKEND END
-
-
-
-# RECOLORING LOGIC BACKEND START
-@app.route('/recolor-category', methods=['POST'])
-def recolor_category():
-    data = request.get_json()
-    category_name = data['categoryName']
-    new_color = data['newColor']
-
-    # Ensure the new color has the '#' symbol for valid CSS hex color
-    css_color = f"#{new_color}"
-
-    # Update categories.html
-    with open('static/categories.html', 'r+', encoding='utf-8') as file:
-        categories_html_content = file.read()
-        soup = BeautifulSoup(categories_html_content, 'html.parser')
-
-        category_to_recolor = soup.find('h3', text=category_name).find_parent('div', class_='categorybutton')
-        if category_to_recolor:
-            category_to_recolor['data-color'] = new_color
-            # Update the style attribute with the '#' symbol included for CSS
-            category_to_recolor['style'] = f'background-color: {css_color};'
-            file.seek(0)
-            file.write(str(soup))
-            file.truncate()
-
-    # Update database
-    map_objects_to_recolor = MapObject.query.filter_by(categoryid=category_name).all()
-    for map_object in map_objects_to_recolor:
-        map_object.hexColor = new_color
-    db.session.commit()
-
-    return jsonify({'message': 'Category recolored successfully'}), 200
+    color = request.json.get('color')
+    new_name = request.json.get('newName')
     
-@app.route('/get-current-color', methods=['POST'])
-def get_current_color():
-    data = request.get_json()
-    category_name = data['categoryName']
+    try:
+        with open('templates/categories.html', 'r+') as file:
+            content = file.read()
+            soup = BeautifulSoup(content, 'html.parser')
+            buttons = soup.find_all('button', {'class': 'categorybutton'})
+            for button in buttons:
+                if color in button['style']:
+                    button.h3.string = new_name  # Update the text within the <h3> tag
+            file.seek(0)
+            file.write(str(soup))
+            file.truncate()
+        return jsonify(success=True)
+    except Exception as e:
+        print(f"Error occurred while renaming category: {e}")
+        return jsonify(success=False, error=str(e)), 500
 
-    # Assuming the category name is unique and used as the ID in the category buttons
-    with open('static/categories.html', 'r', encoding='utf-8') as file:
-        categories_html_content = file.read()
-        soup = BeautifulSoup(categories_html_content, 'html.parser')
+@app.route('/create-category', methods=['POST'])
+def create_category():
+    name = request.json.get('name')
+    color = request.json.get('color')
+    
+    try:
+        with open('templates/categories.html', 'r+') as file:
+            content = file.read()
+            soup = BeautifulSoup(content, 'html.parser')
+            # Create a new button element for the category
+            new_button = soup.new_tag('button', **{
+                'class': 'categorybutton',
+                'onclick': f"parent.setCategory('{color}')",
+                'style': f"background-color: {color};"
+            })
+            new_button_h3 = soup.new_tag('h3')
+            new_button_h3.string = name
+            new_button.append(new_button_h3)
+            soup.body.append(new_button)
+            file.seek(0)
+            file.write(str(soup))
+            file.truncate()
+        return jsonify(success=True)
+    except Exception as e:
+        print(f"Error occurred while creating new category: {e}")
+        return jsonify(success=False, error=str(e)), 500
 
-    category_button = soup.find('h3', text=category_name).find_parent('div', class_='categorybutton')
-    current_color = category_button['data-color'] if category_button else '#FFFFFF'
-
-    return jsonify(currentColor=current_color)
-# RECOLORING LOGIC BACKEND END
-
-
-
-# NEW CATEGORY CREATION LOGIC BACKEND START
-@app.route('/add-category', methods=['POST'])
-def add_category():
-    data = request.get_json()
-    category_title = data.get('title')
-    category_color = data.get('color')
-
-    if category_title and category_color:
-        with open('static/categories.html', 'a', encoding='utf-8') as file:
-            file.write(f'<div class="categorybutton" data-color="{category_color}" style="background-color: #{category_color};">\n')
-            file.write(f'    <h3>{category_title}</h3>\n')
-            file.write('</div>\n')
-        return jsonify({'message': 'New category added successfully'}), 200
-    else:
-        return jsonify({'error': 'Invalid category title or color'}), 400
-# NEW CATEGORY CREATION LOGIC BACKEND END
-
-# DELETE CATEGORY CREATION LOGIC BACKEND START
 @app.route('/delete-category', methods=['POST'])
 def delete_category():
-    data = request.get_json()
-    category_name = data['categoryName']
-
-    with open('static/categories.html', 'r+', encoding='utf-8') as file:
-        categories_html_content = file.read()
-        soup = BeautifulSoup(categories_html_content, 'html.parser')
-
-        category_to_delete = soup.find('h3', text=category_name).find_parent('div', class_='categorybutton')
-        if category_to_delete:
-            category_to_delete.decompose()  # Remove the category div
+    color_to_delete = request.json.get('color')
+    
+    try:
+        # Delete categories from the HTML file
+        with open('templates/categories.html', 'r+') as file:
+            content = file.read()
+            soup = BeautifulSoup(content, 'html.parser')
+            for button in soup.find_all('button', {'class': 'categorybutton'}):
+                if color_to_delete in button['style']:
+                    button.decompose()
             file.seek(0)
             file.write(str(soup))
             file.truncate()
-            return jsonify({'message': 'Category deleted successfully'}), 200
-        else:
-            return jsonify({'error': 'Category not found'}), 404
+        
+        # Delete shapes with the corresponding color from the database
+        shapes_to_delete = Shape.query.filter_by(shape_color=color_to_delete).all()
+        for shape in shapes_to_delete:
+            db.session.delete(shape)
+        db.session.commit()
+        
+        return jsonify(success=True)
+    except Exception as e:
+        print(f"Error occurred while deleting category: {e}")
+        db.session.rollback()  # Roll back the session in case of an error
+        return jsonify(success=False, error=str(e)), 500
+ 
+@app.route('/export-geojson', methods=['GET'])
+def export_geojson():
+    # Query all shapes from the database
+    shapes = Shape.query.all()
+    
+    # Construct GeoJSON features list
+    features = []
+    for shape in shapes:
+        # Parse shape data and create GeoJSON feature
+        feature = {
+            "type": "Feature",
+            "geometry": json.loads(shape.shape_data),
+            "properties": {
+                "id": shape.id,
+                "note": shape.shape_note,
+                "type": shape.shape_type,
+                "color": shape.shape_color,
+                "molen_id": shape.molen_id,
+                "score": shape.score,
+                "highlight_id": shape.highlight_id,
+                "radius": shape.radius
+            }
+        }
+        features.append(feature)
+    
+    # Construct the full GeoJSON structure
+    geojson = {
+        "type": "FeatureCollection",
+        "features": features
+    }
+    
+    # Convert the GeoJSON to a string and then to a BytesIO object for file download
+    geojson_str = json.dumps(geojson, indent=2)
+    geojson_bytes = io.BytesIO(geojson_str.encode('utf-8'))
+    
+    # Send the GeoJSON file to the client
+    return send_file(geojson_bytes, mimetype='application/json',
+    as_attachment=True, download_name='shapes_export.geojson')
 
-# DELETE CATEGORY CREATION LOGIC BACKEND END
+@app.route('/import-geojson', methods=['POST'])
+def import_geojson():
+    try:
+        uploaded_file = request.files['file']
+        if uploaded_file:
+            geojson_data = json.load(uploaded_file)
+            for feature in geojson_data['features']:
+                shape_data = json.dumps(feature['geometry'])
+                shape_note = feature['properties']['note']
+                shape_type = feature['properties']['type']
+                shape_color = feature['properties']['color']
+                molen_id = feature['properties']['molen_id']
+                score = feature['properties']['score']
+                highlight_id = feature['properties']['highlight_id']
+                radius = feature['properties']['radius']
+                shape = Shape(
+                    shape_data=shape_data,
+                    shape_note=shape_note,
+                    shape_type=shape_type,
+                    shape_color=shape_color,
+                    molen_id=molen_id,
+                    score=score,
+                    highlight_id=highlight_id,
+                    radius=radius
+                )
+                db.session.add(shape)
+            db.session.commit()
+            return '''
+                <script>
+                    alert('GeoJSON data imported successfully');
+                    window.location.href = '/';
+                </script>
+            '''
+        else:
+            return '''
+                <script>
+                    alert('No file uploaded');
+                    window.location.href = '/';
+                </script>
+            '''
+    except Exception as e:
+        return '''
+            <script>
+                alert('Error: {}');
+                window.location.href = '/';
+            </script>
+        '''.format(str(e))
+
+# Function to count all objects, category objects, and colors
+def count_objects():
+    total_objects = Shape.query.count()
+    categories = Shape.query.with_entities(Shape.shape_type).distinct()
+    category_counts = {}
+    color_counts = {}
+
+    for category in categories:
+        category_counts[category[0]] = Shape.query.filter_by(shape_type=category[0]).count()
+
+    # Count objects by color
+    colors = Shape.query.with_entities(Shape.shape_color).distinct()
+    for color in colors:
+        color_counts[color[0]] = Shape.query.filter_by(shape_color=color[0]).count()
+
+    return total_objects, category_counts, color_counts
+
+# Route to display counts
+# Change the return value to jsonify the counts
+@app.route('/count-objects')
+def display_counts():
+    total_objects, category_counts, color_counts = count_objects()
+    return jsonify({
+        'total_objects': total_objects, 
+        'category_counts': category_counts, 
+        'color_counts': color_counts
+    })  
+    
+# Route to delete objects by category
+@app.route('/delete-objects-by-category', methods=['POST'])
+def delete_objects_by_category():
+    data = request.json
+    color_to_delete = data.get('color')
+
+    try:
+        # Delete objects with the corresponding category color from the database
+        objects_to_delete = Shape.query.filter_by(shape_color=color_to_delete).all()
+        for obj in objects_to_delete:
+            db.session.delete(obj)
+        db.session.commit()
+
+        return jsonify(success=True)
+    except Exception as e:
+        print(f"Error occurred while deleting objects by category: {e}")
+        db.session.rollback()
+        return jsonify(success=False, error=str(e)), 500
+
+# Route to delete objects by object type
+@app.route('/delete-objects-by-object-type', methods=['POST'])
+def delete_objects_by_object_type():
+    data = request.json
+    object_type_to_delete = data.get('objectType')
+
+    try:
+        # Delete objects with the corresponding object type from the database
+        objects_to_delete = Shape.query.filter_by(shape_type=object_type_to_delete).all()
+        for obj in objects_to_delete:
+            db.session.delete(obj)
+        db.session.commit()
+
+        return jsonify(success=True)
+    except Exception as e:
+        print(f"Error occurred while deleting objects by object type: {e}")
+        db.session.rollback()
+        return jsonify(success=False, error=str(e)), 500
 
 
 if __name__ == '__main__':
-    init_db()
     app.run(debug=True)
