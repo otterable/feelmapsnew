@@ -1,42 +1,42 @@
 <!DOCTYPE html>
+
 <html>
 <head>
-    <title>Stimmungskompass DEMO | Ermine.at</title>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>
+   Stimmungskompass DEMO | Ermine.at
+  </title>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<!-- Leaflet CSS -->
+<link href="http://cdn.leafletjs.com/leaflet/v1.7.1/leaflet.css" rel="stylesheet"/>
+<!-- Leaflet JavaScript -->
+<script src="http://cdn.leafletjs.com/leaflet/v1.7.1/leaflet.js">
+</script>
+<!-- Leaflet Draw CSS -->
+<link href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css" rel="stylesheet"/>
+<!-- Leaflet Draw JavaScript -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.js">
+</script>
+<!-- Heatmap plugin -->
+<!-- JQuery -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js">
+</script>
 
-    <!-- Leaflet CSS -->
-    <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet/v1.7.1/leaflet.css" />
+<!-- Include Spectrum's CSS from CDN -->
+<link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/spectrum/1.8.1/spectrum.min.css" />
 
-    <!-- Leaflet JavaScript -->
-    <script src="http://cdn.leafletjs.com/leaflet/v1.7.1/leaflet.js"></script>
+<!-- Include Spectrum's JavaScript from CDN -->
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/spectrum/1.8.1/spectrum.min.js"></script>
 
-    <!-- Leaflet Draw CSS -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css"/>
-
-    <!-- Leaflet Draw JavaScript -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.js"></script>
-
-    <!-- Heatmap plugin -->
-
-    <!-- JQuery -->
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-	
-	<!-- Include stylesheet -->
-<link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
-<!-- Include the Quill library -->
-<script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
-
-	
-<style type="text/css">body { background-color: #1b1b1b; }
-</style>
-
-    <!-- The categories will be loaded from 'categories.html' -->
-    <iframe id="categories-frame" style="display:none;" src="/categories"></iframe>
+<style type="text/css">
+   body { background-color: #1b1b1b; }
+  </style>
+<!-- The categories will be loaded from 'categories.html' -->
+<iframe id="categories-frame" src="/categories" style="display:none;">
+</iframe>
 </head>
-  <style>
-
-/* BASIC CSS START */
+<style>
+  /* BASIC CSS START */
 body, html {
     margin: 0;
     padding: 0;
@@ -51,10 +51,14 @@ body, html {
 
 #map, #sidebar {
     position: absolute; /* Positioned absolutely to give precise control over their placement */
-    top: 15px; /* Consistent margin from the top */
-    bottom: 15px; /* Consistent margin from the bottom */
+    top: 15px !important; /* Aligns the top edge with the top of the viewport */
+    bottom: 15px !important; /* Aligns the bottom edge with the bottom of the viewport */
     border-radius: 30px;
+    overflow: hidden; /* Ensures content does not make the element scrollable */
 }
+
+
+
 
 #map {
     left: 15px; /* Consistent margin from the left */
@@ -64,7 +68,6 @@ body, html {
 #sidebar {
     width: calc(30% - 15px); /* Sidebar takes up 30% width minus right margin */
     right: 15px; /* Consistent margin from the right */
-    overflow-y: auto; /* Allows for scrolling within the sidebar if the content overflows */
     background: #111111;
     padding: 10px;
 }
@@ -131,7 +134,17 @@ border-radius: 30px;"
 }
 /* LEAFLET MAP ICONS CSS END */
 
+.leaflet-draw-draw-marker {
+display: none !important;
+}
 
+.leaflet-draw-draw-polyline {
+display: none !important;
+}
+
+.leaflet-draw-draw-circlemarker {
+display: none !important;
+}
 
 /* LEAFLET MAP ICON COLOR CHANGE WHEN DISABLED CSS START */
 .leaflet-disabled {
@@ -216,7 +229,7 @@ border-radius: 30px;"
 }
 
 .leaflet-popup .leaflet-popup-content-wrapper .leaflet-popup-content {
-    font-size: 20px !important;
+    font-size: 25px !important;
 }
 
 /* Your existing rules for .leaflet-control-layers and .leaflet-top leaflet-right had typos, corrected below */
@@ -227,6 +240,91 @@ border-radius: 30px;"
 .leaflet-top.leaflet-right {
     border-radius: 50px;
 }
+
+    .leaflet-popup-content-wrapper {
+    background-color: var(--popup-bg-color) !important;
+    color: var(--popup-text-color) !important;
+    border-radius: 30px !important;
+}
+
+   .leaflet-popup-content {
+    color: var(--popup-text-color) !important;
+}
+
+.leaflet-popup-tip {
+    display: block; /* Optional: hides the tip arrow for a cleaner look */
+    background-color: var(--popup-bg-color) !important;
+}
+	
+	  .leaflet-popup-close-button {
+        display: none; /* Optional: hides the tip arrow for a cleaner look */
+
+    }
+	
+  
+
+   #shape-note {
+        border-radius: 10px;
+		border:none;
+        display: block;
+		color: #111111;
+        width: 100%;
+        box-sizing: border-box;
+        max-height: 200px;
+		height: 75px;
+		padding: 5px;
+		max-width: 100%;
+        margin-bottom: -25px; /* Adjust this value as needed to reduce gap */
+		font-size: 15px; /* Set font size to 15px */
+        font-family: 'Roboto', sans-serif; /* Set font family to Roboto */
+    }
+
+
+#shape-note::-webkit-input-placeholder { /* Chrome, Opera, Safari */
+    color: #111111;
+    opacity: 1; /* Override any default opacity */
+}
+
+#shape-note:-ms-input-placeholder { /* Internet Explorer 10-11 */
+    color: #111111;
+    opacity: 1; /* Override any default opacity */
+}
+
+#shape-note::-ms-input-placeholder { /* Microsoft Edge */
+    color: #111111;
+    opacity: 1; /* Override any default opacity */
+}
+
+#shape-note::placeholder { /* Most modern browsers */
+    color: #111111;
+    opacity: 1; /* Override any default opacity */
+}
+
+    #save-note, #cancel-note {
+        background-color: #4CAF50; /* Green for save, red for cancel */
+        border: none;
+        color: white;
+        padding: 10px 20px;
+        border-radius: 30px;
+        cursor: pointer;
+        font-weight: bold;
+        transition: background-color 0.2s ease-in-out;
+        margin-top: 0; /* Remove top margin to reduce gap */
+    }
+
+    #cancel-note {
+        background-color: #B71C1C;
+        margin-left: 50px; /* Adjust this value as needed */
+    }
+
+    #save-note:hover {
+        background-color: #388E3C; /* Darker green for hover effect */
+    }
+
+    #cancel-note:hover {
+        background-color: #D32F2F; /* Darker red for hover effect */
+    }
+
 /* LEAFLET MAP ICON MISC CSS END */
 
 
@@ -373,24 +471,24 @@ border-radius: 30px;"
 
 /* HOVER AND SELECTED BUTTON EFFECT CSS START */
 /* Hover effect */
-.button-s:hover, .categorybutton:hover, .post-button:hover, .key-div:hover, .pinlist-div:hover, .info-div:hover, .lightswitch-div:hover {
-    filter: brightness(85%);
-    outline: 3px solid var(--border-hover-color); /* Use custom property for outline color */
-    outline-offset: -3px; /* Offset to align with the border edge */
+.button-s:hover, .categorybutton:hover, .save-note:hover, .key-div:hover, .pinlist-div:hover, .info-div:hover, .lightswitch-div:hover {
+    filter: brightness(85%) !important;
+    outline: 3px solid var(--border-hover-color) !important; /* Use custom property for outline color */
+    outline-offset: -3px !important; /* Offset to align with the border edge */
 }
 
 /* Default state */
-.button-s, .categorybutton, .post-button, .key-div, .pinlist-div, .info-div, .lightswitch-div {
-    box-sizing: border-box;
-    transition: all 0.2s ease-in-out;
-    border: 3px solid transparent; /* Default border */
+.button-s, .categorybutton, .save-note, .key-div, .pinlist-div, .info-div, .lightswitch-div {
+    box-sizing: border-box !important;
+    transition: all 0.2s ease-in-out !important;
+    border: 3px solid transparent !important; /* Default border */
 }
 
 
 /* Selected effect */
 .button-s.selected, .categorybutton.selected, .key-div.selected, .pinlist-div.selected, .info-div.selected, .lightswitch-div.selected {
-    filter: brightness(85%);
-    outline: 5px solid var(--border-selected-color); /* Use custom property for outline color */
+    filter: brightness(85%) !important;
+    outline: 5px solid var(--border-selected-color) !important; /* Use custom property for outline color */
     outline-offset: -5px; /* Offset to align with the border edge */
 }
 
@@ -486,47 +584,107 @@ border-radius: 30px;"
 .hidden {
     display: none !important; // !important to override any other display property
 }
-
 #popup-overlay {
-  position: fixed;
-  width: 100%;
-  height: 100%;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0,0,0,0.5); /* Black background with opacity */
-  z-index: 2; /* Ensures the overlay is on top of the rest of the page */
-  cursor: pointer;
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: 30px;
+    background-color: rgba(0, 0, 0, 0.5); /* Overlay background */
+    z-index: 1000; /* Ensure it's above other content */
 }
 
-.popup-box {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 400px;
-  height: 300px;
-  background: #fff;
-  border-radius: 10px;
-  padding: 20px;
-  z-index: 3; /* Ensures the popup is above the overlay */
-  cursor: auto;
+#popup-content {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    max-width: calc(100% - 20px); /* Max width, minus the gap */
+    max-height: calc(100% - 20px); /* Max height, minus the gap */
+    width: 400px;
+    height: 300px;
+    background: #fff;
+    padding: 20px;
+    border-radius: 30px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    z-index: 1001; /* Above the overlay */
+    overflow: auto; /* Add scroll for small screens */
 }
 
-.popup-close {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  font-size: 30px;
-  font-weight: bold;
-  cursor: pointer;
+#popup-content button {
+    position: absolute;
+    top: 10px;
+    right: 10px;
 }
 
-    </style>
+#close-popup {
+    position: absolute;
+    top: 0;
+    right: 0;
+    padding: 0.5em;
+    border: none;
+    background-color: transparent;
+    font-size: 1em;
+    cursor: pointer;
+    z-index: 1002;
+}
 
+@media screen and (max-width: 420px) {
+    #popup-content {
+        width: auto; /* Adjust width for very small screens */
+    }
+}
+
+.dismiss-button {
+    border-radius: 30px;
+	margin-right: 50px;
+    /* Add other styling as needed, e.g., padding, border, background-color, etc. */
+}
+
+#popup-text .ql-align-center {
+  text-align: center;
+}
+
+#popup-text .ql-font-serif {
+  font-family: 'Times New Roman', serif;
+}
+
+#popup-text .ql-align-right {
+  text-align: right;
+}
+
+#popup-text .ql-align-justify {
+  text-align: justify;
+}
+
+#popup-text .ql-align-center {
+  text-align: center;
+}
+
+#popup-text img {
+  max-width: 95%;  /* Ensures the image does not exceed the width of the popup */
+  height: auto;     /* Maintains the aspect ratio of the image */
+  display: block;   /* Allows margin auto to work for horizontal centering */
+  margin: 0 auto;
+  border-radius: 30px; /* Centers the image horizontally */
+}
+
+/* Hide all cursors inside the map when marker drawing is active */
+.no-cursor .leaflet-container,
+.no-cursor .leaflet-container * {
+    cursor: none !important;
+}
+
+/* Hide the Leaflet draw tooltip */
+.leaflet-draw-tooltip {
+    display: none !important;
+}
+
+ </style>
 <style>
-@media (max-width: 767px) {
+  @media (max-width: 767px) {
     body, html {
         padding-left: 7.5px; /* Add padding to the left of the body to create space for the content */
         padding-right: 7.5px; /* Add padding to the right of the body to create space for the content */
@@ -598,26 +756,28 @@ border-radius: 30px;"
     }
 	
 }
-</style>
-
+ </style>
 <body>
 <div class="color-111111" id="sidebar-mobileheader" style="display: none; background-color: #111111;">
 <img class="logo-img appear-on-mobile" src="static/logo_long.png" style="display: none; max-width: 100%; height: auto; display: block; margin-bottom: 0px; border-radius: 0px;"/>
-<h3 class="appear-on-mobiledisabled resistant-h3" style="display: none; color: white; text-align: center; margin-top: 5px;">Wie stehen Sie zu den Orten in Ihrer Gemeinde?</h3>
-<h3 class="appear-on-mobiledisabled resistant-h3" style="display: none; color: white; text-align: center; margin-top: -12px; margin-bottom: 7px">Lassen Sie es uns auf dieser Karte wissen!</h3>
+<h3 class="appear-on-mobiledisabled resistant-h3" style="display: none; color: white; text-align: center; margin-top: 5px;">
+    Wie stehen Sie zu den Orten in Ihrer Gemeinde?
+   </h3>
+<h3 class="appear-on-mobiledisabled resistant-h3" style="display: none; color: white; text-align: center; margin-top: -12px; margin-bottom: 7px">
+    Lassen Sie es uns auf dieser Karte wissen!
+   </h3>
 </div>
-
-<div id="map"><!-- Inside the map div -->
+<div id="map">
+<!-- Inside the map div -->
 <div id="counter-pill">
-    <ul id="color-counters" style="list-style: none; display: flex; padding: 0; margin: 0;">
-        <!-- Color circles will be inserted here -->
-    </ul>
-    <ul id="category-counters" style="list-style: none; display: flex; padding: 0; margin: 0;">
-        <!-- Category symbols will be inserted here -->
-    </ul>
+<ul id="color-counters" style="list-style: none; display: flex; padding: 0; margin: 0;">
+<!-- Color circles will be inserted here -->
+</ul>
+<ul id="category-counters" style="list-style: none; display: flex; padding: 0; margin: 0;">
+<!-- Category symbols will be inserted here -->
+</ul>
 </div>
 </div>
-
 <?php MAP END ?>
 <?php SIDEBAR BODY START ?>
 <div class="color-111111" id="sidebar" style="background-color: #111111;">
@@ -625,101 +785,103 @@ border-radius: 30px;"
 <img class="logo-img hide-on-mobile" src="static/logo_long.png" style="max-width: 100%; height: auto; display: block; margin-bottom: 7px; border-radius: 0px;"/>
 <?php LOGO END ?>
 <?php WEBSITE DESCRIPTION START ?>
-<h3 class="hide-on-mobile resistant-h3" style="color: white; text-align: center; margin-top: 5px;">Wie stehen Sie zu den Orten in Ihrer Gemeinde?</h3>
-<h3 class="hide-on-mobile resistant-h3" style="color: white; text-align: center; margin-top: -12px; margin-bottom: 7px">Lassen Sie es uns auf dieser Karte wissen!</h3>
+<h3 class="hide-on-mobile resistant-h3" style="color: white; text-align: center; margin-top: 5px;">
+    Wie stehen Sie zu den Orten in Ihrer Gemeinde?
+   </h3>
+<h3 class="hide-on-mobile resistant-h3" style="color: white; text-align: center; margin-top: -12px; margin-bottom: 7px">
+    Lassen Sie es uns auf dieser Karte wissen!
+   </h3>
 <?php WEBSITE DESCRIPTION END ?>
-
-<button id="edit-popup">Add/Edit Popup</button>
-<div id="editor" style="display:none;">
-    <!-- Create the editor container -->
-    <div id="quill-editor"></div>
-    <button id="save-popup-content">Save</button>
-</div>
-
-
-<div id="popup-overlay" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); z-index:10000; align-items:center; justify-content:center;">
-    <div id="popup-content" style="width:400px; height:300px; background:#fff; position:relative; padding:20px; box-sizing:border-box; border-radius:10px;">
-        <button id="close-popup" style="position:absolute; top:10px; right:10px;">X</button>
-        <div id="popup-text"><!-- Content loaded from Quill editor --></div>
-        <button id="dont-show-again" style="position:absolute; bottom:10px; right:10px;">Don't show this again</button>
+<!-- Popup HTML Structure -->
+<div id="popup-overlay" style="display:none; z-index: 10000">
+    <div id="popup-content" style="width:500px; height:400px; z-index: 10000">
+        <div id="popup-text"></div>
+    <button id="close-popup" onclick="closePopup()">X</button>
+<button onclick="setCookie()" class="dismiss-button">Don't show this again</button>
     </div>
 </div>
+
+
 
 <!-- SMALL OPTIONS MENU TOP START -->
 <div class="smalloptionsmenutop" style="display: flex; align-items: center; justify-content: center;">
-  <div class="left-container">
-    <!-- This button shows the user a list of existing pins -->
+<div class="left-container">
+<!-- This button shows the user a list of existing pins -->
 <div class="pinlist-div" id="pinlistdiv" onclick="toggleSearchFilter()" style="border-radius: 30px;">
-      <img src="static/pinlisticon.png" />
-    </div>
-    <!-- This button shows the user a list of existing pins -->
-    <div class="info-div" id="infoDiv" style="border-radius: 30px;">
-      <img src="static/infoicon.png" />
-    </div>
-  </div>
-  <div class="button-s color-3a3a3a" id="buttonS" onclick="addAndRemoveClass()" style="background-color: #3a3a3a; width: auto; height: auto; padding: 15px;">
-    <h3>Wie funktioniert's?</h3>
-  </div>
-  <div class="right-container">
-    <div class="lightswitch-div" id="lightswitchDiv" style="border-radius: 30px;">
-      <img src="static/sunicon.png" />
-    </div>
-    <div class="key-div" id="keyDiv" style="border-radius: 30px;">
-      <img src="static/keyicon.png" />
-    </div>
-  </div>
+<img src="static/pinlisticon.png"/>
+</div>
+<!-- This button shows the user a list of existing pins -->
+<div class="info-div" id="infoDiv" style="border-radius: 30px;">
+<img src="static/infoicon.png"/>
+</div>
+</div>
+<div class="button-s color-3a3a3a" id="buttonS" onclick="addAndRemoveClass()" style="background-color: #3a3a3a; width: auto; height: auto; padding: 15px;">
+<h3>
+      Wie funktioniert's?
+     </h3>
+</div>
+<div class="right-container">
+<div class="lightswitch-div" id="lightswitchDiv" style="border-radius: 30px;">
+<img src="static/sunicon.png"/>
+</div>
+<div class="key-div" id="keyDiv" style="border-radius: 30px;">
+<img src="static/keyicon.png"/>
+</div>
+</div>
 </div>
 <!-- SMALL OPTIONS MENU TOP END -->
-
-    <!-- Search and Filter Section -->
+<!-- Search and Filter Section -->
 <div id="search-filter-section" style="display: none;">
-        <input type="text" id="search-box" placeholder="Search by note..." oninput="filterObjects()">
-        <select id="color-filter" onchange="filterObjects()">
-            <option value="">Filter by color</option>
-            <!-- Dynamically populate color options here -->
-        </select>
-        <select id="type-filter" onchange="filterObjects()">
-            <option value="">Filter by object type</option>
-            <option value="rectangle">Rectangle</option>
-            <option value="circle">Circle</option>
-            <option value="marker">Marker</option>
-            <option value="polygon">Polygon</option>
-            <!-- Add more object types as needed -->
-        </select>
-
-    <!-- Object List Section -->
-    <div id="object-list">
-        <!-- Dynamically populated object list will go here -->
-    </div>
-    </div>
-
-
+<input id="search-box" style="border-radius: 30px; padding: 5px;" oninput="filterObjects()" placeholder="Search by note..." type="text"/>
+<select id="color-filter" style="border-radius: 30px; padding: 5px;" onchange="filterObjects()">
+<option style="border-radius: 30px; padding: 5px;"value="">
+      Filter by color
+     </option>
+<!-- Dynamically populate color options here -->
+</select>
+<select id="type-filter" style="border-radius: 30px; padding: 5px;"onchange="filterObjects()">
+<option value="">
+      Filter by object type
+     </option>
+<option value="rectangle">
+      Rectangle
+     </option>
+<option value="circle">
+      Circle
+     </option>
+<option value="marker">
+      Marker
+     </option>
+<option value="polygon">
+      Polygon
+     </option>
+<!-- Add more object types as needed -->
+</select>
+<!-- Object List Section -->
+<div id="object-list">
+<!-- Dynamically populated object list will go here -->
+</div>
+</div>
 <?php CITY LOGO START ?>
 <img class="hide-on-mobile resistant-image" id="overlay-image" src="static/overlay.jpg" style="max-width: 100%; height: auto; display: block; margin-left:auto; margin-right:auto; margin-top: 3px; margin-bottom: 5px; border-radius: 30px;"/>
 <?php CITY LOGO END ?>
-
 <?php ADMIN TOOLS (OTP PROTECTED) START // Categories here are dynamically generated from the "static/categories.html" file. Additional categories can be added or removed by editing "static/categories.html".?>
-<div class="menu-admintools" id="dynamicgeneration-admintools"></div>
+<div class="menu-admintools" id="dynamicgeneration-admintools">
+</div>
 <?php ADMIN TOOLS (OTP PROTECTED) END // Categories here are dynamically generated from the "static/categories.html" file. Additional categories can be added or removed by editing "static/categories.html".?>
-
 <?php CATEGORIES PULL START ?>
-<iframe src="/categories" style="width:100%; height:100%; border:none;" frameborder="0"></iframe>
+<iframe frameborder="0" src="/categories" style="width:100%; height:100%; border:none;">
+</iframe>
 <?php CATEGORIES PULL END ?>
- 
-
 </div>
 <?php SIDEBAR BODY END ?>
+<script>
 
-    <script>
-	    var currentCategory = 'yellow'; // default category
 
-        // Function to set category from iframe button click
-        function setCategory(category) {
-            currentCategory = category;
-            console.log('Category set to:', currentCategory);
-        }
-	
-        var map = L.map('map').setView([48.4102, 15.6022], 15);
+
+
+
+var map = L.map('map').setView([48.4102, 15.6022], 15);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             minZoom: 15,
             attribution: '© OpenStreetMap contributors | Stimmungskompass'
@@ -778,59 +940,346 @@ var baseLayers = {
         // Add default layer to map
         baseLayers["Standardkarte"].addTo(map);
 
-        // Layers control
-        L.control.layers(baseLayers).addTo(map);
+// Define a custom marker icon
+var customMarkerIcon = L.divIcon({
+    className: 'custom-marker-icon',
+    html: '<div style="width: 24px; height: 24px; border-radius: 50%; background-color: YOUR_CATEGORY_COLOR;"></div>',
+    iconSize: [24, 24],
+    iconAnchor: [12, 12] // Centers the icon
+});
 
-        var drawnItems = new L.FeatureGroup();
-        map.addLayer(drawnItems);
+// Global variable for the custom cursor icon
+var customCursorIcon;
 
-        var drawControl = new L.Control.Draw({
-            edit: {
-                featureGroup: drawnItems
+// Create and attach a custom cursor icon
+function createCustomCursorIcon(color) {
+    removeCustomCursorIcon();  // Ensure any existing custom cursor is removed
+    customCursorIcon = L.DomUtil.create('div', 'custom-cursor-icon');
+    customCursorIcon.innerHTML = '<div style="width: 24px; height: 24px; border-radius: 50%; background-color: ' + color + ';"></div>';
+    customCursorIcon.style.position = 'absolute';
+    customCursorIcon.style.pointerEvents = 'none';
+    customCursorIcon.style.zIndex = '1000'; // Set high z-index
+    document.body.appendChild(customCursorIcon);
+}
+
+// Function to update the position of the custom cursor icon
+function updateCustomCursorIconPosition(e) {
+    var mapDiv = map.getContainer(); // Get the map container
+    var mapRect = mapDiv.getBoundingClientRect();
+
+    // Check if the cursor is inside the map div
+    if (e.clientX >= mapRect.left && e.clientX <= mapRect.right && e.clientY >= mapRect.top && e.clientY <= mapRect.bottom) {
+        customCursorIcon.style.display = 'block'; // Show the cursor icon
+        customCursorIcon.style.left = e.clientX + 'px';
+        customCursorIcon.style.top = e.clientY + 'px';
+    } else {
+        customCursorIcon.style.display = 'none'; // Hide the cursor icon outside the map
+    }
+}
+
+
+
+// Remove the custom cursor icon
+function removeCustomCursorIcon() {
+    if (customCursorIcon) {
+        document.body.removeChild(customCursorIcon);
+        customCursorIcon = null;
+    }
+}
+
+// Layers control
+L.control.layers(baseLayers).addTo(map);
+
+// Feature group for drawn items
+// Feature group for drawn items
+// Feature group for drawn items
+var drawnItems = new L.FeatureGroup();
+map.addLayer(drawnItems);
+
+// Initialize the draw control with default options
+var drawControl = new L.Control.Draw({
+    edit: {
+        featureGroup: drawnItems
+    },
+    draw: {
+        marker: {
+            icon: customMarkerIcon // Use custom icon for marker
+        },
+        polyline: {
+            shapeOptions: {
+                color: currentCategory, // Default color
+                weight: 4
+            }
+        },
+        rectangle: {
+            shapeOptions: {
+                color: currentCategory, // Default color
+                weight: 4
+            }
+        },
+        circle: {
+            shapeOptions: {
+                color: currentCategory, // Default color
+                weight: 4
+            }
+        },
+        polygon: {
+            shapeOptions: {
+                color: currentCategory, // Default color
+                weight: 4
+            }
+        },
+    }
+});
+
+// Add the draw control to the map
+map.addControl(drawControl);
+
+// Function to update the draw handlers' options based on the current category
+function updateDrawHandlers() {
+    var options = {
+        color: currentCategory, // Dynamic color
+        weight: 4
+    };
+
+    // Check and update options for each handler
+    if (drawControl._toolbars.draw && drawControl._toolbars.draw._modes) {
+        if (drawControl._toolbars.draw._modes.rectangle) {
+            drawControl._toolbars.draw._modes.rectangle.handler.options.shapeOptions = options;
+        }
+        if (drawControl._toolbars.draw._modes.circle) {
+            drawControl._toolbars.draw._modes.circle.handler.options.shapeOptions = options;
+        }
+        if (drawControl._toolbars.draw._modes.polygon) {
+            drawControl._toolbars.draw._modes.polygon.handler.options.shapeOptions = options;
+        }
+        if (drawControl._toolbars.draw._modes.polyline) {
+            drawControl._toolbars.draw._modes.polyline.handler.options.shapeOptions = options;
+        }
+    }
+}
+
+// Event listener for shape creation end
+map.on(L.Draw.Event.CREATED, function(event) {
+    console.log('Shape created:', event.layerType);
+    var layer = event.layer;
+    drawnItems.addLayer(layer); // Add to feature group
+});
+
+
+
+
+// Function to set cursor style for map and its child elements
+function setCursorStyleForMap(cursorStyle) {
+    var mapContainer = map.getContainer();
+    mapContainer.style.cursor = cursorStyle;
+
+    // Apply cursor style to current child elements
+    Array.from(mapContainer.getElementsByTagName('*')).forEach(function(element) {
+        element.style.cursor = cursorStyle;
+    });
+
+    // Use a MutationObserver to apply the style to new elements added to the map
+    var observer = new MutationObserver(function(mutations) {
+        mutations.forEach(function(mutation) {
+            if (mutation.addedNodes.length) {
+                mutation.addedNodes.forEach(function(node) {
+                    if (node.nodeType === 1) { // Element node
+                        node.style.cursor = cursorStyle;
+                        Array.from(node.getElementsByTagName('*')).forEach(function(child) {
+                            child.style.cursor = cursorStyle;
+                        });
+                    }
+                });
             }
         });
-        map.addControl(drawControl);
+    });
 
+    // Start observing the map container for added nodes
+    observer.observe(mapContainer, { childList: true, subtree: true });
 
-	
-		
-    map.on(L.Draw.Event.CREATED, function(event) {
-        var layer = event.layer;
-        var type = event.layerType;
-        var color = currentCategory; // Use the currentCategory as the color for the shape
-        var shapeType = layer instanceof L.Marker ? 'marker' : type.toLowerCase();
+    // Store the observer in a global variable to disconnect it later
+    window.mapCursorObserver = observer;
+}
 
-    layer.options.shapeType = type.toLowerCase(); // Make sure this is consistent with your types
-
-    
-    // Apply the selected category's color to the shape
-    if (type === 'marker') {
-        // For markers, set the icon color based on category
-        // You will need to have custom icons for this or use a plugin
-    } else {
-        // For other types like polygons, set the color directly
-        layer.setStyle({ color: currentCategory });
+// Function to reset cursor style and stop observing for changes
+function resetCursorStyleForMap() {
+    if (window.mapCursorObserver) {
+        window.mapCursorObserver.disconnect(); // Disconnect the observer
+        delete window.mapCursorObserver;
     }
 
-    drawnItems.addLayer(layer);
-    var shapeData = layer.toGeoJSON();
-    var shapeType = layer instanceof L.Marker ? 'marker' : type.toLowerCase();
-    var radius = type === 'circle' || type === 'circlemarker' ? layer.getRadius() : null;
+    var mapContainer = map.getContainer();
+    mapContainer.style.cursor = ''; // Reset cursor style
 
-	// Populate the shapeLayersByColor and shapeLayersByType objects
-        if (!shapeLayersByColor[color]) {
-            shapeLayersByColor[color] = [];
+    // Reset cursor style for child elements
+    Array.from(mapContainer.getElementsByTagName('*')).forEach(function(element) {
+        element.style.cursor = '';
+    });
+}
+
+// Flag to track if warning has already been shown
+var warningShown = false;
+
+// Function to show warning message
+function showWarningMessage(message) {
+    if (!warningShown) {
+        console.log('Warning:', message);
+        alert(message);
+        warningShown = true; // Set the flag to true after showing the warning
+    }
+}
+
+// Function to reset the warning flag
+function resetWarningFlag() {
+    warningShown = false; // Reset the flag when drawing is stopped or started
+}
+
+// Function to check if a category is selected
+function isCategorySelected() {
+    return currentCategory && currentCategory !== '';
+}
+
+// Updated setCategory function
+function setCategory(category) {
+    currentCategory = category;
+    console.log('Category set to:', currentCategory);
+    updateDrawHandlers(); // Update draw handlers when category changes
+
+    // Debugging: Check if the setCategory function is called
+    console.log('setCategory called with category:', category);
+
+    // Attempt to find the marker tool button and click it programmatically
+    var markerToolButton = document.querySelector('.leaflet-draw-draw-marker');
+    if (markerToolButton) {
+        console.log('Marker tool button found:', markerToolButton);
+        markerToolButton.click(); // Simulate a click on the marker tool
+        console.log('Marker tool activated programmatically');
+    } else {
+        console.log('Marker tool button not found');
+    }
+}
+
+// Function to programmatically activate the marker tool
+function activateMarkerTool() {
+    var markerToolButton = document.querySelector('.leaflet-draw-draw-marker');
+    if (markerToolButton) {
+        markerToolButton.click(); // Simulate a click on the marker tool
+        console.log('Marker tool activated programmatically');
+    }
+}
+
+var currentCategory = ''; // Start with no category selected
+
+// Event listener for when the draw tool is selected
+// Update event listener for when the draw tool is selected
+map.on(L.Draw.Event.TOOLBAROPENED, function() {
+    console.log('Draw toolbar opened');
+    resetWarningFlag(); // Reset the warning flag
+    if (!isCategorySelected()) {
+        showWarningMessage('Select a category first');
+    }
+});
+
+// Event listener for when the marker tool is selected
+map.on(L.Draw.Event.DRAWSTART, function(event) {
+    console.log('Draw start:', event.layerType);
+    resetWarningFlag(); // Reset the warning flag
+    if (!isCategorySelected()) {
+        showWarningMessage('Select a category first');
+        if (drawControl._toolbars.draw._activeMode) {
+            drawControl._toolbars.draw._activeMode.handler.disable();
         }
-        if (!shapeLayersByType[shapeType]) {
-            shapeLayersByType[shapeType] = [];
-        }
-        shapeLayersByColor[color].push(layer);
-        shapeLayersByType[shapeType].push(layer);
-        console.log('Added layer to shapeLayersByColor and shapeLayersByType', layer);
+        return;
+    }
+
+
+    if (event.layerType === 'marker') {
+        createCustomCursorIcon(currentCategory);
+        document.addEventListener('mousemove', updateCustomCursorIconPosition);
+        setCursorStyleForMap('none');
+    }
+});
+
+// Update event listener for when drawing is stopped
+map.on(L.Draw.Event.DRAWSTOP, function(event) {
+    console.log('Draw stop:', event.layerType);
+    resetWarningFlag(); // Reset the warning flag
+    if (event.layerType === 'marker') {
+        removeCustomCursorIcon();
+        document.removeEventListener('mousemove', updateCustomCursorIconPosition);
+        resetCursorStyleForMap();
+    }
+});
+
+
+
+
 
 
 	
-    // Bind popup to the layer
+	// Function to create a colored circle icon
+function createColoredCircleIcon(color) {
+    var svgIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="10" fill="${color}" />
+    </svg>`;
+
+    return L.icon({
+        iconUrl: `data:image/svg+xml;base64,${btoa(svgIcon)}`,
+        iconSize: [24, 24],
+        iconAnchor: [12, 12],
+        popupAnchor: [0, -12]
+    });
+}
+
+var postButtonClicked = false;
+
+map.on(L.Draw.Event.CREATED, function(event) {
+    // Reset the flag for the new popup
+    postButtonClicked = false;
+
+    var layer = event.layer;
+    var type = event.layerType;
+    var color = currentCategory;
+    var shapeType = type.toLowerCase();
+
+ layer.options.shapeType = shapeType;
+
+    
+    // Check if the created layer is a marker
+     if (type === 'marker') {
+        var customIcon = createColoredCircleIcon(color);
+        layer.setIcon(customIcon);
+    } else {
+        layer.setStyle({ color: color });
+    }
+	
+	let badWords = [];
+
+
+// Fetch the list of bad words from filter.json
+fetch('/static/filter.json')
+    .then(response => response.json())
+    .then(data => {
+        // Merge the arrays of bad words from different languages into one array
+        badWords = [].concat(...Object.values(data));
+    });
+
+ 
+    drawnItems.addLayer(layer);
+    var shapeData = layer.toGeoJSON();
+    var radius = (type === 'circle' || type === 'circlemarker') ? layer.getRadius() : null;
+
+    if (!shapeLayersByColor[color]) {
+        shapeLayersByColor[color] = [];
+    }
+    if (!shapeLayersByType[shapeType]) {
+        shapeLayersByType[shapeType] = [];
+    }
+    shapeLayersByColor[color].push(layer);
+    shapeLayersByType[shapeType].push(layer);
+    console.log('Added layer to shapeLayersByColor and shapeLayersByType', layer);
+
     var popupContent = '<form id="note-form">' +
                        '<textarea id="shape-note" placeholder="Enter your note here"></textarea><br>' +
                        '<button type="button" id="save-note">Post</button>' +
@@ -840,39 +1289,74 @@ var baseLayers = {
     layer.bindPopup(popupContent, {
         keepInView: true,
         closeButton: false
-    }).openPopup();
+    });
+	
+ // Delay opening the popup to ensure it is rendered
+    setTimeout(function() {
+        layer.openPopup();
+    }, 10);
 
-    layer.on('popupopen', function() {
-        // Add event listeners inside the popupopen event to ensure elements are available
-        var saveButton = document.getElementById('save-note');
-        var cancelButton = document.getElementById('cancel-note');
+     layer.on('popupopen', function() {
+        setTimeout(function() {
+            var saveButton = document.getElementById('save-note');
+            var cancelButton = document.getElementById('cancel-note');
 
-        // Save note button event listener
-        saveButton.addEventListener('click', function() {
-            var noteText = document.getElementById('shape-note').value;
-            console.log('Post button clicked. Saving note:', noteText);
-            saveShapeWithData(shapeData, shapeType, radius, noteText, layer);
-            layer.closePopup();
-        });
+            saveButton.addEventListener('click', function() {
+                var noteText = document.getElementById('shape-note').value;
 
-        // Cancel note button event listener
-        cancelButton.addEventListener('click', function() {
-            console.log('Cancel button clicked. Canceling shape creation.');
-            layer.closePopup();
-            drawnItems.removeLayer(layer);
-        });
+                // Create a RegExp pattern from the list of bad words
+                const badWordPattern = new RegExp(`${badWords.join('|')}`, 'i');
+                const hasBadWord = badWordPattern.test(noteText);
+
+                if (hasBadWord) {
+                    alert("Beleidigende Worte sind nicht erlaubt.");
+                    return;
+                }
+
+                // Pattern to detect repeated letters (same letter repeating more than 4 times)
+                const repeatedLetterPattern = /(.)\1{4,}/;
+                const hasRepeatedLetters = repeatedLetterPattern.test(noteText);
+
+                if (hasRepeatedLetters) {
+                    alert("Wiederholte Buchstaben sind nicht erlaubt.");
+                    return;
+                }
+
+                // Pattern to detect links (http, https, www, or domain names)
+                const linkPattern = /(http:\/\/|https:\/\/|www\.|\.(com|net|org|info|io|at|de|uk|co|gov|edu|eu|biz|tv|me|us|ca|au|nz))/i;
+                const hasLink = linkPattern.test(noteText);
+
+                if (hasLink) {
+                    alert("Links sind nicht erlaubt.");
+                    return;
+                }
+
+                if (noteText.length >= 10 && noteText.length <= 150) {
+                    // Your existing logic to save shape with data
+                    saveShapeWithData(shapeData, shapeType, radius, noteText, layer);
+                } else {
+                    alert("Bitte geben Sie zwischen 10 und 150 Zeichen ein.");
+                }
+
+                layer.closePopup();
+            });
+
+            cancelButton.addEventListener('click', function() {
+                console.log('Cancel button clicked. Canceling shape creation.');
+                layer.closePopup();
+                drawnItems.removeLayer(layer);
+            });
+        }, 10);
     });
 });
 
-// Function to save shape with a note
 function bindPopupWithNote(layer, note) {
-    var popupContent = '<div><strong>Note:</strong> ' + note + '</div>';
+    var popupContent = '<div><strong></strong> ' + note + '</div>';
     layer.bindPopup(popupContent, {
         keepInView: true
     });
 }
 
-// Function to save shape with a note and then bind the popup
 function saveShapeWithData(shapeData, shapeType, radius, note, layer) {
     $.ajax({
         url: '/api/shapes',
@@ -887,8 +1371,8 @@ function saveShapeWithData(shapeData, shapeType, radius, note, layer) {
         }),
         success: function(response) {
             console.log('Shape saved with ID:', response.id);
-            layer.options.id = response.id; // Assign the ID from the response to the layer immediately
-            bindPopupWithNote(layer, note); // Bind the popup with the note
+            layer.options.id = response.id;
+            bindPopupWithNote(layer, note);
             drawnItems.addLayer(layer);
             console.log('Shape and note saved to the database.');
         },
@@ -939,61 +1423,51 @@ function handleDelete(layer) {
         }
     }
 }
-  // Function to load shapes from the server
-    function loadShapes() {
-    console.log('Stimmungskompass v8.11.2023_rc1 | Ermine | Loading shapes...');
+ 
+// Function to load shapes from the server
+function loadShapes() {
+    console.log('Loading shapes...');
     $.get('/api/shapes', function(response) {
-        console.log('Loading successful, total shapes received:', response.shapes.length);
+        console.log('Shapes loaded:', response.shapes.length);
         response.shapes.forEach(function(shape) {
             var shapeLayer;
             var center, radius, popupContent;
-            var shapeType = shape.shape_type.toLowerCase(); // Make sure 'shapeType' is defined correctly based on your API response
+            var shapeType = shape.shape_type.toLowerCase();
 
+            if (shapeType === 'marker') {
+                center = L.GeoJSON.coordsToLatLng(shape.shape_data.geometry.coordinates);
+                // Create a custom icon with the shape color
+                var customIcon = createColoredCircleIcon(shape.shape_color);
+                shapeLayer = L.marker(center, { icon: customIcon });
+            } else if (shapeType === 'circle' || shapeType === 'circlemarker') {
+                center = L.GeoJSON.coordsToLatLng(shape.shape_data.geometry.coordinates);
+                radius = shape.radius;
+                shapeLayer = L.circle(center, { color: shape.shape_color, radius: radius });
+            } else {
+                shapeLayer = L.geoJSON(shape.shape_data, {
+                    style: function() { return { color: shape.shape_color }; }
+                });
+            }
 
-                if (shapeType === 'circle' || shapeType === 'circlemarker') {
-                    center = L.GeoJSON.coordsToLatLng(shape.shape_data.geometry.coordinates);
-                    radius = shape.radius;
-                    shapeLayer = L.circle(center, { color: shape.shape_color, radius: radius });
-                } else {
-                    shapeLayer = L.geoJSON(shape.shape_data, {
-                        style: function() { return { color: shape.shape_color }; }
-                    });
-                }
+            // Attach the ID to the layer
+            shapeLayer.options.id = shape.id;
 
-                // Attach the ID to the layer
-                shapeLayer.options.id = shape.id;
-				shapeLayer.options.shapeType = shapeType; // Make sure 'shapeType' is defined correctly based on your API response
+            // Bind popup and click event if a note is present
+            if (shape.shape_note) {
+                popupContent = '<div><strong></strong> ' + shape.shape_note + '</div>';
+                shapeLayer.bindPopup(popupContent, {
+                    keepInView: true
+                });
+            }
 
-
-                // Initialize arrays if they don't exist
-                if (!shapeLayersByColor[shape.shape_color]) {
-                    shapeLayersByColor[shape.shape_color] = [];
-                }
-                if (!shapeLayersByType[shapeType]) {
-                    shapeLayersByType[shapeType] = [];
-                }
-
-                // Add the layer to the respective arrays
-                shapeLayersByColor[shape.shape_color].push(shapeLayer);
-                shapeLayersByType[shapeType].push(shapeLayer);
-
-                // Bind popup and click event if a note is present
-                if (shape.shape_note) {
-                    popupContent = '<div><strong>Note:</strong> ' + shape.shape_note + '</div>';
-                    shapeLayer.bindPopup(popupContent, {
-                        keepInView: true
-                    });
-                }
-
-                // Add the layer to the map
-                drawnItems.addLayer(shapeLayer);
-                console.log('Shape loaded and added to map:', shapeLayer);
-            });
-            console.log('Shapes loaded.');
-        }).fail(function(jqXHR, textStatus, errorThrown) {
-            console.error('Failed to load shapes:', textStatus, errorThrown);
+            // Add the layer to the map
+            drawnItems.addLayer(shapeLayer);
+            console.log('Shape added to map:', shapeLayer);
         });
-    }
+    }).fail(function(jqXHR, textStatus, errorThrown) {
+        console.error('Failed to load shapes:', textStatus, errorThrown);
+    });
+}
 
 
 
@@ -1017,21 +1491,19 @@ map.on('draw:deletestop', function(event) {
 });
 
 loadShapes();
+  </script>
 
-
-</script>
-	
-	
-	
-
+  
 <?php DARK AND LIGHT MODE SWITCH START ?>
 <script>
 // Dark and light mode switcher
-console.log("Dark and light mode switcher succesfully loaded.");
+console.log("Dark and light mode switcher successfully loaded.");
 let isLightMode = false;  // Initialize with dark mode
 
 // Ensure the dark mode is set on initial load
 document.documentElement.classList.add('dark-mode');
+document.documentElement.style.setProperty('--popup-bg-color', '#111111');
+document.documentElement.style.setProperty('--popup-text-color', 'white');
 
 // Function to switch between light and dark mode
 function toggleLightMode() {
@@ -1040,6 +1512,21 @@ function toggleLightMode() {
   document.documentElement.classList.toggle('dark-mode', !isLightMode);
   document.documentElement.classList.toggle('light-mode', isLightMode);
 
+	// Update color variables for popup based on the mode
+    if (isLightMode) {
+        document.documentElement.style.setProperty('--popup-bg-color', '#ffffff');
+        document.documentElement.style.setProperty('--popup-text-color', 'black');
+		document.documentElement.style.setProperty('--border-hover-color', '#666666'); // Custom border color for hover in light mode
+		document.documentElement.style.setProperty('--border-selected-color', '#444444'); // Custom border color for selected in light mode
+ 
+    } else {
+        document.documentElement.style.setProperty('--popup-bg-color', '#111111');
+        document.documentElement.style.setProperty('--popup-text-color', 'white');
+		document.documentElement.style.setProperty('--border-hover-color', '#cccccc'); // Reset to dark mode colors
+		document.documentElement.style.setProperty('--border-selected-color', '#aaaaaa');
+
+    }
+	
   // Helper function to safely set the src attribute for all elements matching the selector
   function setImgSrc(selector, lightSrc, darkSrc) {
     const elements = document.querySelectorAll(selector);
@@ -1091,42 +1578,10 @@ function toggleLightMode() {
 
 // Add event listener to the light switch div
 document.getElementById('lightswitchDiv').addEventListener('click', toggleLightMode);
+  </script>
 
-</script>
-<style>
-
-/* Dark mode styles (default) */
-.dark-mode {
-    --bg-color1: #1b1b1b;
-    --bg-color2: #111111;
-    --bg-color3: #3a3a3a;
-    --text-color: #ffffff;
-    --logo-img: "static/logo_long.png";
-    --key-icon: "static/keyicon.png";
-    --sun-icon: "static/sunicon.png";
-    --info-icon: "static/infoicon.png";
-    --pinlist-icon: "static/pinlisticon.png";
-	--border-hover-color: white; /* Set hover border color for dark mode */
-    --border-selected-color: white; /* Set selected border color for dark mode */
-}
-
-/* Light mode styles */
-.light-mode {
-    --bg-color1: #F4F4ED;
-    --bg-color2: #D4D7DA;
-    --bg-color3: #000000;
-    --text-color: #000000;
-    --logo-img: "static/logo_long2.png";
-    --key-icon: "static/keyicon2.png";
-    --sun-icon: "static/sunicon2.png";
-    --info-icon: "static/infoicon2.png";
-    --pinlist-icon: "static/pinlisticon2.png";
-	--border-hover-color: black !important; /* Set hover border color for light mode */
-    --border-selected-color: black !important; /* Set selected border color for light mode */
-}
-</style>
 <script>
-// On website launch, the layout is DARK.
+   // On website launch, the layout is DARK.
 let isDarkMode = true;
 
 function togglePopup() {
@@ -1134,15 +1589,14 @@ function togglePopup() {
     document.documentElement.classList.toggle('dark-mode', isDarkMode);
     document.documentElement.classList.toggle('light-mode', !isDarkMode);
 }
-</script>
+  </script>
 <?php DARK AND LIGHT MODE SWITCH END ?>
-
 <?php BUTTON CLICK AUDIO EFFECTS START ?>
 <audio id="buttonClickAudio" preload="auto">
-    <source src="static/buttonclick.mp3" type="audio/mp3"/>
+<source src="static/buttonclick.mp3" type="audio/mp3"/>
 </audio>
 <script>
-document.addEventListener('DOMContentLoaded', function() {
+   document.addEventListener('DOMContentLoaded', function() {
     function playClickSound() {
         // Create a new audio element for each click
         var audio = new Audio('static/buttonclick.mp3');
@@ -1160,9 +1614,9 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 });
-</script>
+  </script>
 <script>
-// General click sound effect
+   // General click sound effect
 document.addEventListener('DOMContentLoaded', function() {
     // Get the audio element
     const audio = document.getElementById('buttonClickAudio');
@@ -1216,11 +1670,15 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 	
 });
-</script>
-<audio id="buttonClickAudio2"><source src="static/buttonclickSuccess.mp3" type="audio/mp3"/></audio>
-<audio id="buttonClickAudio3"><source src="static/buttonclickClose.mp3" type="audio/mp3"/></audio>
+  </script>
+<audio id="buttonClickAudio2">
+<source src="static/buttonclickSuccess.mp3" type="audio/mp3"/>
+</audio>
+<audio id="buttonClickAudio3">
+<source src="static/buttonclickClose.mp3" type="audio/mp3"/>
+</audio>
 <script>
-// Popup closing sound effect
+   // Popup closing sound effect
 document.addEventListener('DOMContentLoaded', function() {
     // Get the audio elements
     const audioSuccess = document.getElementById('buttonClickAudio2');
@@ -1235,12 +1693,11 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 });
-</script>
+  </script>
 <?php BUTTON CLICK AUDIO EFFECTS END ?>
-
 <?php BOTTOM RIGHT CORNER INFOPOPUP LOGIC START ?>
 <script>
-document.addEventListener("DOMContentLoaded", () => {
+   document.addEventListener("DOMContentLoaded", () => {
     const popupTexts = {  
         'Login': {
 			title: '<span style="color: #35b7ff;">Admin-Zugriff</span>',
@@ -1605,11 +2062,10 @@ if (adminPinResize) {
         });
     });
 });
-</script>
+  </script>
 <?php BOTTOM RIGHT CORNER INFOPOPUP LOGIC END ?>
-
 <script>
-function handleLogin() {
+   function handleLogin() {
   // Assuming you have form inputs with IDs 'username', 'password', and 'otp'
   var username = document.getElementById('username').value;
   var password = document.getElementById('password').value;
@@ -1795,14 +2251,10 @@ function loadAdminTools() {
   };
   xhr.send();
 }
-
-
-	
-</script>
-
+  </script>
 <?php ADMINTOOLS CATEGORIES TOGGLING START ?>
 <script>
-    function toggleCategory2Menu() {
+   function toggleCategory2Menu() {
         var category2Menu = document.getElementById('category2-menu');
         if (category2Menu.style.display === 'none') {
             category2Menu.style.display = 'block';
@@ -1810,10 +2262,9 @@ function loadAdminTools() {
             category2Menu.style.display = 'none';
         }
     }
-</script>
-
+  </script>
 <script>
-function toggleHeatmapMenu() {
+   function toggleHeatmapMenu() {
   var heatmapSettings = document.getElementById("heatmapSettings");
   if (heatmapSettings.style.display === "none" || heatmapSettings.style.display === "") {
     heatmapSettings.style.display = "block";
@@ -1821,10 +2272,9 @@ function toggleHeatmapMenu() {
     heatmapSettings.style.display = "none";
   }
 }
-</script>
-
+  </script>
 <script>
-    function toggleEditorMenu() {
+   function toggleEditorMenu() {
         var editorMenu = document.getElementById('editor-menu');
         if (editorMenu.style.display === 'none') {
             editorMenu.style.display = 'block';
@@ -1832,10 +2282,9 @@ function toggleHeatmapMenu() {
             editorMenu.style.display = 'none';
         }
     }
-</script>
-
+  </script>
 <script>
-    function togglePinsExportMenu() {
+   function togglePinsExportMenu() {
         var menu = document.getElementById('pinsexport-menu');
         var button = document.getElementById('pinsexport-menu-button');
         if (menu.style.display === 'none' || menu.style.display === '') {
@@ -1845,10 +2294,10 @@ function toggleHeatmapMenu() {
             button.classList.remove('toggled');
         }
     }
-</script>
+  </script>
 <?php ADMINTOOLS CATEGORIES TOGGLING END ?>
 <script>
-    // Assuming jQuery is included
+   // Assuming jQuery is included
 	
     var shapeLayersByColor = {};
     var shapeLayersByType = {};
@@ -1961,10 +2410,9 @@ function toggleVisibilityByType(type) {
 
         console.log("Counters displayed.");
     });
-</script>
-
-    <script>
-    // Fetch and display all objects and populate filters when the page loads
+  </script>
+<script>
+   // Fetch and display all objects and populate filters when the page loads
 document.addEventListener('DOMContentLoaded', function() {
     fetch('/api/all-shapes').then(response => response.json()).then(data => {
         displayObjects(data.shapes);
@@ -1989,12 +2437,48 @@ function populateColorFilter(shapes) {
 
         // Display objects in the list
         function displayObjects(objects) {
-            const objectList = document.getElementById('object-list');
-            objectList.innerHTML = ''; // Clear the current list
-            objects.forEach(object => {
-                objectList.innerHTML += `<div>${object.shape_type} | ${object.shape_color} | ${object.shape_note}</div>`;
-            });
-        }
+		const objectList = document.getElementById('object-list');
+		objectList.innerHTML = ''; // Clear the current list
+		objects.forEach(object => {
+			const objectDiv = document.createElement('div');
+			objectDiv.textContent = `${object.shape_type} | ${object.shape_color} | ${object.shape_note}`;
+			
+			// Add hover event to center map on object location
+			objectDiv.addEventListener('mouseenter', () => centerMapOnObject(object));
+
+			// Add delete button
+			const deleteBtn = document.createElement('button');
+			deleteBtn.textContent = 'Delete';
+			deleteBtn.addEventListener('click', () => deleteObject(object.id));
+			objectDiv.appendChild(deleteBtn);
+
+			objectList.appendChild(objectDiv);
+		});
+	}
+	
+	// Function to center map on object location
+	function centerMapOnObject(object) {
+		console.log(`Centering map on object: ${object.id}`);
+		// Add your map centering logic here
+	}
+
+	// Function to delete an object
+	function deleteObject(objectId) {
+		console.log(`Deleting object: ${objectId}`);
+		fetch(`/api/delete-object/${objectId}`, { method: 'DELETE' })
+			.then(response => response.json())
+			.then(data => {
+				if (data.success) {
+					console.log(`Object ${objectId} deleted successfully.`);
+					// Refresh the object list
+					fetch('/api/all-shapes').then(response => response.json()).then(data => {
+						displayObjects(data.shapes);
+					});
+				} else {
+					console.error(`Failed to delete object ${objectId}.`);
+				}
+			});
+	}
 
         // Function to filter objects based on the search input and selected filters
         function filterObjects() {
@@ -2023,9 +2507,9 @@ function populateColorFilter(shapes) {
                 displayObjects(filteredObjects);
             });
         }
-    </script>
-	<script>
-function toggleSearchFilter() {
+  </script>
+<script>
+   function toggleSearchFilter() {
     var searchFilterSection = document.getElementById('search-filter-section');
     var overlayImage = document.getElementById('overlay-image');
 
@@ -2043,49 +2527,24 @@ function toggleSearchFilter() {
         overlayImage.style.display = 'none';
     }
 }
-
-</script>
+  </script>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const popupOverlay = document.getElementById('popup-overlay');
-    const closePopupButton = document.getElementById('close-popup');
-    const dontShowAgainButton = document.getElementById('dont-show-again');
-    const editPopupButton = document.getElementById('edit-popup');
-    const savePopupContentButton = document.getElementById('save-popup-content');
-    const quillEditor = new Quill('#quill-editor', {theme: 'snow'});
+// Event delegation to handle clicks on category buttons
+document.addEventListener('click', function(e) {
+    // Check if the clicked element has the 'categorybutton' class
+    if (e.target.classList.contains('categorybutton')) {
+        // Remove 'selected' class from all category buttons
+        document.querySelectorAll('.categorybutton').forEach(function(btn) {
+            btn.classList.remove('selected');
+        });
 
-    // Check if the 'dontShowPopup' cookie is set
-    if (!document.cookie.split(';').some((item) => item.trim().startsWith('dontShowPopup='))) {
-        popupOverlay.style.display = 'flex';
+        // Add 'selected' class to the clicked button
+        e.target.classList.add('selected');
     }
-
-    // Close popup and set cookie if "Don't show this again" is clicked
-    dontShowAgainButton.addEventListener('click', function() {
-        document.cookie = "dontShowPopup=true; max-age=86400; path=/"; // Expires in 1 day
-        popupOverlay.style.display = 'none';
-    });
-
-    // Close popup without setting cookie
-    closePopupButton.addEventListener('click', function() {
-        popupOverlay.style.display = 'none';
-    });
-
-    // Toggle editor visibility
-    editPopupButton.addEventListener('click', function() {
-        const editor = document.getElementById('editor');
-        editor.style.display = editor.style.display === 'none' ? 'block' : 'none';
-    });
-
-    // Save the popup content
-    savePopupContentButton.addEventListener('click', function() {
-        const popupContent = document.getElementById('popup-text');
-        popupContent.innerHTML = quillEditor.root.innerHTML;
-        // Save the content to server or local storage here
-        // For now, just hiding the editor
-        document.getElementById('editor').style.display = 'none';
-    });
 });
 </script>
+
+
 </body>
 </html>

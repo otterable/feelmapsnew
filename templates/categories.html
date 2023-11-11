@@ -25,15 +25,45 @@
             border: none; /* Removes border */
         }
 
-        .categorybutton:hover {
-            opacity: 0.9; /* Slight transparency on hover */
-        }
+    .categorybutton:hover {
+        filter: brightness(85%);
+        outline: 3px solid white;
+        outline-offset: -3px;
+    }
 
+    .categorybutton.selected {
+        filter: brightness(85%);
+        outline: 5px solid white;
+        outline-offset: -5px;
+    }
+     
         .categorybutton h3 {
             margin: 0; /* Removes any default margin */
             color: white;
         }
 		
+     .hamburger-menu {
+            display: none;
+            flex-direction: column;
+            position: absolute;
+            top: 20px; /* Adjust as needed */
+            right: 20px; /* Adjust as needed */
+            background-color: #fff;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            padding: 10px;
+        }
+        .hamburger-menu button {
+            margin-bottom: 5px;
+        }
+        #hamburger-icon {
+            display: none;
+            position: absolute;
+            top: 20px; /* Adjust as needed */
+            right: 20px; /* Adjust as needed */
+            cursor: pointer;
+        }
+
     </style>
 </head>
 <body>
@@ -45,5 +75,95 @@
 <button class="categorybutton" onclick="parent.setCategory('#4E342E')" style="background-color: #4E342E;"><h3>Dieser Ort braucht eine Verbesserung.</h3></button>
 <button class="categorybutton" onclick="parent.setCategory('#212121')" style="background-color: #212121;"><h3>An diesem Ort fehlt ein Service.</h3></button>
 </div>
+ <div id="hamburger-icon">☰</div>
+    <div class="hamburger-menu" id="hamburger-menu">
+   <!-- Dynamically filled with category buttons -->
+    </div>
+
+
 </body>
 </html>
+
+ <audio id="buttonClickAudio" preload="auto">
+    <source src="static/buttonclick.mp3" type="audio/mp3"/>
+  </audio>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const audio = document.getElementById('buttonClickAudio');
+      const categoryButtons = document.querySelectorAll('.categorybutton');
+
+      categoryButtons.forEach((button) => {
+        button.addEventListener('click', function() {
+          audio.play();
+        });
+      });
+    });
+  </script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    let clickableMenus = document.querySelectorAll('.categorybutton');
+
+    clickableMenus.forEach(menu => {
+        menu.addEventListener('click', function(e) {
+            // Unselect all
+            clickableMenus.forEach(m => m.classList.remove('selected'));
+
+            // Select the clicked one
+            e.currentTarget.classList.add('selected');
+        });
+    });
+});
+</script>
+<script>
+const categoryChoices = document.getElementById('category-choices');
+            const hamburgerMenu = document.getElementById('hamburger-menu');
+            const hamburgerIcon = document.getElementById('hamburger-icon');
+
+            function adjustButtonPadding() {
+                // Debugging log
+                console.log('Adjusting button padding...');
+
+                let totalHeight = 0;
+                const buttons = document.querySelectorAll('.categorybutton');
+                buttons.forEach(button => {
+                    totalHeight += button.offsetHeight;
+                });
+
+                const maxHeight = window.innerHeight - 40; // 20px from top and bottom
+                if (totalHeight > maxHeight) {
+                    // Convert to hamburger menu
+                    // Debugging log
+                    console.log('Converting to hamburger menu...');
+
+                    hamburgerIcon.style.display = 'block';
+                    buttons.forEach(button => {
+                        hamburgerMenu.appendChild(button.cloneNode(true));
+                    });
+                    categoryChoices.style.display = 'none';
+                } else {
+                    // Adjust padding
+                    let padding = 5;
+                    while (totalHeight < maxHeight && padding < 50) {
+                        padding++;
+                        buttons.forEach(button => {
+                            button.style.padding = padding + 'px';
+                        });
+                        totalHeight = 0;
+                        buttons.forEach(button => {
+                            totalHeight += button.offsetHeight;
+                        });
+                    }
+                    // Debugging log
+                    console.log('Final padding set to:', padding);
+                }
+            }
+
+            adjustButtonPadding();
+            window.addEventListener('resize', adjustButtonPadding);
+
+            hamburgerIcon.addEventListener('click', function() {
+                hamburgerMenu.style.display = hamburgerMenu.style.display === 'block' ? 'none' : 'block';
+            });
+</script>

@@ -461,23 +461,44 @@ def get_all_shapes():
     ]
     return jsonify(shapes=shapes_data)
 
-@app.route('/save-popup-content', methods=['POST'])
-def save_popup_content():
-    content = request.json.get('content')
-    # Save this content to a file or database
-    # For example, writing to a file:
-    with open('popup_content.html', 'w') as file:
-        file.write(content)
-    return jsonify(success=True)
+# Add a route to retrieve and update the popup content
+@app.route('/popup-content', methods=['GET', 'POST'])
+def popup_content():
+    if request.method == 'POST':
+        try:
+            content = request.form.get('content')
+            # Save the content to a file or database as required
+            with open('index.html', 'w') as file:
+                file.write(content)
+            app.logger.debug('Popup content updated.')
+            return jsonify(success=True), 200
+        except Exception as e:
+            app.logger.debug(f'Error updating popup content: {e}')
+            return jsonify(success=False, error=str(e)), 500
+    else:
+        try:
+            with open('index.html', 'r') as file:
+                content = file.read()
+            return jsonify(content=content), 200
+        except Exception as e:
+            app.logger.debug(f'Error retrieving popup content: {e}')
+            return jsonify(error=str(e)), 500
 
-@app.route('/load-popup-content', methods=['GET'])
-def load_popup_content():
-    # Load the content from a file or database
-    # For example, reading from a file:
-    with open('popup_content.html', 'r') as file:
-        content = file.read()
-    return jsonify(content=content)
 
-
+@app.route('/api/delete-object/<int:object_id>', methods=['DELETE'])
+def delete_object(object_id):
+    try:
+        # Find the object by its ID and delete it from the database
+        object_to_delete = Shape.query.get(object_id)
+        if object_to_delete:
+            db.session.delete(object_to_delete)
+            db.session.commit()
+            return jsonify({'success': True, 'message': 'Object deleted successfully.'})
+        else:
+            return jsonify({'success': False, 'message': 'Object not found.'}), 404
+    except Exception as e:
+        db.session.rollback()  # Rollback in case of any error
+        return jsonify({'success': False, 'message': str(e)}), 500
+        
 if __name__ == '__main__':
     app.run(debug=True)

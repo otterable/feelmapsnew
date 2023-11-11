@@ -1,5 +1,10 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
+<!-- Include stylesheet -->
+<link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet"/>
+<!-- Include the Quill library -->
+<script src="https://cdn.quilljs.com/1.3.6/quill.js">
+</script>
 
 <div class="admintools-container color-111111 text-white" style="display:block;             color: #ffffff;  /* This makes the text color white */ ; margin-top: 15px;  margin-bottom: 15px; border-radius: 30px">
 <button class="button-s" id="aboutBtnEditor" onclick="toggleEditorMenu()" style="background-color: #35b7ff">Texteditor</button>
@@ -258,6 +263,8 @@ function fetchCategories() {
 <button id="delete-object-type-objects">Delete Objects</button>
 
 
+
+
 <script>
 $(document).ready(function() {
     // Populate the delete category dropdown
@@ -305,5 +312,148 @@ $(document).ready(function() {
     });
 
     // Other JavaScript code here...
+});
+</script>
+
+
+<!-- Quill Editor -->
+<div id="editor" style="height: 300px;"></div>
+<button id="save-popup-content">Save</button>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Initialize the color pickers with Spectrum
+  $("#text-color-picker").spectrum({
+    color: "#000", // Initial color
+    change: function(color) {
+      quill.format('color', color.toHexString());
+    }
+  });
+
+  $("#highlight-color-picker").spectrum({
+    color: "#fff", // Initial color, white for highlight
+    change: function(color) {
+      quill.format('background', color.toHexString());
+    }
+  });
+
+  // Initialize Quill editor with custom color buttons
+  var quill = new Quill('#editor', {
+    theme: 'snow',
+    modules: {
+      toolbar: {
+        container: [
+          // Other toolbar options
+          ['bold', 'italic', 'underline', 'strike'], // toggled buttons
+
+          [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+
+		  [{ 'color': [] }, { 'background': [] }], // dropdown with defaults from theme
+          [{ 'align': [] }],
+		  
+          [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+          [{ 'script': 'sub'}, { 'script': 'super' }], // superscript/subscript
+
+
+    
+
+          ['clean'], // remove formatting button
+		  ['image'], // Add button for image uploading
+
+          ['textColorPicker', 'highlightColorPicker'], // custom color picker buttons
+        ],
+        handlers: {
+          'textColorPicker': function() {
+            $("#text-color-picker").spectrum("toggle");
+          },
+          'highlightColorPicker': function() {
+            $("#highlight-color-picker").spectrum("toggle");
+          }
+        }
+      }
+    }
+  });
+
+// Load existing popup content
+fetch('/popup-content').then(response => response.json()).then(data => {
+    quill.root.innerHTML = data.content;
+});
+
+// Function to save popup content
+document.querySelector('#save-popup-content').addEventListener('click', function(){
+    let content = quill.root.innerHTML;
+    fetch('/popup-content', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: 'content=' + encodeURIComponent(content)
+    }).then(response => response.json()).then(data => {
+        if(data.success) {
+            alert('Popup content saved.');
+        } else {
+            alert('Error saving popup content.');
+        }
+    });
+});
+
+// Functions to handle popup display and cookies
+function closePopup() {
+    document.getElementById('popup-overlay').style.display = 'none';
+}
+
+function setCookie() {
+    // Set a cookie to hide the popup in the future
+    document.cookie = "hidePopup=true; max-age=86400; path=/";
+    closePopup();
+}
+
+function imageHandler() {
+  var range = this.quill.getSelection();
+  var input = document.createElement('input');
+  input.setAttribute('type', 'file');
+  input.setAttribute('accept', 'image/*');
+  input.click();
+
+  input.onchange = () => {
+    var file = input.files[0];
+    // Implement the logic to handle the image file
+    // This could involve uploading to a server and getting a URL, or converting to base64
+    // For example:
+    uploadImage(file).then((imageUrl) => {
+      this.quill.insertEmbed(range.index, 'image', imageUrl);
+    });
+  };
+}
+
+// Example function for image uploading
+async function uploadImage(file) {
+  // Implement the logic for uploading the image and returning the URL
+  // This is just a placeholder function
+}
+
+
+window.onload = function() {
+  // Check if the cookie exists
+  if(document.cookie.indexOf('hidePopup=true') == -1) {
+    fetch('/popup-content').then(response => response.json()).then(data => {
+      document.getElementById('popup-text').innerHTML = data.content;
+      document.getElementById('popup-overlay').style.display = 'block';
+    });
+  }
+};
+
+// Close popup function
+function closePopup() {
+  document.getElementById('popup-overlay').style.display = 'none';
+}
+
+document.getElementById('popup-overlay').addEventListener('click', function(event) {
+  if (event.target === this) {
+    closePopup();
+  }
+});
+
+
 });
 </script>
