@@ -9,6 +9,7 @@ from bs4 import BeautifulSoup
 from werkzeug.utils import secure_filename
 from datetime import datetime
 
+import logging
 import io
 import json
 import os
@@ -173,36 +174,64 @@ def upload_overlay_image():
 def get_categories():
     try:
         with open('templates/categories.html') as file:
-            soup = BeautifulSoup(file, 'html.parser')  # Use BeautifulSoup directly
+            soup = BeautifulSoup(file, 'html.parser')
             categories = [{'color': button['style'].split(': ')[1].replace(';', '').strip(), 'text': button.h3.text}
                           for button in soup.find_all('button', {'class': 'categorybutton'})]
-        # Include "null" category in the response
-        categories.append({'color': 'null', 'text': 'Null Category'})
+            categories.append({'color': 'null', 'text': ''})
+        print("Categories fetched successfully:", categories)  # Debugging statement
         return jsonify(categories)
     except Exception as e:
-        # Log the error for debugging
-        print(f"Error occurred: {e}")
-        # Return a 500 error to the client with the error message
+        print(f"Error occurred in get_categories: {e}")  # Debugging statement
         return jsonify(error=str(e)), 500
+
+
 
 
 @app.route('/update-category', methods=['POST'])
 def update_category():
-    color_to_update = request.json.get('oldColor')
-    new_color = request.json.get('newColor')
-    
-    with open('templates/categories.html', 'r+') as file:
-        content = file.read()
+    logging.basicConfig(level=logging.DEBUG)
+
+    try:
+        color_to_update = request.json.get('oldColor')
+        new_color = request.json.get('newColor')
+
+        # Validating the input colors
+        if not color_to_update or not new_color:
+            logging.error(f"Invalid color data: oldColor={color_to_update}, newColor={new_color}")
+            return jsonify(success=False, message="Invalid color data"), 400
+
+        # Reading the HTML content with UTF-8 encoding
+        with open('templates/categories.html', 'r', encoding='utf-8') as file:
+            content = file.read()
+
+        logging.debug(f"Original HTML content: {content}")
+
         soup = BeautifulSoup(content, 'html.parser')
+        updated = False
+
         for button in soup.find_all('button', {'class': 'categorybutton'}):
             if color_to_update in button['style']:
                 button['style'] = f"background-color: {new_color};"
                 button['onclick'] = f"parent.setCategory('{new_color}')"
-        file.seek(0)
-        file.write(str(soup))
-        file.truncate()
-    
-    return jsonify(success=True)
+                updated = True
+
+        # Writing the updated content back to the file with UTF-8 encoding, if necessary
+        if updated:
+            updated_html = str(soup)
+            logging.debug(f"Updated HTML content: {updated_html}")
+            with open('templates/categories.html', 'w', encoding='utf-8') as file:
+                file.write(updated_html)
+            return jsonify(success=True)
+        else:
+            return jsonify(success=False, message="Color not found"), 404
+
+    except FileNotFoundError:
+        logging.exception("File not found error")
+        return jsonify(success=False, error="File not found"), 500
+    except Exception as e:
+        logging.exception("Unexpected error occurred")
+        return jsonify(success=False, error=str(e)), 500
+
     
 @app.route('/update-shape-colors', methods=['POST'])
 def update_shape_colors():

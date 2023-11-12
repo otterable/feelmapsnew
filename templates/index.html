@@ -42,19 +42,34 @@ body, html {
     padding: 0;
     overflow: hidden; /* Prevent scrolling */
     box-sizing: border-box; /* Include padding and border in the element's total width and height */
-	font-family: 'Roboto', sans-serif !important;
+    font-family: 'Roboto', sans-serif !important;
 }
 
 *, *:before, *:after {
-    box-sizing: inherit; /* Inherit box-sizing to make sure that padding and border are included in total width and height */
+    box-sizing: inherit; /* Inherit box-sizing */
 }
 
-#map, #sidebar {
-    position: absolute; /* Positioned absolutely to give precise control over their placement */
-    top: 15px !important; /* Aligns the top edge with the top of the viewport */
-    bottom: 15px !important; /* Aligns the bottom edge with the bottom of the viewport */
-    border-radius: 30px;
-    overflow: hidden; /* Ensures content does not make the element scrollable */
+/* Desktop Styles */
+@media (min-width: 768px) {
+    #map, #sidebar {
+        position: absolute;
+        top: 15px;
+        bottom: 15px;
+        border-radius: 30px;
+        overflow: hidden;
+    }
+
+    #map {
+        left: 15px;
+        right: calc(30% + 15px);
+    }
+
+    #sidebar {
+        width: calc(30% - 15px);
+        right: 15px;
+        background: #111111;
+        padding: 10px;
+    }
 }
 
 
@@ -111,28 +126,37 @@ border-radius: 30px;"
 }
 /* CITY PICTURE CSS END */
 
-
-
-/* LEAFLET MAP PILL CSS START */
+/* LEAFLET MAP PILL CSS */
 .leaflet-bar, .leaflet-draw-section, .leaflet-draw-section {
   border-radius: 30px !important;
-  background-color: #3a3a3a !important;
+  background-color: var(--leaflet-control-bg-dark) !important; /* Use variable */
 }
-/* LEAFLET MAP PILL CSS END */
 
-
-
-/* LEAFLET MAP ICONS CSS START */
-.leaflet-control-zoom-in, .leaflet-control-zoom-out, .leaflet-draw-draw-polyline, .leaflet-draw-draw-polygon, .leaflet-draw-draw-rectangle, .leaflet-draw-draw-circle, .leaflet-draw-draw-marker, .leaflet-draw-draw-circlemarker, .leaflet-draw-edit-edit, .leaflet-draw-edit-remove  {
-  background-color: #3a3a3a !important;
-  color: white !important;
+/* LEAFLET MAP ICONS CSS */
+.leaflet-control-zoom-in, .leaflet-control-zoom-out, .leaflet-draw-draw-polyline, .leaflet-draw-draw-polygon, .leaflet-draw-draw-rectangle, .leaflet-draw-draw-circle, .leaflet-draw-draw-marker, .leaflet-draw-draw-circlemarker, .leaflet-draw-edit-edit, .leaflet-draw-edit-remove {
+  background-color: var(--leaflet-control-bg-dark) !important; /* Use variable */
+  color: var(--leaflet-control-color-dark) !important; /* Use variable */
   border: none !important;
   font-size: 18px !important;
   line-height: 30px !important;
   width: 30px !important;
   height: 30px !important;
 }
+
+.leaflet-draw-draw-rectangle {
+  background-image: url('rectangle_darkmode_svg.svg'); /* Replace with the path to your new icon */
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+}
 /* LEAFLET MAP ICONS CSS END */
+
+:root {
+  --leaflet-control-bg-dark: #3a3a3a; /* Dark mode background color */
+  --leaflet-control-color-dark: white; /* Dark mode symbol color */
+  --leaflet-control-bg-light: #f4f4ed; /* Light mode background color */
+  --leaflet-control-color-light: black; /* Light mode symbol color */
+}
 
 .leaflet-draw-draw-marker {
 display: none !important;
@@ -175,6 +199,7 @@ display: none !important;
   border-bottom-left-radius: 30px !important;
   border-bottom-right-radius: 30px !important;
 }
+
 
 .leaflet-control-layers-toggle {
     font-size: 30px;
@@ -554,16 +579,21 @@ display: none !important;
     left: 50%;
     transform: translate(-50%, -50%);
     display: flex;
-    align-items: center; /* This will ensure vertical centering */
+    align-items: center;
     justify-content: center;
     border-radius: 30px;
-    padding: 4px 8px; /* Slightly reduced padding */
-    background-color: #ffffff;
+    padding: 4px 8px;
     z-index: 10000;
-    font-size: 25px; /* Font size to match the icon height */
+    font-size: 25px;
     font-weight: bold;
-    gap: 5px; /* Reduced gap between items */
+    gap: 5px;
+    background-color: var(--counter-pill-bg-color);
+    color: var(--counter-pill-text-color);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
+
 
 .counter-item {
     display: flex;
@@ -682,57 +712,170 @@ display: none !important;
     display: none !important;
 }
 
+:root {
+    /* Define default dark mode colors */
+    --counter-pill-bg-color: #111111;
+    --counter-pill-text-color: white;
+}
+
+.light-mode {
+    /* Define light mode colors */
+    --counter-pill-bg-color: #f4f4ed;
+    --counter-pill-text-color: black;
+}
+
+ .leaflet-draw-draw-polyline, .leaflet-draw-draw-polygon, .leaflet-draw-draw-rectangle, .leaflet-draw-draw-circle, .leaflet-draw-draw-marker, .leaflet-draw-draw-circlemarker, .leaflet-draw-edit-edit, .leaflet-draw-section {
+  visibility: hidden; /* Hide the icons */
+}
+#tool-selection-popup {
+    position: absolute; /* Use absolute positioning for precise control */
+    left: 50%; /* Position the left edge of the element at the middle of the container */
+    top: 50%; /* Position the top edge of the element at the middle of the container */
+    transform: translate(-50%, -50%); /* Shift the element to center it at the container's center */
+    width: auto; /* Auto width to adjust based on content */
+    max-width: 90%; /* Max width to prevent overflow */
+    display: flex; /* Use flexbox for internal alignment */
+    flex-direction: row; /* Align items in a row */
+    justify-content: center; /* Center items horizontally in the flex container */
+    align-items: center; /* Center items vertically in the flex container */
+    margin: 0; /* Remove any default margin */
+}
+
+.tool-btn {
+    border: none;
+    background: none;
+    cursor: pointer;
+    display: inline-block; /* Align as inline blocks for proper spacing */
+    margin: 0 10px; /* Add horizontal margin for spacing between buttons */
+    transition: transform 0.3s ease;
+}
+
+.tool-btn img {
+    width: 50px; /* Fixed width for the images */
+    height: 50px; /* Fixed height for the images */
+    border-radius: 50%; /* Make the images round */
+}
+
+.tool-btn:hover {
+    transform: scale(1.1); /* Slightly enlarge on hover */
+}
+
+.tool-btn.selected {
+    outline: 5px solid white;
+}
+
+.tool-btn:not(.selected):hover {
+    outline: 3px solid white;
+}
  </style>
 <style>
-  @media (max-width: 767px) {
+
+/* Mobile Styles */
+@media (max-width: 767px) {
     body, html {
-        padding-left: 7.5px; /* Add padding to the left of the body to create space for the content */
-        padding-right: 7.5px; /* Add padding to the right of the body to create space for the content */
-        margin: 0; /* Remove any margin that might interfere */
-    }
-	
-	#counter-pill {
-    position: absolute;
-    top: 3%;
-	}
-	
-    #map, #sidebar {
-        position: relative; /* Stack the map and sidebar */
-        top: 15px; /* Add top margin */
-        left: 0; /* Align left edge with the viewport */
-        right: 0; /* Align right edge with the viewport */
-        border-radius: 30px; /* Add border radius */
-        margin-bottom: 15px; /* Add bottom margin */
-        width: auto; /* Auto width to fill the space with padding from body */
+        padding-left: 15px;
+        padding-right: 15px;
     }
 
+
     #map {
-        height: 400px; /* Set fixed height for the map */
+        position: absolute;
+        top: calc(9vh + 35px); /* Estimate based on viewport height and gap */
+        bottom: 165px; /* Adjust for the fixed height of the sidebar (150px + 15px gap) */
+        left: 15px;
+        right: 15px;
+        border-radius: 30px;
+        margin-bottom: 15px;
     }
 
     #sidebar {
-        height: 400px; /* Set fixed height for the sidebar */
-        overflow-y: auto; /* Enable scrolling if content overflows */
+        position: fixed;
+        height: 150px;
+        bottom: 0;
+        left: 15px !important;
+        right: 15px !important;
+        border-radius: 30px;
+        margin-bottom: 15px;
+        overflow: hidden;
+		width: auto;
     }
-	 .hide-on-mobile {
+
+    #sidebar-mobileheader {
+        position: fixed;
+        top: 15px;
+        left: 15px;
+        right: 15px;
+        margin-bottom: 15px !important;
+        border-radius: 30px;
+        padding-right: 15px;
+        padding-left: 15px;
+        padding: 7.5px;
+
+        z-index: 1001; /* High z-index */
+        background-color: red; /* Bright background color for testing */
+        width: auto; /* Fixed width for testing */
+        display: block !important; /* Force display */
+        /* Remove the fixed height */
+    }
+
+    #sidebar-mobileheader img {
+        display: block; /* Use block display for the image */
+        max-width: 100%; /* Limit image width to container width */
+        height: auto; /* Adjust height automatically */
+        margin: auto; /* Center the image if needed */
+    }
+
+    .hide-on-mobile {
         display: none !important;
-	}
-	 .appear-on-mobile {
+    }
+
+    .appear-on-mobile {
         display: block !important;
-	}
-#sidebar-mobileheader {
-    position: relative;
-    top: 15px;
-    left: 0;
-    right: 0;
-    border-radius: 30px;
-    margin-bottom: 15px;
-    width: auto;
-    display: block !important;
-    padding: 7px; /* Add padding to create a gap inside */
+    }
 }
 
+@media (max-width: 768px) {
+    #counter-pill {
+        padding: 8px 12px; /* Increased left and right padding */
+        font-size: 3vw;
+        top: 7.5%;
+        max-width: 60%;
     }
+	
+	.counter-color {
+    height: 12px;
+    width: 12px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 5px; /* Reduced space after the circle */
+}
+
+
+
+    #color-counters, #category-counters {
+        display: flex;
+        padding: 0;
+        margin: 0;
+        gap: 5px;
+    }
+
+    #color-counters li, #category-counters li {
+        flex-grow: 1; /* Allow each item to grow to fill available space */
+        flex-shrink: 1; /* Allow each item to shrink if needed */
+        display: flex; /* Make the list items flex containers */
+        justify-content: center; /* Center the content horizontally */
+        align-items: center; /* Center the content vertically */
+        max-height: 100%; /* Ensure items do not exceed the pill's height */
+    }
+
+    /* Adjust the size of the content (icons, text, etc.) inside the list items */
+    #color-counters li > *, #category-counters li > * {
+        max-height: 50%; /* Ensure content does not exceed the list item's height */
+        max-width: 50%; /* Ensure content does not exceed the list item's width */
+        font-size: 2.5vw; /* Responsive font size for the content */
+    }
+}
+
 
 /* Media query for tablet devices */
 @media (min-width: 768px) and (max-width: 1024px) {
@@ -801,8 +944,6 @@ display: none !important;
     </div>
 </div>
 
-
-
 <!-- SMALL OPTIONS MENU TOP START -->
 <div class="smalloptionsmenutop" style="display: flex; align-items: center; justify-content: center;">
 <div class="left-container">
@@ -865,6 +1006,23 @@ display: none !important;
 <?php CITY LOGO START ?>
 <img class="hide-on-mobile resistant-image" id="overlay-image" src="static/overlay.jpg" style="max-width: 100%; height: auto; display: block; margin-left:auto; margin-right:auto; margin-top: 3px; margin-bottom: 5px; border-radius: 30px;"/>
 <?php CITY LOGO END ?>
+<div id="tool-selection-popup" style="display: none;">
+  <button id="marker-btn" class="tool-btn selected" onclick="selectTool('.leaflet-draw-draw-marker', this)">
+    <img src="/static/popupmenu_marker_darkmode.png" alt="Marker">
+  </button>
+  <button id="rectangle-btn" class="tool-btn" onclick="selectTool('.leaflet-draw-draw-rectangle', this)">
+    <img src="/static/popupmenu_rectangle_darkmode.png" alt="Rectangle">
+  </button>
+  <button id="circle-btn" class="tool-btn" onclick="selectTool('.leaflet-draw-draw-circle', this)">
+    <img src="/static/popupmenu_circle_darkmode.png" alt="Circle">
+  </button>
+  <button id="polygon-btn" class="tool-btn" onclick="selectTool('.leaflet-draw-draw-polygon', this)">
+    <img src="/static/popupmenu_polygon_darkmode.png" alt="Polygon">
+  </button>
+</div>
+
+
+
 <?php ADMIN TOOLS (OTP PROTECTED) START // Categories here are dynamically generated from the "static/categories.html" file. Additional categories can be added or removed by editing "static/categories.html".?>
 <div class="menu-admintools" id="dynamicgeneration-admintools">
 </div>
@@ -1140,23 +1298,79 @@ function isCategorySelected() {
     return currentCategory && currentCategory !== '';
 }
 
-// Updated setCategory function
+let popupTimer;
+
+function showToolSelectionPopup() {
+  const popup = document.getElementById('tool-selection-popup');
+  if (popup) {
+    popup.style.display = 'block';
+    resetToolSelectionPopupTimer();
+  }
+}
+
+function resetToolSelectionPopupTimer() {
+  clearTimeout(popupTimer);
+  popupTimer = setTimeout(function() {
+    const popup = document.getElementById('tool-selection-popup');
+    if (popup) {
+      popup.style.display = 'none';
+    }
+  }, 10000); // Hide after 10 seconds
+}
+
+function selectTool(selector, button) {
+  // Reset all buttons to unselected state
+  document.querySelectorAll('.tool-btn').forEach(btn => btn.classList.remove('selected'));
+
+  // Mark the clicked button as selected
+  button.classList.add('selected');
+
+  // Find and click the corresponding Leaflet tool button
+  var toolButton = document.querySelector(selector);
+  if (toolButton) {
+    toolButton.click();
+    console.log(`Tool ${selector} activated programmatically`);
+  } else {
+    console.log(`Tool button for ${selector} not found`);
+  }
+
+  // Reset popup timer on each click
+  resetToolSelectionPopupTimer();
+}
+
+// Add click event listener to popup to reset timer on click
+document.getElementById('tool-selection-popup').addEventListener('click', resetToolSelectionPopupTimer);
+
+// Call showToolSelectionPopup when category is set
 function setCategory(category) {
     currentCategory = category;
     console.log('Category set to:', currentCategory);
     updateDrawHandlers(); // Update draw handlers when category changes
-
-    // Debugging: Check if the setCategory function is called
     console.log('setCategory called with category:', category);
 
-    // Attempt to find the marker tool button and click it programmatically
-    var markerToolButton = document.querySelector('.leaflet-draw-draw-marker');
-    if (markerToolButton) {
-        console.log('Marker tool button found:', markerToolButton);
-        markerToolButton.click(); // Simulate a click on the marker tool
-        console.log('Marker tool activated programmatically');
+    // Display the tool selection popup
+    var popup = document.getElementById('tool-selection-popup');
+    if (popup) {
+        popup.style.display = 'block';
+        console.log('Popup displayed');
     } else {
-        console.log('Marker tool button not found');
+        console.log('Popup element not found');
+    }
+
+    // Default to Marker tool
+    selectTool('.leaflet-draw-draw-marker');
+	    showToolSelectionPopup();
+
+}
+
+function selectTool(selector) {
+    var toolButton = document.querySelector(selector);
+    if (toolButton) {
+        console.log(`Tool button for ${selector} found:`, toolButton);
+        toolButton.click(); // Simulate a click on the tool button
+        console.log(`Tool ${selector} activated programmatically`);
+    } else {
+        console.log(`Tool button for ${selector} not found`);
     }
 }
 
@@ -1515,12 +1729,22 @@ function toggleLightMode() {
 	// Update color variables for popup based on the mode
     if (isLightMode) {
         document.documentElement.style.setProperty('--popup-bg-color', '#ffffff');
+		        document.documentElement.style.setProperty('--counter-pill-bg-color', '#ffffff');
+				        document.documentElement.style.setProperty('--counter-pill-text-color', 'black');
+						  document.documentElement.style.setProperty('--leaflet-control-bg-dark', '#f4f4ed');
+    document.documentElement.style.setProperty('--leaflet-control-color-dark', 'black');
+
         document.documentElement.style.setProperty('--popup-text-color', 'black');
 		document.documentElement.style.setProperty('--border-hover-color', '#666666'); // Custom border color for hover in light mode
 		document.documentElement.style.setProperty('--border-selected-color', '#444444'); // Custom border color for selected in light mode
  
     } else {
         document.documentElement.style.setProperty('--popup-bg-color', '#111111');
+		   document.documentElement.style.setProperty('--counter-pill-bg-color', '#111111');
+        document.documentElement.style.setProperty('--counter-pill-text-color', 'white');
+    document.documentElement.style.setProperty('--leaflet-control-bg-dark', '#3a3a3a');
+    document.documentElement.style.setProperty('--leaflet-control-color-dark', 'white');
+
         document.documentElement.style.setProperty('--popup-text-color', 'white');
 		document.documentElement.style.setProperty('--border-hover-color', '#cccccc'); // Reset to dark mode colors
 		document.documentElement.style.setProperty('--border-selected-color', '#aaaaaa');
@@ -2297,8 +2521,8 @@ function loadAdminTools() {
   </script>
 <?php ADMINTOOLS CATEGORIES TOGGLING END ?>
 <script>
-   // Assuming jQuery is included
-	
+    // Assuming jQuery is included
+    
     var shapeLayersByColor = {};
     var shapeLayersByType = {};
     var colorVisibilityState = {};
@@ -2307,7 +2531,11 @@ function loadAdminTools() {
     // Initialize visibility state dictionaries
     function initializeVisibilityStates() {
         var colors = {{ color_counts | tojson }};
+        console.log("Parsed color data:", colors);
+
         var types = {{ category_counts | tojson }};
+        console.log("Parsed category data:", types);
+
         Object.keys(colors).forEach(function(color) {
             colorVisibilityState[color] = true; // All colors visible by default
             console.log('Initialized visibility state for color', color);
@@ -2318,76 +2546,131 @@ function loadAdminTools() {
         });
     }
 
-// Function to update visibility based on both color and type
-function updateVisibility(layer, color, type) {
-    var visibleByColor = color ? colorVisibilityState[color] : true; // Default to true if color is undefined
-    var visibleByType = typeVisibilityState[type]; // The visibility state of the type
-    console.log('Updating visibility for layer. Color:', color, 'Type:', type, 'Visible by Color:', visibleByColor, 'Visible by Type:', visibleByType);
+    // Function to update visibility based on both color and type
+    function updateVisibility(layer, color, type) {
+        var visibleByColor = color ? colorVisibilityState[color] : true; // Default to true if color is undefined
+        var visibleByType = typeVisibilityState[type]; // The visibility state of the type
+        console.log('Updating visibility for layer. Color:', color, 'Type:', type, 'Visible by Color:', visibleByColor, 'Visible by Type:', visibleByType);
 
-    // Change visibility only if both color and type visibility are true
-    if (visibleByColor && visibleByType) {
-        if (!map.hasLayer(layer)) {
-            map.addLayer(layer);
-            console.log('Layer shown on map:', layer);
+        // Change visibility only if both color and type visibility are true
+        if (visibleByColor && visibleByType) {
+            if (!map.hasLayer(layer)) {
+                map.addLayer(layer);
+                console.log('Layer shown on map:', layer);
+            }
+        } else {
+            if (map.hasLayer(layer)) {
+                map.removeLayer(layer);
+                console.log('Layer removed from map:', layer);
+            }
         }
-    } else {
-        if (map.hasLayer(layer)) {
-            map.removeLayer(layer);
-            console.log('Layer removed from map:', layer);
+    }
+
+ // Enhanced addLayer function
+function addLayer(layer, color, type) {
+    console.log('Attempting to add layer:', layer, 'Color:', color, 'Type:', type);
+
+    // Add to color dictionary
+    if (!shapeLayersByColor[color]) {
+        shapeLayersByColor[color] = [];
+    }
+    shapeLayersByColor[color].push(layer);
+
+    // Check if type is defined before adding to type dictionary
+    if (type) {
+        if (!shapeLayersByType[type]) {
+            shapeLayersByType[type] = [];
+        }
+        shapeLayersByType[type].push(layer);
+    }
+
+    console.log(`Layer added. Current state by color:`, shapeLayersByColor, `Current state by type:`, shapeLayersByType);
+}
+
+    // Modify the toggleVisibility function to handle shapes without a defined type
+    function toggleVisibility(color) {
+        console.log('Toggling visibility for color:', color);
+        colorVisibilityState[color] = !colorVisibilityState[color];
+        console.log(`Visibility state for color '${color}' is now:`, colorVisibilityState[color]);
+        if (shapeLayersByColor[color]) {
+            console.log(`Found layers for color '${color}'. Processing...`);
+            shapeLayersByColor[color].forEach(function(layer) {
+                var type = layer.options.shapeType || undefined; // Use undefined if shapeType isn't set
+                console.log('Updating visibility for layer. Layer:', layer, 'Color:', color, 'Type:', type);
+                updateVisibility(layer, color, type);
+            });
+        } else {
+            console.log('No layers found for color:', color);
         }
     }
-}
 
-// Modify the toggleVisibility function to handle shapes without a defined type
-function toggleVisibility(color) {
-    console.log('Toggling visibility for color:', color);
-    colorVisibilityState[color] = !colorVisibilityState[color];
-    if (shapeLayersByColor[color]) {
-        shapeLayersByColor[color].forEach(function(layer) {
-            var type = layer.options.shapeType || undefined; // Use undefined if shapeType isn't set
-            updateVisibility(layer, color, type);
-        });
-    } else {
-        console.log('No layers found for color:', color);
+    // Enhanced toggleVisibilityByType function
+    function toggleVisibilityByType(type) {
+        console.log('Toggling visibility for type:', type);
+        typeVisibilityState[type] = !typeVisibilityState[type];
+        console.log(`Visibility state for type '${type}' is now:`, typeVisibilityState[type]);
+        if (shapeLayersByType[type]) {
+            console.log(`Found layers for type '${type}'. Processing...`);
+            shapeLayersByType[type].forEach(function(layer) {
+                var color = layer.options.color || layer.options.shapeColor; // Assume each layer has a color or shapeColor property
+                console.log('Updating visibility for layer. Layer:', layer, 'Color:', color, 'Type:', type);
+                updateVisibility(layer, color, type);
+            });
+        } else {
+            console.log('No layers found for type:', type);
+        }
     }
-}
 
-// Toggle visibility for type
-function toggleVisibilityByType(type) {
-    console.log('Toggling visibility for type:', type);
-    typeVisibilityState[type] = !typeVisibilityState[type];
-    if (shapeLayersByType[type]) {
-        shapeLayersByType[type].forEach(function(layer) {
-            var color = layer.options.color || layer.options.shapeColor; // Assume each layer has a color or shapeColor property
-            updateVisibility(layer, color, type);
-        });
-    } else {
-        console.log('No layers found for type:', type);
-    }
-}
-
+    
     $(document).ready(function() {
-        // Initialize visibility states when document is ready
+        // Initialize visibility states when the document is ready
         initializeVisibilityStates();
 
-    var colorCounts = {{ color_counts | tojson }};
-            Object.entries(colorCounts).forEach(([color, count]) => {
-        var colorCircle = $(`<span class="counter-color" style="background-color: ${color};"></span>`);
-        var listItem = $(`<li style="margin-right: 5px;">`).append(colorCircle).append(` ${count}`);
-        listItem.on('click', function() {
-            toggleVisibility(color);
-            // Dim the circle by adjusting the opacity
-            if (colorCircle.css('opacity') == '1') {
-                colorCircle.css('opacity', '0.5'); // Dim it
-            } else {
-                colorCircle.css('opacity', '1'); // Return to full opacity
-            }
-        });
-        $('#color-counters').append(listItem);
+        // Load shapes from the database and add to the map and dictionaries
+        
+// Load shapes from the database and add to map and dictionaries
+$.getJSON('/api/shapes', function(data) {
+    data.shapes.forEach(function(shape) {
+        console.log('Loading shape from database:', shape);
+
+        // Create a layer from the shape data
+        var layer = L.geoJSON(shape.shape_data); // Modify according to actual layer creation logic
+
+        // Ensure shape_type is correctly set in your database and here
+        var layerType = shape.shape_type || 'defaultType'; // Provide a default type if undefined
+
+        // Add the loaded shape to dictionaries
+        addLayer(layer, shape.shape_color, layerType);
+
+        // Additional logic to add the layer to the map, if necessary
     });
+    console.log('All shapes loaded from the database and added to dictionaries.');
+});
+		
+        var colorCounts = {{ color_counts | tojson }};
+        console.log('Color counts:', colorCounts);
+
+        Object.entries(colorCounts).forEach(([color, count]) => {
+            var colorCircle = $(`<span class="counter-color" style="background-color: ${color};"></span>`);
+            var listItem = $(`<li style="margin-right: 5px;">`).append(colorCircle).append(` ${count}`);
+            listItem.on('click', function() {
+                console.log('Clicked color:', color);
+
+                toggleVisibility(color);
+                // Dim the circle by adjusting the opacity
+                if (colorCircle.css('opacity') == '1') {
+                    colorCircle.css('opacity', '0.5'); // Dim it
+                } else {
+                    colorCircle.css('opacity', '1'); // Return to full opacity
+                }
+            });
+            $('#color-counters').append(listItem);
+        });
 
         // Populate category counters
         var categoryCounts = {{ category_counts | tojson }};
+        console.log('Category counts:', categoryCounts);
+
         Object.entries(categoryCounts).forEach(([category, count]) => {
             var symbol = '';
             switch(category) {
@@ -2398,23 +2681,25 @@ function toggleVisibilityByType(type) {
                 // Add more cases for other categories if necessary
             }
             $('#category-counters').append(
-    $(`<li style="margin-right: 5px;">`).append(
-        $(symbol).on('click', function() {
-            toggleVisibilityByType(category);
-            // Dim the symbol by adjusting the opacity
-            $(this).css('opacity', $(this).css('opacity') == '1' ? '0.5' : '1');
-        })
-    ).append(` ${count}`)
-);
+                $(`<li style="margin-right: 5px;">`).append(
+                    $(symbol).on('click', function() {
+                        toggleVisibilityByType(category);
+                        // Dim the symbol by adjusting the opacity
+                        $(this).css('opacity', $(this).css('opacity') == '1' ? '0.5' : '1');
+                    })
+                ).append(` ${count}`)
+            );
         });
 
         console.log("Counters displayed.");
     });
-  </script>
+</script>
+
 <script>
-   // Fetch and display all objects and populate filters when the page loads
+// Fetch and display all objects and populate filters when the page loads
 document.addEventListener('DOMContentLoaded', function() {
     fetch('/api/all-shapes').then(response => response.json()).then(data => {
+        console.log('Objects loaded from the database:', data.shapes);
         displayObjects(data.shapes);
         populateColorFilter(data.shapes);
     });
@@ -2435,26 +2720,27 @@ function populateColorFilter(shapes) {
 }
 
 
-        // Display objects in the list
-        function displayObjects(objects) {
-		const objectList = document.getElementById('object-list');
-		objectList.innerHTML = ''; // Clear the current list
-		objects.forEach(object => {
-			const objectDiv = document.createElement('div');
-			objectDiv.textContent = `${object.shape_type} | ${object.shape_color} | ${object.shape_note}`;
-			
-			// Add hover event to center map on object location
-			objectDiv.addEventListener('mouseenter', () => centerMapOnObject(object));
+      // Display objects in the list
+function displayObjects(objects) {
+    const objectList = document.getElementById('object-list');
+    objectList.innerHTML = ''; // Clear the current list
+    objects.forEach(object => {
+        console.log('Processing object:', object); // Debugging
+        const objectDiv = document.createElement('div');
+        objectDiv.textContent = `${object.shape_type} | ${object.shape_color} | ${object.shape_note}`;
 
-			// Add delete button
-			const deleteBtn = document.createElement('button');
-			deleteBtn.textContent = 'Delete';
-			deleteBtn.addEventListener('click', () => deleteObject(object.id));
-			objectDiv.appendChild(deleteBtn);
+        // Add hover event to center map on object location
+        objectDiv.addEventListener('mouseenter', () => centerMapOnObject(object));
 
-			objectList.appendChild(objectDiv);
-		});
-	}
+        // Add delete button
+        const deleteBtn = document.createElement('button');
+        deleteBtn.textContent = 'Delete';
+        deleteBtn.addEventListener('click', () => deleteObject(object.id));
+        objectDiv.appendChild(deleteBtn);
+
+        objectList.appendChild(objectDiv);
+    });
+}
 	
 	// Function to center map on object location
 	function centerMapOnObject(object) {

@@ -132,6 +132,7 @@ $(document).ready(function() {
         });
     });
 });
+
 </script>
 
 <!-- Category Creation Section -->
@@ -456,4 +457,48 @@ document.getElementById('popup-overlay').addEventListener('click', function(even
 
 
 });
+</script>
+
+<script>
+// Function to update category dropdowns
+function updateCategoryDropdowns() {
+    console.log("Fetching updated categories from the server."); // Debugging statement
+
+    fetch('/get-categories')
+        .then(response => response.json())
+        .then(categories => {
+            console.log("Received categories:", categories); // Debugging statement
+
+            // Dropdown elements
+            const dropdowns = [
+                document.getElementById('category-select'),
+                document.getElementById('rename-category-select'),
+                document.getElementById('delete-category-select')
+            ];
+
+            // Clear existing options in dropdowns
+            dropdowns.forEach(dropdown => {
+                while (dropdown.firstChild) {
+                    dropdown.removeChild(dropdown.firstChild);
+                }
+            });
+
+            // Add new options to dropdowns
+            categories.forEach(category => {
+                dropdowns.forEach(dropdown => {
+                    const option = document.createElement('option');
+                    option.value = category.text;
+                    option.textContent = category.text;
+                    option.style.color = category.color;
+                    dropdown.appendChild(option);
+                });
+            });
+
+            console.log("Dropdowns updated successfully."); // Debugging statement
+        })
+        .catch(error => {
+            console.error("Error fetching categories:", error); // Debugging statement
+        });
+}
+ updateCategoryDropdowns
 </script>
