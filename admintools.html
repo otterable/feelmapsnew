@@ -1,14 +1,68 @@
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<style>
+    input, select, button {
+        border-radius: 30px;
+        padding: 5px;
+        border: 1.5px solid black;
+    }
+	
+	         .admintools-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
 
-<!-- Include stylesheet -->
+        .toggle-button {
+            background-color: #35b7ff;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 14px 0;
+            padding: 15px;
+            box-sizing: border-box;
+            cursor: pointer;
+            text-decoration: none;
+            white-space: normal;
+            border-radius: 30px;
+            transition: background-color 0.2s ease-in-out;
+            color: white;
+            text-align: center;
+            line-height: 1;
+            max-height: 40px;
+            width: 100%;
+        }
+		
+	   .centered-title {
+        text-align: center;
+        width: 100%;
+    }
+	
+	
+</style>
+
+<!-- jQuery -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<!-- Leaflet CSS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.8.0/dist/leaflet.css" />
+
+<!-- Leaflet Draw Plugin CSS -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css" />
+
+<!-- Leaflet JavaScript Library -->
+<script src="https://unpkg.com/leaflet@1.8.0/dist/leaflet.js"></script>
+
+<!-- Leaflet Draw Plugin JavaScript -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.js"></script>
+<!-- Include Spectrum's CSS from CDN -->
+<link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/spectrum/1.8.1/spectrum.min.css" />
+
+<!-- Include Spectrum's JavaScript from CDN -->
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/spectrum/1.8.1/spectrum.min.js"></script>
+<!-- Your additional scripts and libraries -->
+<script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
 <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet"/>
-<!-- Include the Quill library -->
-<script src="https://cdn.quilljs.com/1.3.6/quill.js">
-</script>
-
-<div class="admintools-container color-111111 text-white" style="display:block;             color: #ffffff;  /* This makes the text color white */ ; margin-top: 15px;  margin-bottom: 15px; border-radius: 30px">
-<button class="button-s" id="aboutBtnEditor" onclick="toggleEditorMenu()" style="background-color: #35b7ff">Texteditor</button>
-
 <!-- Popup Container -->
 
 
@@ -17,18 +71,33 @@
 
 
 
+<div class="admintools-container color-111111 text-white" style="display:flex;             color: #ffffff;  /* This makes the text color white */ ; margin-top: 15px;  margin-bottom: 15px; border-radius: 30px">
 
-   
-<div id="category-menu">
-    <h2>Recolor Categories</h2>
+<button class="toggle-button" id="toggle-category-menu">Category options</button>
+
+<div id="category-menu" style="display: none;">
     <select id="category-select">
         <!-- Category options will be dynamically generated -->
     </select>
     <input type="color" id="color-picker">
     <button type="button" id="update-color">Update Color</button>
+	
+        <select id="rename-category-select"></select>
+        <input type="text" id="rename-category-name" placeholder="Enter new category name" />
+        <button id="rename-category">Rename Category</button>
+		
+		      <input type="text" id="create-category-name" placeholder="Enter new category name" />
+        <input type="color" id="create-category-color" />
+        <button id="create-category">Create Category</button>
 </div>
 
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        document.getElementById('toggle-category-menu').addEventListener('click', function() {
+            var categoryMenu = document.getElementById('category-menu');
+            categoryMenu.style.display = categoryMenu.style.display === 'none' ? 'block' : 'none';
+        });
+    </script>
+
 <script>
 $(document).ready(function() {
     // Fetch categories and populate dropdown
@@ -88,14 +157,35 @@ $(document).ready(function() {
 
 </script>
 
-<!-- Category Renaming Section -->
-<div>
-    <h2>Rename Category</h2>
-    <select id="rename-category-select"></select>
-    <input type="text" id="rename-category-name" placeholder="Enter new category name" />
-    <button id="rename-category">Rename Category</button>
-</div>
-
+ 
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Event delegation for dynamically loaded content
+    document.body.addEventListener('click', function(event) {
+        if (event.target.id === 'toggle-category-menu2') {
+            var categoryMenu = document.getElementById('category-menu');
+            categoryMenu.style.display = categoryMenu.style.display === 'none' ? 'block' : 'none';
+        } else if (event.target.id === 'toggle-rename-category') {
+            var renameCategoryContent = document.getElementById('rename-category-content');
+            renameCategoryContent.style.display = renameCategoryContent.style.display === 'none' ? 'block' : 'none';
+        } else if (event.target.id === 'toggle-create-category') {
+            var createCategoryContent = document.getElementById('create-category-content');
+            createCategoryContent.style.display = createCategoryContent.style.display === 'none' ? 'block' : 'none';
+        } else if (event.target.id === 'toggle-delete-category') {
+            var deleteCategoryContent = document.getElementById('delete-category-content');
+            deleteCategoryContent.style.display = deleteCategoryContent.style.display === 'none' ? 'block' : 'none';
+        } else if (event.target.id === 'toggle-geojson-options') {
+            var geojsonOptionsContent = document.getElementById('geojson-options-content');
+            geojsonOptionsContent.style.display = geojsonOptionsContent.style.display === 'none' ? 'block' : 'none';
+        }
+		  else if (event.target.id === 'toggle-object-type-restriction') {
+            var objectTypeRestrictionContent = document.getElementById('object-type-restriction-content');
+            objectTypeRestrictionContent.style.display = objectTypeRestrictionContent.style.display === 'none' ? 'block' : 'none';
+        }
+    });
+});
+</script>
+	
 <script>
 $(document).ready(function() {
     // Fetch categories and populate the rename dropdown
@@ -135,13 +225,9 @@ $(document).ready(function() {
 
 </script>
 
-<!-- Category Creation Section -->
-<div>
-    <h2>Create New Category</h2>
-    <input type="text" id="create-category-name" placeholder="Enter new category name" />
-    <input type="color" id="create-category-color" />
-    <button id="create-category">Create Category</button>
-</div>
+
+
+
 <script>
 $(document).ready(function() {
     // Handle the category creation
@@ -177,13 +263,33 @@ $(document).ready(function() {
 </script>
 
 <!-- Category Deletion Section -->
-<div>
-    <h2>Delete Category</h2>
-    <select id="delete-category-select">
-        <!-- Options will be dynamically populated -->
-    </select>
-    <button id="delete-category">Delete Category</button>
-</div>
+  <button class="toggle-button" id="toggle-delete-category">Deletion options</button>
+    <div id="delete-category-content" style="display: none;">
+        <select id="delete-category-select">
+            <!-- Options will be dynamically populated -->
+        </select>
+        <button id="delete-category">Delete Category</button>
+		
+		<h2>Delete Objects by Category</h2>
+
+<button id="delete-category-objects">Delete Only objects of the category</button>
+
+<!-- Delete Objects by Object Type -->
+<h2>Delete Objects by Object Type</h2>
+<select id="delete-object-type-select">
+    <option value="circle">Circle</option>
+    <option value="rectangle">Rectangle</option>
+    <option value="polygon">Polygon</option>
+    <option value="polyline">Polyline</option>
+    <option value="circlemarker">Circle Marker</option>
+    <option value="marker">Marker</option>
+    <!-- Add more object types as needed -->
+</select>
+<button id="delete-object-type-objects">Delete Objects</button>
+
+
+
+    </div>
 
 <script>
 $(document).ready(function() {
@@ -234,36 +340,21 @@ function fetchCategories() {
     }
 </script>
 
+  <button class="toggle-button" id="toggle-geojson-options">GeoJSON Options</button>
+    <div id="geojson-options-content" style="display: none;">
+        <button onclick="window.location.href='/export-geojson'">Export GeoJSON</button>
+        
+        <!-- Add a form for importing GeoJSON -->
+        <form action="/import-geojson" method="POST" enctype="multipart/form-data">
+            <input type="file" name="file" accept=".geojson">
+            <button type="submit">Import GeoJSON</button>
+        </form>
+    </div>
 
-<button onclick="window.location.href='/export-geojson'">Export GeoJSON</button>
-    
-    <!-- Add a form for importing GeoJSON -->
-    <form action="/import-geojson" method="POST" enctype="multipart/form-data">
-        <input type="file" name="file" accept=".geojson">
-        <button type="submit">Import GeoJSON</button>
-    </form>
 
 <!-- ADMINTOOLS CATEGORY LOADING END-->
 
 <!-- Delete Objects by Category -->
-<h2>Delete Objects by Category</h2>
-
-<button id="delete-category-objects">Delete Only objects of the category</button>
-
-<!-- Delete Objects by Object Type -->
-<h2>Delete Objects by Object Type</h2>
-<select id="delete-object-type-select">
-    <option value="circle">Circle</option>
-    <option value="rectangle">Rectangle</option>
-    <option value="polygon">Polygon</option>
-    <option value="polyline">Polyline</option>
-    <option value="circlemarker">Circle Marker</option>
-    <option value="marker">Marker</option>
-    <!-- Add more object types as needed -->
-</select>
-<button id="delete-object-type-objects">Delete Objects</button>
-
-
 
 
 <script>
@@ -316,148 +407,17 @@ $(document).ready(function() {
 });
 </script>
 
+<button class="toggle-button" id="toggle-object-type-restriction">Object permissions / Map boundary creation / Pin resizing</button>
+    <div id="object-type-restriction-content" style="display: none;">
+        <form id="object-type-restriction-form">
+            <input type="checkbox" id="allow-marker" name="marker" checked> <label for="allow-marker">Marker</label><br>
+            <input type="checkbox" id="allow-rectangle" name="rectangle" checked> <label for="allow-rectangle">Rectangle</label><br>
+            <input type="checkbox" id="allow-circle" name="circle" checked> <label for="allow-circle">Circle</label><br>
+            <input type="checkbox" id="allow-polygon" name="polygon" checked> <label for="allow-polygon">Polygon</label><br>
+            <button type="submit">Submit</button>
+        </form>
+    </div>
 
-<!-- Quill Editor -->
-<div id="editor" style="height: 300px;"></div>
-<button id="save-popup-content">Save</button>
-
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-  // Initialize the color pickers with Spectrum
-  $("#text-color-picker").spectrum({
-    color: "#000", // Initial color
-    change: function(color) {
-      quill.format('color', color.toHexString());
-    }
-  });
-
-  $("#highlight-color-picker").spectrum({
-    color: "#fff", // Initial color, white for highlight
-    change: function(color) {
-      quill.format('background', color.toHexString());
-    }
-  });
-
-  // Initialize Quill editor with custom color buttons
-  var quill = new Quill('#editor', {
-    theme: 'snow',
-    modules: {
-      toolbar: {
-        container: [
-          // Other toolbar options
-          ['bold', 'italic', 'underline', 'strike'], // toggled buttons
-
-          [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
-
-		  [{ 'color': [] }, { 'background': [] }], // dropdown with defaults from theme
-          [{ 'align': [] }],
-		  
-          [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-          [{ 'script': 'sub'}, { 'script': 'super' }], // superscript/subscript
-
-
-    
-
-          ['clean'], // remove formatting button
-		  ['image'], // Add button for image uploading
-
-          ['textColorPicker', 'highlightColorPicker'], // custom color picker buttons
-        ],
-        handlers: {
-          'textColorPicker': function() {
-            $("#text-color-picker").spectrum("toggle");
-          },
-          'highlightColorPicker': function() {
-            $("#highlight-color-picker").spectrum("toggle");
-          }
-        }
-      }
-    }
-  });
-
-// Load existing popup content
-fetch('/popup-content').then(response => response.json()).then(data => {
-    quill.root.innerHTML = data.content;
-});
-
-// Function to save popup content
-document.querySelector('#save-popup-content').addEventListener('click', function(){
-    let content = quill.root.innerHTML;
-    fetch('/popup-content', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: 'content=' + encodeURIComponent(content)
-    }).then(response => response.json()).then(data => {
-        if(data.success) {
-            alert('Popup content saved.');
-        } else {
-            alert('Error saving popup content.');
-        }
-    });
-});
-
-// Functions to handle popup display and cookies
-function closePopup() {
-    document.getElementById('popup-overlay').style.display = 'none';
-}
-
-function setCookie() {
-    // Set a cookie to hide the popup in the future
-    document.cookie = "hidePopup=true; max-age=86400; path=/";
-    closePopup();
-}
-
-function imageHandler() {
-  var range = this.quill.getSelection();
-  var input = document.createElement('input');
-  input.setAttribute('type', 'file');
-  input.setAttribute('accept', 'image/*');
-  input.click();
-
-  input.onchange = () => {
-    var file = input.files[0];
-    // Implement the logic to handle the image file
-    // This could involve uploading to a server and getting a URL, or converting to base64
-    // For example:
-    uploadImage(file).then((imageUrl) => {
-      this.quill.insertEmbed(range.index, 'image', imageUrl);
-    });
-  };
-}
-
-// Example function for image uploading
-async function uploadImage(file) {
-  // Implement the logic for uploading the image and returning the URL
-  // This is just a placeholder function
-}
-
-
-window.onload = function() {
-  // Check if the cookie exists
-  if(document.cookie.indexOf('hidePopup=true') == -1) {
-    fetch('/popup-content').then(response => response.json()).then(data => {
-      document.getElementById('popup-text').innerHTML = data.content;
-      document.getElementById('popup-overlay').style.display = 'block';
-    });
-  }
-};
-
-// Close popup function
-function closePopup() {
-  document.getElementById('popup-overlay').style.display = 'none';
-}
-
-document.getElementById('popup-overlay').addEventListener('click', function(event) {
-  if (event.target === this) {
-    closePopup();
-  }
-});
-
-
-});
-</script>
 
 <script>
 // Function to update category dropdowns
@@ -501,4 +461,190 @@ function updateCategoryDropdowns() {
         });
 }
  updateCategoryDropdowns
+</script>
+
+    <form id="sizeForm">
+        <label for="pinSize">Pin Size:</label>
+        <select id="pinSize" name="pin_size">
+            <option value="18">XXS</option>
+            <option value="20">XS</option>
+            <option value="24">S</option>
+            <option value="32" selected>M (Default)</option>
+            <option value="48">L</option>
+            <option value="60">XL</option>
+        </select>
+        <label for="outlineSize">Outline Size:</label>
+        <select id="outlineSize" name="outline_size">
+            <option value="6">XXS</option>
+            <option value="10">XS</option>
+            <option value="12">S</option>
+            <option value="16" selected>M (Default)</option>
+            <option value="20">L</option>
+            <option value="24">XL</option>
+            <option value="32">XXL</option>
+            <option value="48">XXXL</option>
+        </select>
+        <button type="submit">Update Sizes</button>
+    </form>
+
+    <script>
+        document.getElementById('sizeForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const pinSize = document.getElementById('pinSize').value;
+            const outlineSize = document.getElementById('outlineSize').value;
+
+            fetch('/update_sizes', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ pin_size: parseInt(pinSize), outline_size: parseInt(outlineSize) }),
+            })
+            .then(response => response.json())
+            .then(data => console.log(data.message))
+            .catch((error) => {
+                console.error('Error:', error);
+            });
+        });
+    </script>
+	
+	
+    <div id="admin-map"></div>
+
+    <style>
+        #admin-map {
+            height: 400px;
+            width: 600px;
+        }
+    </style>
+    <script>
+        var map = L.map('admin-map').setView([48.4102, 15.6022], 15);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: 'Stimmungskompass boundary editing tool | © OpenStreetMap contributors'
+        }).addTo(map);
+
+        // Feature group to store drawn items
+        var drawnItems = new L.FeatureGroup();
+        map.addLayer(drawnItems);
+
+        // Initialize the draw control and pass it the FeatureGroup of editable layers
+        var drawControl = new L.Control.Draw({
+            edit: {
+                featureGroup: drawnItems
+            },
+            draw: {
+                polyline: true,
+                polygon: true,
+                circle: true,
+                marker: false,
+                rectangle: false,
+                circlemarker: false
+            }
+        });
+        map.addControl(drawControl);
+
+        map.on(L.Draw.Event.CREATED, function (e) {
+            var type = e.layerType,
+                layer = e.layer;
+
+            // Add the drawn layer to the feature group
+            drawnItems.addLayer(layer);
+
+            // Prepare data for saving
+            var shapeData = layer.toGeoJSON();
+            var shapeType = type;
+            var radius = type === 'circle' ? layer.getRadius() : null;
+
+            // Send data to server via AJAX
+            fetch('/api/shapes', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    shape_data: shapeData,
+                    shape_type: shapeType,
+                    radius: radius
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Shape saved with ID:', data.id);
+                layer.options.id = data.id; // Assign ID to layer for further operations
+            })
+            .catch(error => console.error('Error saving shape:', error));
+        });
+		
+		// Initialize your map and Leaflet Draw control as before...
+
+// Function to load existing shapes from the server and add them to the map
+function loadExistingShapes() {
+    fetch('/api/shapes')
+        .then(response => response.json())
+        .then(data => {
+            data.shapes.forEach(shape => {
+                var layer;
+                var shapeType = shape.shape_type;
+                var shapeData = shape.shape_data;
+
+                // Check the type of shape and create the corresponding Leaflet layer
+                if (shapeType === 'circle') {
+                    layer = L.circle([shapeData.coordinates[1], shapeData.coordinates[0]], { radius: shape.radius });
+                } else if (shapeType === 'polygon') {
+                    layer = L.polygon(shapeData.coordinates);
+                } else if (shapeType === 'polyline') {
+                    layer = L.polyline(shapeData.coordinates);
+                } else {
+                    // Handle other shape types...
+                }
+
+                // Add the layer to the map and the feature group
+                if (layer) {
+                    layer.addTo(map);
+                    drawnItems.addLayer(layer);
+                }
+            });
+        })
+        .catch(error => console.error('Error loading shapes:', error));
+}
+
+// Call the function to load existing shapes
+loadExistingShapes();
+
+    </script>
+	
+	
+<!-- Object Type Restriction Section -->
+     
+
+<script>
+document.getElementById('object-type-restriction-form').addEventListener('submit', function(event) {
+    event.preventDefault();
+
+    var formData = {
+        marker: document.getElementById('allow-marker').checked,
+        rectangle: document.getElementById('allow-rectangle').checked,
+        circle: document.getElementById('allow-circle').checked,
+        polygon: document.getElementById('allow-polygon').checked
+    };
+
+    console.log('Submitting allowed object types:', formData);
+
+    fetch('/update-allowed-object-types', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(formData)
+    })
+    .then(response => response.json())
+    .then(result => {
+        console.log('Allowed object types updated:', result);
+        // Optionally, give feedback to the user
+    })
+    .catch(error => {
+        console.error('Error updating allowed object types:', error);
+    });
+});
 </script>

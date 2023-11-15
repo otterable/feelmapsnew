@@ -6,25 +6,45 @@
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <title>Categories</title>
 <style>
+body, html {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden; /* Prevents scrollbar within the iframe */
+}
 
-        .categorybutton {
-            font-weight: bold;
-            margin: 8px 0; /* Increased vertical margin for more gap between elements */
-            line-height: 1; /* Adjusted line-height */
-            cursor: pointer;
-            text-decoration: none;
-            display: flex; /* Changed to flexbox */
-            align-items: center; /* Vertically center content */
-            justify-content: center; /* Horizontally center content */
-            width: 100%;
-            height: auto;
-            box-sizing: border-box; /* Ensure padding and border are included in the width */
-            transition: background-color 0.2s ease-in-out;
-            border-radius: 30px;
-            text-align: center;
-            padding: 5px 5px; /* Adds padding to top and bottom */
-            border: none; /* Removes border */
-        }
+#category-choices {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center; /* Align items centrally */
+    height: calc(100% - 44.5px); /* Subtract 60px for the gap at the bottom */
+    margin: 0;
+    padding: 0 0 44.5px 0; /* 60px padding at the bottom */
+}
+
+.categorybutton {
+    opacity: 0; /* Set initial opacity to 0 */
+    font-weight: bold;
+    line-height: 1; /* Adjusted line-height */
+    cursor: pointer;
+    text-decoration: none;
+    display: flex; /* Changed to flexbox */
+    align-items: center; /* Vertically center content */
+    justify-content: center; /* Horizontally center content */
+    width: 97%; /* Adjusted width */
+    height: auto;
+    box-sizing: border-box; /* Ensure padding and border are included in the width */
+    transition: background-color 0.2s ease-in-out;
+    border-radius: 30px;
+    text-align: center;
+    border: none; /* Removes border */
+    flex-grow: 1;
+    flex-shrink: 1;
+    padding: 0.5px; /* Initial padding */
+    margin: 8px auto; /* Small vertical margin and auto horizontal margin for centering */
+}
+
 
     .categorybutton:hover {
         filter: brightness(85%);
@@ -84,12 +104,16 @@
     </style>
 </head>
 <body>
-<div id="category-choices">
-<button class="categorybutton" onclick="parent.setCategory('#feb4b4')" style="background-color: #feb4b4;"><h3>morde</h3></button>
-</div>
 <div class="hamburger-menu">☰ Kategorie auswählen</div>
-<button class="categorybutton" onclick="parent.setCategory('#44f3e7')" style="background-color: #44f3e7;"><h3>xdddd</h3></button><button class="categorybutton" onclick="parent.setCategory('#58ff4d')" style="background-color: #58ff4d;"><h3>morde2</h3></button></body>
-</html>
+<div id="category-choices">
+<button class="categorybutton" onclick="parent.setCategory('#FF7043')" style="background-color: #FF7043;"><h3>Dieser Ort gefällt mir.</h3></button>
+<button class="categorybutton" onclick="parent.setCategory('#B71C1C')" style="background-color: #B71C1C;"><h3>Hier fühle ich mich unsicher.</h3></button>
+<button class="categorybutton" onclick="parent.setCategory('#1565C0')" style="background-color: #1565C0;"><h3>Hier gibt es Probleme mit dem Parken.</h3></button>
+<button class="categorybutton" onclick="parent.setCategory('#4CAF50')" style="background-color: #4CAF50;"><h3>Hier verbringe ich gerne meine Freizeit.</h3></button>
+<button class="categorybutton" onclick="parent.setCategory('#4E342E')" style="background-color: #4E342E;"><h3>Dieser Ort braucht eine Verbesserung.</h3></button>
+
+</div>
+</body></html>
 <audio id="buttonClickAudio" preload="auto">
 <source src="static/buttonclick.mp3" type="audio/mp3"/>
 </audio>
@@ -172,4 +196,27 @@ document.addEventListener('DOMContentLoaded', function() {
         parent.addEventListener('resize', adjustForScreenSize);
     }
 });
+
+ document.addEventListener('DOMContentLoaded', adjustButtonPadding);
+
+function adjustButtonPadding() {
+    const categoryButtons = document.querySelectorAll('.categorybutton');
+    categoryButtons.forEach((button) => {
+        button.style.padding = '1px';
+        // Removed the immediate setting of opacity to 1
+    });
+}
+
+window.addEventListener('resize', adjustButtonPadding);
+
+function makeButtonsVisible() {
+    const categoryButtons = document.querySelectorAll('.categorybutton');
+    categoryButtons.forEach((button) => {
+        button.style.opacity = '1'; // Set opacity to 100%
+    });
+}
+
+window.makeButtonsVisible = makeButtonsVisible; // Expose the function to be callable from index.html
+
+
 </script>

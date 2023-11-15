@@ -49,32 +49,64 @@ def before_request():
 @app.route('/')
 def index():
     total_objects, category_counts, color_counts = count_objects()  # Assuming count_objects is already defined as per your previous messages.
-    return render_template('index.html', category_counts=category_counts, color_counts=color_counts)
+    return render_template('index.html', category_counts=category_counts, color_counts=color_counts, favicon=favicon)
+
 
 @app.route('/categories')
 def categories():
     return render_template('categories.html')
     
 
+@app.route('/favicon.ico')
+def favicon():
+    app.logger.debug('Favicon loaded successfully')  # Add this debug message
+    return url_for('static', filename='favicon.ico')
+
 
 @app.route('/api/shapes', methods=['POST'])
 def add_shape():
-    data = request.json
-    shape_data_json = json.dumps(data['shape_data'])  # Ensuring JSON serialization
+    # Handle JSON data
+    data = request.json if request.is_json else {}
+    shape_data_json = json.dumps(data.get('shape_data', {}))
+
+    # Initialize the Shape object with available data
     new_shape = Shape(
         shape_data=shape_data_json,
         shape_note=data.get('shape_note', ''),
-        shape_type=data['shape_type'],
-        shape_color=data.get('shape_color', 'yellow'),  # Save the color
-        radius=data.get('radius'),  # Save the radius if provided
+        shape_type=data.get('shape_type', ''),
+        shape_color=data.get('shape_color', '#212121'),
+        radius=data.get('radius'),
         molen_id=data.get('molen_id', 'null'),
         score=data.get('score', 'null'),
         highlight_id=data.get('highlight_id', 'null')
     )
+
+    # Handle image upload
+    if 'shape_image' in request.files:
+        image = request.files['shape_image']
+        if image.filename != '':
+            filename = secure_filename(image.filename)
+            image_path = os.path.join('static/userimgs/', filename)
+            image.save(image_path)
+            new_shape.shape_imagelink = image_path  # Update shape object with image link
+
     db.session.add(new_shape)
     db.session.commit()
     print('New shape added with ID:', new_shape.id)
-    return jsonify(success=True, id=new_shape.id)
+
+    return jsonify(success=True, id=new_shape.id, image_link=getattr(new_shape, 'shape_imagelink', None))
+    
+@app.route('/api/colorOrder')
+def color_order():
+    try:
+        with open('templates/categories.html', 'r') as file:
+            content = file.read()
+            soup = BeautifulSoup(content, 'html.parser')
+            colors = [button['style'].split(': ')[1] for button in soup.find_all('button', {'class': 'categorybutton'})]
+            return jsonify({'colorOrder': colors})
+    except Exception as e:
+        print(f"Error retrieving color order: {e}")
+        return jsonify({'error': 'Could not retrieve color order'}), 500
 
 @app.route('/api/shapes', methods=['GET'])
 def get_shapes():
@@ -144,14 +176,40 @@ def is_authenticated():
 
 @app.route('/admintools')
 def admintools():
-    app.logger.info(f'Logged in: {session.get("logged_in")}')
-    if session.get('logged_in'):
-        # If the user is logged in, serve the admintools.html content
+    if 'logged_in' in session and session['logged_in']:
+        app.logger.info('Serving admin tools to an authenticated user.')
         return send_from_directory('.', 'admintools.html')
     else:
-        # If the user is not logged in, return an error or redirect to login
+        app.logger.warning('Unauthorized attempt to access admin tools.')
         return jsonify({'status': 'failed', 'message': 'Unauthorized access'}), 401
+
  
+
+@app.route('/filter-shapes', methods=['POST'])
+def filter_shapes():
+    data = request.json
+    color_filter = data.get('color')
+    type_filter = data.get('type')
+
+    query = Shape.query
+    if color_filter:
+        query = query.filter(Shape.shape_color == color_filter)
+    if type_filter:
+        query = query.filter(Shape.shape_type == type_filter)
+
+    shapes = query.all()
+    shapes_data = [
+        {
+            'id': shape.id,
+            'shape_data': json.loads(shape.shape_data),
+            'shape_type': shape.shape_type,
+            'shape_color': shape.shape_color,
+            'radius': shape.radius,
+            'shape_note': shape.shape_note
+        } for shape in shapes
+    ]
+    return jsonify(shapes=shapes_data)
+
 
 
 # OVERLAY IMAGE REPLACEMENT (TITELBILD) START
@@ -438,7 +496,29 @@ def display_counts():
         'category_counts': category_counts, 
         'color_counts': color_counts
     })  
-    
+ 
+@app.route('/update-allowed-object-types', methods=['POST'])
+def update_allowed_object_types():
+    data = request.json
+    print("Received allowed object types:", data)
+    # Save the data to a file or database as needed
+    with open('allowed_object_types.json', 'w') as file:
+        json.dump(data, file)
+    return jsonify(success=True, message="Allowed object types updated successfully")
+
+@app.route('/get-allowed-object-types')
+def get_allowed_object_types():
+    # Read the settings from the file where you saved them
+    try:
+        with open('allowed_object_types.json', 'r') as file:
+            data = json.load(file)
+            return jsonify(data)
+    except FileNotFoundError:
+        # If the file doesn't exist, return default values (all true, for example)
+        return jsonify({'marker': True, 'rectangle': True, 'circle': True, 'polygon': True})
+
+ 
+
 # Route to delete objects by category
 @app.route('/delete-objects-by-category', methods=['POST'])
 def delete_objects_by_category():
@@ -490,29 +570,14 @@ def get_all_shapes():
     ]
     return jsonify(shapes=shapes_data)
 
-# Add a route to retrieve and update the popup content
-@app.route('/popup-content', methods=['GET', 'POST'])
-def popup_content():
-    if request.method == 'POST':
-        try:
-            content = request.form.get('content')
-            # Save the content to a file or database as required
-            with open('index.html', 'w') as file:
-                file.write(content)
-            app.logger.debug('Popup content updated.')
-            return jsonify(success=True), 200
-        except Exception as e:
-            app.logger.debug(f'Error updating popup content: {e}')
-            return jsonify(success=False, error=str(e)), 500
-    else:
-        try:
-            with open('index.html', 'r') as file:
-                content = file.read()
-            return jsonify(content=content), 200
-        except Exception as e:
-            app.logger.debug(f'Error retrieving popup content: {e}')
-            return jsonify(error=str(e)), 500
-
+@app.route('/save_popup_content', methods=['POST'])
+def save_popup_content():
+    content = request.form['content']
+    # Use BeautifulSoup or any other method to process the content
+    # Save to popup_content.html
+    with open('popup_content.html', 'w') as file:
+        file.write(content)
+    return 'Success'
 
 @app.route('/api/delete-object/<int:object_id>', methods=['DELETE'])
 def delete_object(object_id):
@@ -529,5 +594,72 @@ def delete_object(object_id):
         db.session.rollback()  # Rollback in case of any error
         return jsonify({'success': False, 'message': str(e)}), 500
         
+        
+# Load or initialize pin size settings
+def load_pin_settings():
+    try:
+        with open('pinsize.json', 'r') as file:
+            return json.load(file)
+    except FileNotFoundError:
+        return {'pin_size': 32, 'outline_size': 16}
+
+# Save pin size settings
+def save_pin_settings(settings):
+    with open('pinsize.json', 'w') as file:
+        json.dump(settings, file)
+
+# Update index.html with new pin sizes
+def update_svg(pin_size, outline_size):
+    file_path = 'templates/index.html'  # Ensure this is the correct path
+    with open(file_path, 'r', encoding='utf-8') as file:
+        content = file.read()
+
+    # Regex pattern to find and capture the SVG string
+    svg_pattern = r'var svgIcon = `(<svg[^>]*>.*?</svg>)`;'
+    match = re.search(svg_pattern, content, re.DOTALL)
+
+    if not match:
+        print("Error: SVG pattern not found in index.html")
+        return
+
+    # Extract the current SVG string
+    svg_string = match.group(1)
+    
+    # Use BeautifulSoup to modify the SVG
+    soup = BeautifulSoup(svg_string, 'html.parser')
+    circles = soup.find_all('circle')
+    if len(circles) != 2:
+        print(f"Error: Expected 2 <circle> elements, found {len(circles)}")
+        return
+
+    circle1, circle2 = circles
+    circle1['r'] = str(pin_size // 2)
+    circle2['r'] = str(pin_size // 2)
+    circle2['stroke-width'] = str(outline_size)
+
+    # Replace the old SVG string with the modified one
+    modified_svg_string = str(soup)
+    modified_content = re.sub(svg_pattern, f'var svgIcon = `{modified_svg_string}`;', content, flags=re.DOTALL)
+
+    with open(file_path, 'w', encoding='utf-8') as file:
+        file.write(modified_content)
+
+    print("SVG updated successfully")
+
+
+@app.route('/update_sizes', methods=['POST'])
+def update_sizes():
+    data = request.json
+    pin_size = data['pin_size']
+    outline_size = data['outline_size']
+
+    settings = load_pin_settings()
+    settings['pin_size'] = pin_size
+    settings['outline_size'] = outline_size
+    save_pin_settings(settings)
+
+    update_svg(pin_size, outline_size)
+    return jsonify({'message': 'Sizes updated successfully'})
+    
 if __name__ == '__main__':
     app.run(debug=True)
