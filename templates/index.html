@@ -383,7 +383,7 @@ display: none !important;
     }
 
     /* Make the containers hidden when screen width is less than 1271px */
-    @media (max-width: 1271px) and (min-width: 780px) {
+    @media (max-width: 1271px) and (min-width: 769px) {
 	  .left-container, .right-container, .togglebuttoncontainer {
 		display: none;
 	  }
@@ -570,7 +570,7 @@ display: none !important;
     position: absolute;
     top: 4.5%;
     left: 50%;
-	outline: 2px solid rgba(0,0,0,0.2);
+    outline: 2px solid rgba(0,0,0,0.2);
     transform: translate(-50%, -50%);
     display: flex;
     align-items: center;
@@ -586,9 +586,10 @@ display: none !important;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    max-width: 80%; /* Increased maximum width */
 }
 
-.counter-color {
+.counter-color, .marker-btn {
     height: 25px; /* Adjusted to match desktop version */
     width: 25px; /* Adjusted to match desktop version */
     border-radius: 50%;
@@ -740,18 +741,19 @@ display: none !important;
 #tool-selection-popup {
     position: absolute;
     left: 50%;
+	bottom: 1.5%;
     transform: translateX(-50%);
     display: flex;
     justify-content: center;
     align-items: center;
-    background-color: rgba(211, 211, 211, 0.05);
+    background-color: rgba(211, 211, 211, 0.4);
     border-radius: 35px;
     padding: 10px;
     gap: 10px;
-    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.2);
+    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.05);
     flex-wrap: nowrap;
     max-width: 50%;
-    z-index: 2;
+    z-index: 2000000;
 }
 
 .container {
@@ -777,7 +779,8 @@ display: none !important;
 .tool-btn img {
     display: block;
     width: auto;
-    height: 40px;
+    height: 30px;
+	border-radius: 10px;
     transition: transform 0.2s;
 }
 
@@ -787,8 +790,10 @@ display: none !important;
 }
 
 .tool-btn.selected img {
-    outline: 5px solid white;
+    background-color: rgba(255, 255, 255, 0.3); /* Example style */
 }
+
+
 
 .filter-container {
     display: flex;
@@ -887,7 +892,7 @@ margin-bottom: 50px;
     #counter-pill {
         padding: 8px 12px; /* Increased left and right padding */
         font-size: 3vw;
-        top: 7.5%;
+        top: 5.5%;
         max-width: 60%;
     }
 	
@@ -936,7 +941,15 @@ margin-bottom: 50px;
         border-radius: 30px; /* Maintain border radius */
     }
 	
-	
+
+.counter-color, .marker-btn {
+    height: 25px; /* Adjusted to match desktop version */
+    width: 25px; /* Adjusted to match desktop version */
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 5px; /* Consistent space after the circle */
+}
+
 
     #sidebar {
         width: calc(40% - 30px); /* Sidebar takes up 40% width minus the total horizontal margins */
@@ -969,6 +982,21 @@ margin-bottom: 50px;
 <!-- Category symbols will be inserted here -->
 </ul>
 </div>
+<div id="tool-selection-popup" style="display:none;">
+  <button id="marker-btn" class="tool-btn" onclick="selectTool('.leaflet-draw-draw-marker', this)">
+    <img src="/static/popupmenu_marker_darkmode.png" alt="Marker">
+  </button>
+  <button id="rectangle-btn" class="tool-btn" onclick="selectTool('.leaflet-draw-draw-rectangle', this)">
+    <img src="/static/popupmenu_rectangle_darkmode.png" alt="Rectangle">
+  </button>
+  <button id="circle-btn" class="tool-btn" onclick="selectTool('.leaflet-draw-draw-circle', this)">
+    <img src="/static/popupmenu_circle_darkmode.png" alt="Circle">
+  </button>
+  <button id="polygon-btn" class="tool-btn" onclick="selectTool('.leaflet-draw-draw-polygon', this)">
+    <img src="/static/popupmenu_polygon_darkmode.png" alt="Polygon">
+  </button>
+</div>
+
 </div>
 <?php MAP END ?>
 <?php SIDEBAR BODY START ?>
@@ -995,7 +1023,7 @@ margin-bottom: 50px;
 <img src="static/pinlisticon.png"/>
 </div>
 <!-- This button shows the user a list of existing pins -->
-<div class="info-div" id="infoDiv" style="border-radius: 30px;">
+<div class="info-div" id="infoDiv" style="border-radius: 30px; margin-right: 5px; margin-left: 5px;">
 <img src="static/infoicon.png"/>
 </div>
 </div>
@@ -1005,10 +1033,10 @@ margin-bottom: 50px;
      </h3>
 </div>
 <div class="right-container">
-<div class="lightswitch-div" id="lightswitchDiv" style="border-radius: 30px;">
+<div class="lightswitch-div" id="lightswitchDiv" style="border-radius: 30px; margin-left: 5px;">
 <img src="static/sunicon.png"/>
 </div>
-<div class="key-div" id="keyDiv" style="border-radius: 30px;">
+<div class="key-div" id="keyDiv" style="border-radius: 30px; margin-left: 5px;">
 <img src="static/keyicon.png"/>
 </div>
 </div>
@@ -1052,20 +1080,6 @@ margin-bottom: 50px;
 <?php CITY LOGO START ?>
 <img class="hide-on-mobile resistant-image" id="overlay-image" src="static/overlay.jpg" style="max-width: 97%; height: auto; display: block; margin-left:auto; margin-right:auto; margin-top: 3px; margin-bottom: 0px; border-radius: 30px; max-height: 368px;"/>
 <?php CITY LOGO END ?>
-<div id="tool-selection-popup" style="display: none;">
-  <button id="marker-btn" class="tool-btn selected" onclick="selectTool('.leaflet-draw-draw-marker', this)">
-    <img src="/static/popupmenu_marker_darkmode.png" alt="Marker">
-  </button>
-  <button id="rectangle-btn" class="tool-btn" onclick="selectTool('.leaflet-draw-draw-rectangle', this)">
-    <img src="/static/popupmenu_rectangle_darkmode.png" alt="Rectangle">
-  </button>
-  <button id="circle-btn" class="tool-btn" onclick="selectTool('.leaflet-draw-draw-circle', this)">
-    <img src="/static/popupmenu_circle_darkmode.png" alt="Circle">
-  </button>
-  <button id="polygon-btn" class="tool-btn" onclick="selectTool('.leaflet-draw-draw-polygon', this)">
-    <img src="/static/popupmenu_polygon_darkmode.png" alt="Polygon">
-  </button>
-</div>
 
 
 <svg width="0" height="0" id="hatch-patterns">
@@ -1084,9 +1098,7 @@ margin-bottom: 50px;
 <?php ADMIN TOOLS (OTP PROTECTED) END // Categories here are dynamically generated from the "static/categories.html" file. Additional categories can be added or removed by editing "static/categories.html".?>
 <?php CATEGORIES PULL START ?>
 <div class="container">
-    <div id="tool-selection-popup">
-        <!-- Popup content -->
-    </div>
+
 
     <iframe id="categories-iframe" frameborder="0" src="/categories" style="width:100%; height:100%; border:none;"></iframe>
 </div>
@@ -1099,6 +1111,7 @@ margin-bottom: 50px;
 // Initialize the map
 var map = L.map('map').setView([48.4102, 15.6022], 15);
 var currentDrawnLayer = null;
+var selectedToolButton = null;
 
 // Calculate the offset for boundaries
 var horizontalOffset = 1125; // 1.125 km on each side, total 2.25 km
@@ -1308,7 +1321,7 @@ var drawControl = new L.Control.Draw({
         },
         rectangle: {
             shapeOptions: {
-                color: currentCategory, // Default color
+                color: currentCategory, // This should set the color dynamically
                 weight: 4
             }
         },
@@ -1471,23 +1484,29 @@ function resetToolSelectionPopupTimer() {
 }
 
 function selectTool(selector, button) {
-  // Reset all buttons to unselected state
-  document.querySelectorAll('.tool-btn').forEach(btn => btn.classList.remove('selected'));
+    // Remove 'selected' class from all buttons
+    var buttons = document.querySelectorAll('#tool-selection-popup .tool-btn');
+    buttons.forEach(function(btn) {
+        btn.classList.remove('selected');
+    });
 
-  // Mark the clicked button as selected
-  button.classList.add('selected');
+    // Add 'selected' class to the clicked button
+    button.classList.add('selected');
 
-  // Find and click the corresponding Leaflet tool button
-  var toolButton = document.querySelector(selector);
-  if (toolButton) {
-    toolButton.click();
-    console.log(`Tool ${selector} activated programmatically`);
-  } else {
-    console.log(`Tool button for ${selector} not found`);
-  }
+    // Set the global variable to the currently selected button
+    selectedToolButton = button;
 
-  // Reset popup timer on each click
-  resetToolSelectionPopupTimer();
+    // Find and click the corresponding Leaflet tool button
+    var toolButton = document.querySelector(selector);
+    if (toolButton) {
+        toolButton.click();
+        console.log(`Tool ${selector} activated programmatically`);
+    } else {
+        console.log(`Tool button for ${selector} not found`);
+    }
+
+    // Reset popup timer on each click
+    resetToolSelectionPopupTimer();
 }
 
 // Add click event listener to popup to reset timer on click
@@ -1576,9 +1595,15 @@ map.on(L.Draw.Event.DRAWSTART, function(event) {
 // Update event listener for when drawing is stopped
 map.on(L.Draw.Event.DRAWSTOP, function(event) {
     console.log('Draw stop:', event.layerType);
-	  if (currentLayer) {
-        var type = currentLayer.getLayerType ? currentLayer.getLayerType() : '';
-        var isWithinBounds = type === 'marker' ? bounds.contains(currentLayer.getLatLng()) : bounds.contains(currentLayer.getBounds());
+    if (currentLayer) {
+        var type = currentLayer instanceof L.Marker ? 'marker' : ''; // Check if currentLayer is a Marker
+        var isWithinBounds;
+        
+        if (type === 'marker') {
+            isWithinBounds = bounds.contains(currentLayer.getLatLng());
+        } else if (currentLayer.getBounds) {
+            isWithinBounds = bounds.contains(currentLayer.getBounds());
+        }
 
         if (!isWithinBounds) {
             map.removeLayer(currentLayer); // Remove the layer if it's outside the boundaries
@@ -1587,7 +1612,8 @@ map.on(L.Draw.Event.DRAWSTOP, function(event) {
         }
     }
     isDrawing = false; // Reset the drawing flag
-	    currentLayer = null; // Reset the current layer
+    currentLayer = null; // Reset the current layer
+    resetSelectedToolButton();
 
     resetWarningFlag(); // Reset the warning flag
     if (event.layerType === 'marker') {
@@ -1626,6 +1652,7 @@ var currentLayer;
 map.on(L.Draw.Event.CREATED, function(event) {
     console.log('Shape creation event triggered'); // Debug: Confirm the event is firing
     console.log('Created shape type:', event.layerType); // Debug: Log the actual type of created shape
+    resetSelectedToolButton();
 
     var layer = event.layer;
     var type = event.layerType.toLowerCase();
@@ -1635,11 +1662,15 @@ map.on(L.Draw.Event.CREATED, function(event) {
     isDrawing = false; // Reset the drawing flag as the shape has been created
 
     // Boundary check
-    if (type === 'marker') {
+     if (bounds && type === 'marker') {
         if (!bounds.contains(layer.getLatLng())) {
             alert("It is not allowed to place objects outside of boundaries!");
-            // No need to set isDrawing = false here as the drawing process is already completed
-            return; // Exit the function without adding the layer
+            return;
+        }
+    } else if (type !== 'marker' && bounds && layer.getBounds) {
+        if (!bounds.contains(layer.getBounds())) {
+            alert("It is not allowed to place objects outside of boundaries!");
+            return;
         }
     } else {
         if (!bounds.contains(layer.getBounds())) {
@@ -1649,19 +1680,13 @@ map.on(L.Draw.Event.CREATED, function(event) {
         }
     }
 	
-	 currentLayer = layer; // Store the current layer
+    currentLayer = event.layer; // Assign the newly created layer to currentLayer
     drawnItems.addLayer(layer); // Add to feature group
     isDrawing = false; // Reset the drawing flag as shape creation is complete
 	
     if (type === 'marker') {
         var customIcon = createColoredCircleIcon(color);
         layer.setIcon(customIcon);
-    } else if (type === 'rectangle') {
-        console.log('Applying hatching pattern...'); // Debug: Log when applying the pattern
-        layer.setStyle({
-            color: '#FF7043',
-            fillPattern: document.getElementById('diagonalHatch')
-        });
     } else {
         layer.setStyle({ color: color });
     }
@@ -1687,12 +1712,8 @@ fetch('/static/filter.json')
     if (!shapeLayersByColor[color]) {
         shapeLayersByColor[color] = [];
     }
-    if (!shapeLayersByType[shapeType]) {
-        shapeLayersByType[shapeType] = [];
-    }
     shapeLayersByColor[color].push(layer);
-    shapeLayersByType[shapeType].push(layer);
-    console.log('Added layer to shapeLayersByColor and shapeLayersByType', layer);
+    console.log('Added layer to shapeLayersByColor', layer);
 
     var popupContent = '<form id="note-form">' +
                        '<textarea id="shape-note" placeholder="Enter your note here"></textarea><br>' +
@@ -1764,11 +1785,13 @@ fetch('/static/filter.json')
      }
 	 );
     // Setup click event listener on the document to detect clicks outside the popup
-    document.addEventListener('click', function onClickOutsidePopup(event) {
-        if (!layer._popup._container.contains(event.target) && !postButtonClicked) {
+	document.addEventListener('click', function onClickOutsidePopup(event) {
+    if (currentLayer && currentLayer._popup && currentLayer._popup._container) {
+        if (!currentLayer._popup._container.contains(event.target) && !postButtonClicked) {
             console.log('Click detected outside the popup. Canceling shape creation.');
-            drawnItems.removeLayer(layer);
+            drawnItems.removeLayer(currentLayer);
             document.removeEventListener('click', onClickOutsidePopup); // Remove the event listener
+}
         }
     });
 }
@@ -1893,7 +1916,12 @@ function loadShapes() {
 }
 
 
-
+function resetSelectedToolButton() {
+    if (selectedToolButton) {
+        selectedToolButton.classList.remove('selected');
+        selectedToolButton = null; // Reset the global variable
+    }
+}
 
 
 map.on(L.Draw.Event.DELETED, function(event) {
@@ -1915,7 +1943,6 @@ map.on('draw:deletestop', function(event) {
 
 
 loadShapes();
-
   </script>
 
   
@@ -1932,7 +1959,6 @@ loadShapes();
             fetch('/api/all-shapes').then(response => response.json()).then(data => {
                 console.log('Objects loaded from the database:', data.shapes);
                 objectsData = data.shapes; // Store data globally
-                displayObjects(objectsData);
                 populateColorFilter(objectsData);
             });
         });
@@ -3074,55 +3100,47 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   </script>
 <?php ADMINTOOLS CATEGORIES TOGGLING END ?>
-<script>
-    // Assuming jQuery is included
-    
+<script>    
     var shapeLayersByColor = {};
-    var shapeLayersByType = {};
     var colorVisibilityState = {};
-    var typeVisibilityState = {};
 
     // Initialize visibility state dictionaries
     function initializeVisibilityStates() {
         var colors = {{ color_counts | tojson }};
         console.log("Parsed color data:", colors);
 
-        var types = {{ category_counts | tojson }};
-        console.log("Parsed category data:", types);
-
         Object.keys(colors).forEach(function(color) {
             colorVisibilityState[color] = true; // All colors visible by default
             console.log('Initialized visibility state for color', color);
         });
-        Object.keys(types).forEach(function(type) {
-            typeVisibilityState[type] = true; // All types visible by default
-            console.log('Initialized visibility state for type', type);
-        });
     }
 
-    // Function to update visibility based on both color and type
-    function updateVisibility(layer, color, type) {
-        var visibleByColor = color ? colorVisibilityState[color] : true; // Default to true if color is undefined
-        var visibleByType = typeVisibilityState[type]; // The visibility state of the type
-        console.log('Updating visibility for layer. Color:', color, 'Type:', type, 'Visible by Color:', visibleByColor, 'Visible by Type:', visibleByType);
+    // Debugging enhanced updateVisibility function
+function updateVisibility(layer, color) {
+    var visibleByColor = color ? colorVisibilityState[color] : true;
 
-        // Change visibility only if both color and type visibility are true
-        if (visibleByColor && visibleByType) {
-            if (!map.hasLayer(layer)) {
-                map.addLayer(layer);
-                console.log('Layer shown on map:', layer);
-            }
-        } else {
-            if (map.hasLayer(layer)) {
-                map.removeLayer(layer);
-                console.log('Layer removed from map:', layer);
-            }
+    // Debug: Log visibility states
+    console.log('Visibility states - Color:', visibleByColor);
+
+    if (visibleByColor) {
+        if (!map.hasLayer(layer)) {
+            map.addLayer(layer);
+            console.log('Layer shown on map:', layer);
+        }
+    } else {
+        if (map.hasLayer(layer)) {
+            map.removeLayer(layer);
+            console.log('Layer removed from map:', layer);
         }
     }
+}
 
- // Enhanced addLayer function
-function addLayer(layer, color, type) {
-    console.log('Attempting to add layer:', layer, 'Color:', color, 'Type:', type);
+// Enhanced addLayer function with debugging
+function addLayer(layer, color) {
+    console.log('Attempting to add layer:', layer, 'Color:', color);
+
+    // Debug: Check if color is defined
+    console.log('Check - Color defined:', color !== undefined);
 
     // Add to color dictionary
     if (!shapeLayersByColor[color]) {
@@ -3130,73 +3148,44 @@ function addLayer(layer, color, type) {
     }
     shapeLayersByColor[color].push(layer);
 
-    // Check if type is defined before adding to type dictionary
-    if (type) {
-        if (!shapeLayersByType[type]) {
-            shapeLayersByType[type] = [];
-        }
-        shapeLayersByType[type].push(layer);
-    }
-
-    console.log(`Layer added. Current state by color:`, shapeLayersByColor, `Current state by type:`, shapeLayersByType);
+    // Debug: Print current state of dictionaries
+    console.log(`Layer added. Current state by color:`, shapeLayersByColor);
 }
 
-    // Modify the toggleVisibility function to handle shapes without a defined type
-    function toggleVisibility(color) {
-        console.log('Toggling visibility for color:', color);
-        colorVisibilityState[color] = !colorVisibilityState[color];
-        console.log(`Visibility state for color '${color}' is now:`, colorVisibilityState[color]);
-        if (shapeLayersByColor[color]) {
-            console.log(`Found layers for color '${color}'. Processing...`);
-            shapeLayersByColor[color].forEach(function(layer) {
-                var type = layer.options.shapeType || undefined; // Use undefined if shapeType isn't set
-                console.log('Updating visibility for layer. Layer:', layer, 'Color:', color, 'Type:', type);
-                updateVisibility(layer, color, type);
-            });
-        } else {
-            console.log('No layers found for color:', color);
-        }
-    }
+    // Enhanced toggleVisibility with debugging
+function toggleVisibility(color) {
+    console.log('Toggling visibility for color:', color);
+    colorVisibilityState[color] = !colorVisibilityState[color];
+    console.log(`Visibility state for color '${color}' is now:`, colorVisibilityState[color]);
 
-    // Enhanced toggleVisibilityByType function
-    function toggleVisibilityByType(type) {
-        console.log('Toggling visibility for type:', type);
-        typeVisibilityState[type] = !typeVisibilityState[type];
-        console.log(`Visibility state for type '${type}' is now:`, typeVisibilityState[type]);
-        if (shapeLayersByType[type]) {
-            console.log(`Found layers for type '${type}'. Processing...`);
-            shapeLayersByType[type].forEach(function(layer) {
-                var color = layer.options.color || layer.options.shapeColor; // Assume each layer has a color or shapeColor property
-                console.log('Updating visibility for layer. Layer:', layer, 'Color:', color, 'Type:', type);
-                updateVisibility(layer, color, type);
-            });
-        } else {
-            console.log('No layers found for type:', type);
-        }
+    if (shapeLayersByColor[color]) {
+        console.log(`Found layers for color '${color}'. Processing...`);
+        shapeLayersByColor[color].forEach(function(layer) {
+            console.log('Processing layer. Layer:', layer, 'Color:', color);
+            updateVisibility(layer, color);
+        });
+    } else {
+        console.log('No layers found for color:', color);
     }
-
-    
+}
     $(document).ready(function() {
         // Initialize visibility states when the document is ready
         initializeVisibilityStates();
-
-        // Load shapes from the database and add to the map and dictionaries
         
-// Load shapes from the database and add to map and dictionaries
+// Debug: Loading shapes with detailed logs
 $.getJSON('/api/shapes', function(data) {
-    data.shapes.forEach(function(shape) {
-        console.log('Loading shape from database:', shape);
+    console.log('Loading shapes from database. Total shapes:', data.shapes.length);
+    data.shapes.forEach(function(shape, index) {
+        console.log(`Processing shape ${index + 1}:`, shape);
 
         // Create a layer from the shape data
         var layer = L.geoJSON(shape.shape_data); // Modify according to actual layer creation logic
 
-        // Ensure shape_type is correctly set in your database and here
-        var layerType = shape.shape_type || 'defaultType'; // Provide a default type if undefined
+        // Debug: Log layer creation details
+        console.log(`Layer created from shape ${index + 1}. Layer:`, layer, 'Color:', shape.shape_color);
 
         // Add the loaded shape to dictionaries
-        addLayer(layer, shape.shape_color, layerType);
-
-        // Additional logic to add the layer to the map, if necessary
+        addLayer(layer, shape.shape_color);
     });
     console.log('All shapes loaded from the database and added to dictionaries.');
 });
@@ -3220,37 +3209,11 @@ $.getJSON('/api/shapes', function(data) {
             });
             $('#color-counters').append(listItem);
         });
-
-        // Populate category counters
-        var categoryCounts = {{ category_counts | tojson }};
-        console.log('Category counts:', categoryCounts);
-
-        Object.entries(categoryCounts).forEach(([category, count]) => {
-            var symbol = '';
-            switch(category) {
-			    case 'marker': symbol = '<img src="static/popupmenu_marker_darkmode.png" style="border: 1px solid white;"   alt="Marker" class="category-symbol" />'; break;
-                case 'circle': symbol = '<img src="static/popupmenu_circle_darkmode.png" style="border: 1px solid white;"  alt="Circle" class="category-symbol" />'; break;
-				case 'rectangle': symbol = '<img src="static/popupmenu_rectangle_darkmode.png" style="border: 1px solid white;"   alt="Rectangle" class="category-symbol" />'; break;
-                case 'polygon': symbol = '<img src="static/popupmenu_polygon_darkmode.png" style="border: 1px solid white;" alt="Polygon" class="category-symbol" />'; break;
-                // Add more cases for other categories if necessary
-            }
-            $('#category-counters').append(
-                $(`<li style="margin-right: 5px;">`).append(
-                    $(symbol).on('click', function() {
-                        toggleVisibilityByType(category);
-                        // Dim the symbol by adjusting the opacity
-                        $(this).css('opacity', $(this).css('opacity') == '1' ? '0.5' : '1');
-                    })
-                ).append(` ${count}`)
-            );
-        });
-
         console.log("Counters displayed.");
     });
 </script>
 
 <script>
-// Fetch and display all objects and populate filters when the page loads
 document.addEventListener('DOMContentLoaded', function() {
     fetch('/api/all-shapes').then(response => response.json()).then(data => {
         console.log('Objects loaded from the database:', data.shapes);
@@ -3259,12 +3222,11 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
-// Populate color filter options
 function populateColorFilter(shapes) {
     const colorSet = new Set(shapes.map(shape => shape.shape_color));
     const colorFilter = document.getElementById('color-filter');
     colorSet.forEach(color => {
-        if (color) { // ensure that null or undefined colors are not added
+        if (color) {
             const option = document.createElement('option');
             option.value = color;
             option.textContent = color;
@@ -3273,65 +3235,62 @@ function populateColorFilter(shapes) {
     });
 }
 
-
-// Display objects in the list
 function displayObjects(objects) {
     const objectList = document.getElementById('object-list');
-    objectList.innerHTML = ''; // Clear the current list
+    objectList.innerHTML = '';
     objects.forEach(object => {
-        console.log('Processing object:', object); // Debugging
+        console.log('Processing object:', object);
+
         const objectDiv = document.createElement('div');
         objectDiv.style.display = 'flex';
-        objectDiv.style.alignItems = 'center'; // Align items vertically
+        objectDiv.style.alignItems = 'center';
 
-            // Create a colored circle for the object
         const colorCircle = document.createElement('span');
         colorCircle.style.width = '20px';
         colorCircle.style.height = '20px';
         colorCircle.style.borderRadius = '50%';
-		        colorCircle.style.border = '2px solid white';
+        colorCircle.style.border = '2px solid white';
         colorCircle.style.backgroundColor = object.shape_color;
         colorCircle.style.display = 'inline-block';
         colorCircle.style.marginRight = '5px';
-        colorCircle.style.flexShrink = '0'; // Prevent circle from shrinking
+        colorCircle.style.flexShrink = '0';
 
         objectDiv.appendChild(colorCircle);
 
-        // Add emoji based on shape type
         const shapeTypeEmoji = document.createElement('span');
         shapeTypeEmoji.style.marginRight = '5px';
         shapeTypeEmoji.style.fontSize = '20px';
         switch (object.shape_type) {
             case 'marker':
-                shapeTypeEmoji.textContent = '📍'; // Pin emoji
+                shapeTypeEmoji.textContent = '📍';
                 break;
             case 'rectangle':
-                shapeTypeEmoji.textContent = '◼️'; // Rectangle emoji
+                shapeTypeEmoji.textContent = '◼️';
                 break;
             case 'circle':
-                shapeTypeEmoji.textContent = '⚪'; // Circle emoji
+                shapeTypeEmoji.textContent = '⚪';
                 break;
             case 'polygon':
-                shapeTypeEmoji.textContent = '🔺'; // Triangle (used as a polygon) emoji
+                shapeTypeEmoji.textContent = '🔺';
                 break;
-            // Add more cases for other shape types if needed
         }
         objectDiv.appendChild(shapeTypeEmoji);
 
-              // Create a span for the shape note
         const shapeNote = document.createElement('span');
         shapeNote.textContent = `${object.shape_note}`;
-
-        // Determine the current mode by checking the class
         const currentMode = document.documentElement.classList.contains('light-mode') ? 'light' : 'dark';
         shapeNote.style.color = currentMode === 'light' ? 'black' : 'white';
-
         objectDiv.appendChild(shapeNote);
 
-        // Add hover event to center map on object location
+        // Debugging to check if objectDiv is present
+        if (!objectDiv) {
+            console.error('objectDiv is not present.');
+        } else {
+            console.log('objectDiv is present:', objectDiv);
+        }
+
         objectDiv.addEventListener('mouseenter', () => centerMapOnObject(object));
 
-        // Add delete button
         const deleteBtn = document.createElement('button');
         deleteBtn.textContent = 'Delete';
         deleteBtn.addEventListener('click', () => deleteObject(object.id));
@@ -3340,70 +3299,57 @@ function displayObjects(objects) {
         objectList.appendChild(objectDiv);
     });
 }
-	
-// Function to fetch shapes and calculate the center of mass
-// Function to center map on a specific object's location
+
 function centerMapOnObject(object) {
     console.log(`Centering map on object: ${object.id}`);
-
     if (object.shape_data && object.shape_data.coordinates) {
-        const lat = object.shape_data.coordinates[1]; // Assuming format [lng, lat]
+        const lat = object.shape_data.coordinates[1];
         const lng = object.shape_data.coordinates[0];
-        map.setView([lat, lng], 13); // Adjust the zoom level as needed
+        map.setView([lat, lng], 13);
     } else {
         console.error('Object does not have valid coordinates:', object);
     }
 }
-objectDiv.addEventListener('mouseenter', () => centerMapOnObject(object));
 
+function deleteObject(objectId) {
+    console.log(`Deleting object: ${objectId}`);
+    fetch(`/api/delete-object/${objectId}`, { method: 'DELETE' })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                console.log(`Object ${objectId} deleted successfully.`);
+                fetch('/api/all-shapes').then(response => response.json()).then(data => {
+                    displayObjects(data.shapes);
+                });
+            } else {
+                console.error(`Failed to delete object ${objectId}.`);
+            }
+        });
+}
 
+function filterObjects() {
+    const searchQuery = document.getElementById('search-box').value.toLowerCase();
+    const colorFilter = document.getElementById('color-filter').value;
+    const typeFilter = document.getElementById('type-filter').value;
 
+    fetch('/api/shapes').then(response => response.json()).then(data => {
+        let filteredObjects = data.shapes;
 
-	// Function to delete an object
-	function deleteObject(objectId) {
-		console.log(`Deleting object: ${objectId}`);
-		fetch(`/api/delete-object/${objectId}`, { method: 'DELETE' })
-			.then(response => response.json())
-			.then(data => {
-				if (data.success) {
-					console.log(`Object ${objectId} deleted successfully.`);
-					// Refresh the object list
-					fetch('/api/all-shapes').then(response => response.json()).then(data => {
-						displayObjects(data.shapes);
-					});
-				} else {
-					console.error(`Failed to delete object ${objectId}.`);
-				}
-			});
-	}
-
-        // Function to filter objects based on the search input and selected filters
-        function filterObjects() {
-            const searchQuery = document.getElementById('search-box').value.toLowerCase();
-            const colorFilter = document.getElementById('color-filter').value;
-            const typeFilter = document.getElementById('type-filter').value;
-
-            fetch('/api/shapes').then(response => response.json()).then(data => {
-                let filteredObjects = data.shapes;
-
-                // Filter by color if a color is selected
-                if (colorFilter) {
-                    filteredObjects = filteredObjects.filter(object => object.shape_color === colorFilter);
-                }
-
-                // Filter by object type if a type is selected
-                if (typeFilter) {
-                    filteredObjects = filteredObjects.filter(object => object.shape_type === typeFilter);
-                }
-
-                // Filter by note based on search query
-                if (searchQuery) {
-                    filteredObjects = filteredObjects.filter(object => object.shape_note.toLowerCase().includes(searchQuery));
-                }
-
-                displayObjects(filteredObjects);
-            });
+        if (colorFilter) {
+            filteredObjects = filteredObjects.filter(object => object.shape_color === colorFilter);
         }
+
+        if (typeFilter) {
+            filteredObjects = filteredObjects.filter(object => object.shape_type === typeFilter);
+        }
+
+        if (searchQuery) {
+            filteredObjects = filteredObjects.filter(object => object.shape_note.toLowerCase().includes(searchQuery));
+        }
+
+        displayObjects(filteredObjects);
+    });
+}
   </script>
 <script>
    function toggleSearchFilter() {
@@ -3511,5 +3457,27 @@ document.addEventListener('click', function(e) {
     }
   </script>
 
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Select the tool-selection-popup element
+    var toolSelectionPopup = document.getElementById('tool-selection-popup');
+    
+    if (toolSelectionPopup) {
+        // Stop click events from propagating to underlying elements
+        toolSelectionPopup.addEventListener('click', function(event) {
+            event.stopPropagation();
+        });
+
+        // If there are clickable elements inside the popup, apply the same logic
+        var clickableElements = toolSelectionPopup.querySelectorAll('.clickable');
+        clickableElements.forEach(function(element) {
+            element.addEventListener('click', function(event) {
+                event.stopPropagation();
+            });
+        });
+    }
+});
+</script>
 </body>
 </html>

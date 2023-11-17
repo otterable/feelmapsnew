@@ -5,7 +5,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_session import Session
 from collections import Counter
 from werkzeug.security import generate_password_hash, check_password_hash
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, Comment
 from werkzeug.utils import secure_filename
 from datetime import datetime
 
@@ -336,6 +336,10 @@ def create_category():
         with open('templates/categories.html', 'r+') as file:
             content = file.read()
             soup = BeautifulSoup(content, 'html.parser')
+            
+            # Locate the ENDING OF CATEGORY EDITING AREA comment
+            end_comment = soup.find(string=lambda text: isinstance(text, Comment) and 'ENDING OF CATEGORY EDITING AREA' in text)
+            
             # Create a new button element for the category
             new_button = soup.new_tag('button', **{
                 'class': 'categorybutton',
@@ -345,15 +349,19 @@ def create_category():
             new_button_h3 = soup.new_tag('h3')
             new_button_h3.string = name
             new_button.append(new_button_h3)
-            soup.body.append(new_button)
+            
+            # Insert the new button before the end comment
+            end_comment.insert_before(new_button)
+
+            # Write the updated HTML back to the file
             file.seek(0)
             file.write(str(soup))
             file.truncate()
+
         return jsonify(success=True)
     except Exception as e:
         print(f"Error occurred while creating new category: {e}")
         return jsonify(success=False, error=str(e)), 500
-
 @app.route('/delete-category', methods=['POST'])
 def delete_category():
     color_to_delete = request.json.get('color')
