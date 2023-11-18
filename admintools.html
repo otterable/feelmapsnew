@@ -57,6 +57,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.js"></script>
 <!-- Include Spectrum's CSS from CDN -->
 <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/spectrum/1.8.1/spectrum.min.css" />
+<meta charset="UTF-8">
 
 <!-- Include Spectrum's JavaScript from CDN -->
 <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/spectrum/1.8.1/spectrum.min.js"></script>
@@ -517,18 +518,16 @@ function updateCategoryDropdowns() {
             width: 600px;
         }
     </style>
-    <script>
+<script>
         var map = L.map('admin-map').setView([48.4102, 15.6022], 15);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             maxZoom: 19,
             attribution: 'Stimmungskompass boundary editing tool | © OpenStreetMap contributors'
         }).addTo(map);
 
-        // Feature group to store drawn items
         var drawnItems = new L.FeatureGroup();
         map.addLayer(drawnItems);
 
-        // Initialize the draw control and pass it the FeatureGroup of editable layers
         var drawControl = new L.Control.Draw({
             edit: {
                 featureGroup: drawnItems
@@ -548,69 +547,78 @@ function updateCategoryDropdowns() {
             var type = e.layerType,
                 layer = e.layer;
 
-            // Add the drawn layer to the feature group
             drawnItems.addLayer(layer);
 
-            // Prepare data for saving
             var shapeData = layer.toGeoJSON();
             var shapeType = type;
             var radius = type === 'circle' ? layer.getRadius() : null;
 
-            // Send data to server via AJAX
+            layer.bindPopup(getPopupContent(), {keepInView: true});
+            layer.on('popupopen', function() {
+                document.getElementById('save-shape').addEventListener('click', function() {
+                    var note = document.getElementById('shape-note').value;
+                    var imageFile = document.getElementById('shape-image').files[0];
+                    saveShapeWithData(shapeData, shapeType, radius, note, layer, imageFile);
+                });
+            });
+        });
+
+        function getPopupContent() {
+            return `
+                <form id="shape-form">
+                    <textarea id="shape-note" placeholder="Add a note..."></textarea>
+                    <input type="file" id="shape-image" accept="image/*">
+                    <button type="button" id="save-shape">Save</button>
+                </form>
+            `;
+        }
+
+        function saveShapeWithData(shapeData, shapeType, radius, note, layer, imageFile) {
+            var formData = new FormData();
+            formData.append('shape_data', JSON.stringify(shapeData));
+            formData.append('shape_type', shapeType);
+            formData.append('radius', radius);
+            formData.append('note', note);
+            if (imageFile) {
+                formData.append('image', imageFile);
+            }
+
             fetch('/api/shapes', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    shape_data: shapeData,
-                    shape_type: shapeType,
-                    radius: radius
-                })
+                body: formData
             })
             .then(response => response.json())
             .then(data => {
                 console.log('Shape saved with ID:', data.id);
-                layer.options.id = data.id; // Assign ID to layer for further operations
+                layer.options.id = data.id;
+                bindPopupWithNoteAndImage(layer, note, data.imageUrl);
             })
             .catch(error => console.error('Error saving shape:', error));
-        });
-		
-		// Initialize your map and Leaflet Draw control as before...
+        }
 
-// Function to load existing shapes from the server and add them to the map
-function loadExistingShapes() {
-    fetch('/api/shapes')
-        .then(response => response.json())
-        .then(data => {
-            data.shapes.forEach(shape => {
-                var layer;
-                var shapeType = shape.shape_type;
-                var shapeData = shape.shape_data;
+        function bindPopupWithNoteAndImage(layer, note, imageUrl) {
+            var popupContent = `<div><strong>Note:</strong> ${note}</div>`;
+            if (imageUrl) {
+                popupContent += `<img src="${imageUrl}" alt="Uploaded Image" style="width:100%;height:auto;">`;
+            }
+            layer.bindPopup(popupContent, {keepInView: true});
+        }
 
-                // Check the type of shape and create the corresponding Leaflet layer
-                if (shapeType === 'circle') {
-                    layer = L.circle([shapeData.coordinates[1], shapeData.coordinates[0]], { radius: shape.radius });
-                } else if (shapeType === 'polygon') {
-                    layer = L.polygon(shapeData.coordinates);
-                } else if (shapeType === 'polyline') {
-                    layer = L.polyline(shapeData.coordinates);
-                } else {
-                    // Handle other shape types...
-                }
-
-                // Add the layer to the map and the feature group
-                if (layer) {
-                    layer.addTo(map);
-                    drawnItems.addLayer(layer);
-                }
-            });
-        })
-        .catch(error => console.error('Error loading shapes:', error));
-}
-
-// Call the function to load existing shapes
-loadExistingShapes();
+        // Load existing shapes
+        function loadExistingShapes() {
+            fetch('/api/shapes')
+            .then(response => response.json())
+            .then(data => {
+                data.shapes.forEach(shape => {
+                    var layer;
+                    var shapeType = shape.shape_type;
+                    var shapeData = shape.shape_data;
+                    // ... (existing code to add shapes to the map)
+                });
+            })
+            .catch(error => console.error('Error loading shapes:', error));
+        }
+        loadExistingShapes();
 
     </script>
 	

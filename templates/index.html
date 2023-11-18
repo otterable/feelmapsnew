@@ -91,28 +91,45 @@ body, html {
 }
 
 
-/* CUSTOM SCROLLBAR CSS START */
+/* Custom Scrollbar Styles */
 /* For Webkit (Chrome, Safari, Edge) */
 ::-webkit-scrollbar {
-    display: none; /* Hide scrollbar for Webkit browsers */
+    width: 0px; /* Hide scrollbar globally */
+}
+
+::-webkit-scrollbar-thumb {
+    background-color: transparent; /* Invisible scrollbar thumb globally */
 }
 
 /* Hide scrollbar for IE, Edge, and Firefox */
 body {
-    -ms-overflow-style: none;  /* IE and Edge */
-    scrollbar-width: none;  /* Firefox */
+    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none; /* Firefox */
 }
 
-/* Hide scrollbar for Chrome, Safari and Opera */
-body::-webkit-scrollbar {
-    display: none;
+/* Custom scrollbar for object list */
+#object-list::-webkit-scrollbar {
+    width: 6px; /* Adjust the width for object list */
 }
 
-.leaflet-draw-edit-edit {
-        display: none !important;
-    }
+#object-list::-webkit-scrollbar-thumb {
+    background-color: #888; /* Customize the scrollbar thumb color for object list */
+    border-radius: 3px; /* Add rounded corners for object list scrollbar */
+}
 
-/* CUSTOM SCROLLBAR CSS END */
+#object-list {
+    overflow-y: auto; /* Enable scrolling for object list */
+    max-height: 350px; /* Adjust height as needed */
+    scrollbar-width: thin; /* Use a thin scrollbar for the object list in Firefox */
+    -ms-overflow-style: scrollbar; /* Enable scrollbar for IE and Edge */
+}
+
+/* Exception for the scrollbar inside the object list */
+#object-list.custom-scrollbar {
+    border-radius: 10px; /* Add rounded corners to the object list */
+}
+
+/* Custom Scrollbar CSS End */
 
 /* CITY PICTURE CSS START */
 .logo-img {
@@ -594,7 +611,9 @@ display: none !important;
     width: 25px; /* Adjusted to match desktop version */
     border-radius: 50%;
     display: inline-block;
-    margin-right: 5px; /* Consistent space after the circle */
+    margin-right: 2.5px; /* Consistent space after the circle */
+	    margin-left: 2.5px; /* Consistent space after the circle */
+
 }
 
 #color-counters, #category-counters {
@@ -810,7 +829,78 @@ display: none !important;
 margin-bottom: 50px;
 }
 
+#mobileCategoryOverlay {
+    display: none;
+    position: fixed; /* Changed from absolute to fixed */
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.8);
+    z-index: 2147483647; /* Max value */
+    overflow: auto;
+    justify-content: center;
+    align-items: center;
+}
 
+        /* Responsive design */
+        @media screen and (min-width: 769px) {
+            #mobileCategoryOverlay {
+                display: none; /* Hide on non-mobile devices */
+            }
+        }
+		
+.categorybutton {
+    opacity: 0;
+    font-weight: bold;
+    line-height: 1;
+    cursor: pointer;
+    text-decoration: none;
+    display: flex;
+    max-width: 90%;
+    height: auto;
+    box-sizing: border-box;
+    transition: background-color 0.2s ease-in-out;
+    border-radius: 30px;
+    text-align: center;
+    border: none;
+    flex-grow: 1;
+    flex-shrink: 1;
+    padding: 20px 20px !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+}
+
+
+    .categorybutton:hover {
+        filter: brightness(85%);
+        outline: 3px solid white;
+        outline-offset: -3px;
+    }
+
+    .categorybutton.selected {
+        filter: brightness(85%);
+        outline: 5px solid white;
+        outline-offset: -5px;
+    }
+     
+        .categorybutton h3 {
+            margin: 0; /* Removes any default margin */
+            color: white;
+        }
+		
+.button-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+}
+#search-filter-section {
+    display: none;
  </style>
 <style>
 
@@ -837,6 +927,7 @@ margin-bottom: 50px;
         border-radius: 30px;
         margin-bottom: 15px;
 		margin-top: 7.5px !important;
+		z-index: 500!important;
     }
 
     #sidebar {
@@ -862,7 +953,7 @@ margin-bottom: 50px;
     padding-left: 15px;
     padding: 7.5px;
     max-height: 81px;
-    z-index: 1001; /* High z-index */
+    z-index: 500!important; /* High z-index */
     background-color: red; /* Bright background color for testing */
     width: auto; /* Fixed width for testing */
     display: block !important; /* Force display */
@@ -890,7 +981,7 @@ margin-bottom: 50px;
 
 @media (max-width: 768px) {
     #counter-pill {
-        padding: 8px 12px; /* Increased left and right padding */
+        padding: 8px 15px; /* Increased left and right padding */
         font-size: 3vw;
         top: 5.5%;
         max-width: 60%;
@@ -901,7 +992,9 @@ margin-bottom: 50px;
     width: 12px;
     border-radius: 50%;
     display: inline-block;
-    margin-right: 5px; /* Reduced space after the circle */
+    margin-right: 1.5px; /* Reduced space after the circle */
+	    margin-left: 1.5px; /* Reduced space after the circle */
+
 }
 
 
@@ -961,8 +1054,35 @@ margin-bottom: 50px;
     }
 	
 }
+
+/* Mobile view */
+@media screen and (max-width: 768px) {
+    #search-filter-section {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background-color: rgba(0, 0, 0, 0.8);
+        z-index: 2147483647;
+        overflow: auto;
+        justify-content: center;
+        align-items: center;
+        padding: 20px;
+        box-sizing: border-box;
+    }
+
+    .filter-container {
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+    }
+}
  </style>
 <body>
+    <div id="mobileCategoryOverlay"></div>
+
 <div class="color-111111" id="sidebar-mobileheader" style="display: none; background-color: #111111;">
 <img class="logo-img appear-on-mobile" src="static/logo_long.png" style="display: none; max-width: 97%; height: auto; display: block; margin-bottom: 0px; border-radius: 0px;"/>
 <h3 class="appear-on-mobiledisabled resistant-h3" style="display: none; color: white; text-align: center; margin-top: 5px;">
@@ -1044,38 +1164,40 @@ margin-bottom: 50px;
 <!-- SMALL OPTIONS MENU TOP END -->
 <!-- Search and Filter Section -->
 <div id="search-filter-section" style="display: none; max-height: 350px; overflow-y: auto; max-width: 97%; margin-left:auto; margin-bottom: 0; margin-top: 3px; margin-right: auto;">
-<div class="filter-container">
-<input id="search-box" style="border-radius: 30px; padding: 5px; border: 1.5px solid black;" oninput="filterObjects()" placeholder="Search by note..." type="text"/>
-<select id="color-filter" style="border-radius: 30px; padding: 5px; border: 1.5px solid black;" onchange="filterObjects()">
-<option style="border-radius: 30px; padding: 5px;"value="">
-      Filter by color
-     </option>
-<!-- Dynamically populate color options here -->
-</select>
-<select id="type-filter" style="border-radius: 30px; padding: 5px; margin-bottom: 7.5px; border: 1.5px solid black;"onchange="filterObjects()">
-<option value="">
-      Filter by object type
-     </option>
-<option value="rectangle">
-      Rectangle
-     </option>
-<option value="circle">
-      Circle
-     </option>
-<option value="marker">
-      Marker
-     </option>
-<option value="polygon">
-      Polygon
-     </option>
-<!-- Add more object types as needed -->
-</select>
-</div>
+    <div class="filter-container">
+        <input id="search-box" style="border-radius: 30px; padding: 5px; border: 1.5px solid black;" oninput="filterObjects()" placeholder="Notiztext..." type="text" />
+        <select id="color-filter" style="border-radius: 30px; padding: 5px; border: 1.5px solid black;" onchange="filterObjects()">
+            <option style="border-radius: 30px; padding: 5px;" value="">
+                Alle Kategorien
+            </option>
+            <!-- Dynamically populate color options here -->
+        </select>
+        <select id="type-filter" style="border-radius: 30px; padding: 5px; margin-bottom: 7.5px; border: 1.5px solid black;" onchange="filterObjects()">
+            <option value="">
+                Alle Markierungsarten
+            </option>
+			<option value="marker">
+                Marker
+            </option>
+			<option value="circle">
+                Kreis
+            </option>
+            <option value="rectangle">
+                Rechteck
+            </option>
+            <option value="polygon">
+                Polygon
+            </option>
+            <!-- Add more object types as needed -->
+        </select>
+    </div>
 
-<!-- Object List Section -->
-<div id="object-list">
-<!-- Dynamically populated object list will go here -->
-</div>
+    <!-- Object List Section -->
+    <div id="object-list" style="position: relative;" class="custom-scrollbar">
+        <!-- Dynamically populated object list will go here -->
+        <!-- Sidebar -->
+    </div>
+
 </div>
 <?php CITY LOGO START ?>
 <img class="hide-on-mobile resistant-image" id="overlay-image" src="static/overlay.jpg" style="max-width: 97%; height: auto; display: block; margin-left:auto; margin-right:auto; margin-top: 3px; margin-bottom: 0px; border-radius: 30px; max-height: 368px;"/>
@@ -1101,6 +1223,9 @@ margin-bottom: 50px;
 
 
     <iframe id="categories-iframe" frameborder="0" src="/categories" style="width:100%; height:100%; border:none;"></iframe>
+	
+
+
 </div>
 <?php CATEGORIES PULL END ?>
 </div>
@@ -1254,18 +1379,52 @@ var customMarkerIcon = L.divIcon({
 });
 
 
-// Global variable for the custom cursor icon
+// Global variable to store the current cursor icon color
 var customCursorIcon;
 
-// Create and attach a custom cursor icon
+var currentCursorColor = '';
+
+// Function to create the custom cursor icon
 function createCustomCursorIcon(color) {
-    removeCustomCursorIcon();  // Ensure any existing custom cursor is removed
+    // Remove the existing custom cursor icon if it exists
+    removeCustomCursorIcon();
+
+    // Create a new custom cursor icon with the specified color
     customCursorIcon = L.DomUtil.create('div', 'custom-cursor-icon');
     customCursorIcon.innerHTML = '<div style="width: 24px; height: 24px; border-radius: 50%; background-color: ' + color + ';"></div>';
     customCursorIcon.style.position = 'absolute';
     customCursorIcon.style.pointerEvents = 'none';
     customCursorIcon.style.zIndex = '1000'; // Set high z-index
     document.body.appendChild(customCursorIcon);
+
+    // Update the current cursor color
+    currentCursorColor = color;
+}
+
+
+// Function to create or update the custom cursor icon
+function createOrUpdateCustomCursorIcon(color) {
+    // Remove the existing custom cursor icon if it exists
+    removeCustomCursorIcon();
+
+    // Create a new custom cursor icon with the specified color
+    customCursorIcon = L.DomUtil.create('div', 'custom-cursor-icon');
+    customCursorIcon.innerHTML = '<div style="width: 24px; height: 24px; border-radius: 50%; background-color: ' + color + ';"></div>';
+    customCursorIcon.style.position = 'absolute';
+    customCursorIcon.style.pointerEvents = 'none';
+    customCursorIcon.style.zIndex = '1000'; // Set high z-index
+    document.body.appendChild(customCursorIcon);
+
+    // Update the current cursor color
+    currentCursorColor = color;
+}
+
+// Event listener for when the category changes
+function onCategoryChange(newCategory) {
+    // Check if the new category is different from the current cursor color
+    if (newCategory !== currentCursorColor) {
+        createOrUpdateCustomCursorIcon(newCategory);
+    }
 }
 
 
@@ -1512,12 +1671,25 @@ function selectTool(selector, button) {
 // Add click event listener to popup to reset timer on click
 document.getElementById('tool-selection-popup').addEventListener('click', resetToolSelectionPopupTimer);
 
-// Call showToolSelectionPopup when category is set
+// Function to set the current category and update the map elements
 function setCategory(category) {
     currentCategory = category;
     console.log('Category set to:', currentCategory);
     updateDrawHandlers(); // Update draw handlers when category changes
     console.log('setCategory called with category:', category);
+
+    // Update the color of the cursor icon
+    createOrUpdateCustomCursorIcon(currentCategory);
+
+    // Define a custom marker icon
+var customMarkerIcon = L.divIcon({
+    className: 'custom-marker-icon',
+    html: '<div style="width: 24px; height: 24px; border-radius: 50%; background-color: YOUR_CATEGORY_COLOR;"></div>',
+    iconSize: [24, 24],
+    iconAnchor: [12, 12], // Centers the icon
+    className: 'your-custom-class' // Add your custom class here
+});
+
 
     // Display the tool selection popup
     var popup = document.getElementById('tool-selection-popup');
@@ -1530,9 +1702,9 @@ function setCategory(category) {
 
     // Default to Marker tool
     selectTool('.leaflet-draw-draw-marker');
-	    showToolSelectionPopup();
-
+    showToolSelectionPopup();
 }
+
 
 function selectTool(selector) {
     var toolButton = document.querySelector(selector);
@@ -1716,9 +1888,9 @@ fetch('/static/filter.json')
     console.log('Added layer to shapeLayersByColor', layer);
 
     var popupContent = '<form id="note-form">' +
-                       '<textarea id="shape-note" placeholder="Enter your note here"></textarea><br>' +
-                       '<button type="button" id="save-note">Post</button>' +
-                       '<button type="button" id="cancel-note">Cancel</button>' +
+                       '<textarea id="shape-note" placeholder="Wie denken Sie über diesen Ort?"></textarea><br>' +
+                       '<button type="button" id="save-note">Schicken</button>' +
+                       '<button type="button" id="cancel-note">Stornieren</button>' +
                        '</form>';
 
     layer.bindPopup(popupContent, {
@@ -1941,8 +2113,6 @@ map.on('draw:deletestop', function(event) {
     }
 });
 
-
-loadShapes();
   </script>
 
   
@@ -3100,9 +3270,12 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   </script>
 <?php ADMINTOOLS CATEGORIES TOGGLING END ?>
-<script>    
+<script>
     var shapeLayersByColor = {};
     var colorVisibilityState = {};
+    var selectedColors = {}; // Object to keep track of selected colors
+    var isCounterPillHovered = false; // Flag to track hovering state of the counter-pill
+	var leafletLayers = {}; // Global object to store references to Leaflet layers
 
     // Initialize visibility state dictionaries
     function initializeVisibilityStates() {
@@ -3111,134 +3284,219 @@ document.addEventListener('DOMContentLoaded', function() {
 
         Object.keys(colors).forEach(function(color) {
             colorVisibilityState[color] = true; // All colors visible by default
+            shapeLayersByColor[color] = []; // Initialize an empty array for each color
+            selectedColors[color] = false; // Initialize selected colors
             console.log('Initialized visibility state for color', color);
         });
     }
 
-    // Debugging enhanced updateVisibility function
-function updateVisibility(layer, color) {
-    var visibleByColor = color ? colorVisibilityState[color] : true;
+    function updateVisibility(color) {
+        var visible = colorVisibilityState[color];
+        console.log(`Updating visibility for color '${color}' to:`, visible);
 
-    // Debug: Log visibility states
-    console.log('Visibility states - Color:', visibleByColor);
-
-    if (visibleByColor) {
-        if (!map.hasLayer(layer)) {
-            map.addLayer(layer);
-            console.log('Layer shown on map:', layer);
-        }
-    } else {
-        if (map.hasLayer(layer)) {
-            map.removeLayer(layer);
-            console.log('Layer removed from map:', layer);
-        }
-    }
-}
-
-// Enhanced addLayer function with debugging
-function addLayer(layer, color) {
-    console.log('Attempting to add layer:', layer, 'Color:', color);
-
-    // Debug: Check if color is defined
-    console.log('Check - Color defined:', color !== undefined);
-
-    // Add to color dictionary
-    if (!shapeLayersByColor[color]) {
-        shapeLayersByColor[color] = [];
-    }
-    shapeLayersByColor[color].push(layer);
-
-    // Debug: Print current state of dictionaries
-    console.log(`Layer added. Current state by color:`, shapeLayersByColor);
-}
-
-    // Enhanced toggleVisibility with debugging
-function toggleVisibility(color) {
-    console.log('Toggling visibility for color:', color);
-    colorVisibilityState[color] = !colorVisibilityState[color];
-    console.log(`Visibility state for color '${color}' is now:`, colorVisibilityState[color]);
-
-    if (shapeLayersByColor[color]) {
-        console.log(`Found layers for color '${color}'. Processing...`);
         shapeLayersByColor[color].forEach(function(layer) {
-            console.log('Processing layer. Layer:', layer, 'Color:', color);
-            updateVisibility(layer, color);
+            if (visible && !map.hasLayer(layer)) {
+                map.addLayer(layer);
+                console.log('Layer added back to map:', layer);
+            } else if (!visible && map.hasLayer(layer)) {
+                map.removeLayer(layer);
+                console.log('Layer removed from map:', layer);
+            }
         });
-    } else {
-        console.log('No layers found for color:', color);
     }
-}
-    $(document).ready(function() {
-        // Initialize visibility states when the document is ready
-        initializeVisibilityStates();
-        
-// Debug: Loading shapes with detailed logs
-$.getJSON('/api/shapes', function(data) {
-    console.log('Loading shapes from database. Total shapes:', data.shapes.length);
-    data.shapes.forEach(function(shape, index) {
-        console.log(`Processing shape ${index + 1}:`, shape);
 
-        // Create a layer from the shape data
-        var layer = L.geoJSON(shape.shape_data); // Modify according to actual layer creation logic
 
-        // Debug: Log layer creation details
-        console.log(`Layer created from shape ${index + 1}. Layer:`, layer, 'Color:', shape.shape_color);
+    function createColoredCircleIcon(color) {
+        var svgIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
+            <circle cx="16" cy="16" r="8" fill="${color}" />
+            <circle cx="16" cy="16" r="8" stroke="${color}" stroke-width="16" fill="none" stroke-opacity="0.5" />
+        </svg>`;
 
-        // Add the loaded shape to dictionaries
-        addLayer(layer, shape.shape_color);
-    });
-    console.log('All shapes loaded from the database and added to dictionaries.');
-});
-		
-        var colorCounts = {{ color_counts | tojson }};
-        console.log('Color counts:', colorCounts);
-
-        Object.entries(colorCounts).forEach(([color, count]) => {
-            var colorCircle = $(`<span class="counter-color" style="background-color: ${color}; border: 2px solid white;"></span>`);
-            var listItem = $(`<li style="margin-right: 5px;">`).append(colorCircle).append(` ${count}`);
-            listItem.on('click', function() {
-                console.log('Clicked color:', color);
-
-                toggleVisibility(color);
-                // Dim the circle by adjusting the opacity
-                if (colorCircle.css('opacity') == '1') {
-                    colorCircle.css('opacity', '0.5'); // Dim it
-                } else {
-                    colorCircle.css('opacity', '1'); // Return to full opacity
-                }
-            });
-            $('#color-counters').append(listItem);
+        return L.icon({
+            iconUrl: `data:image/svg+xml;base64,${btoa(svgIcon)}`,
+            iconSize: [32, 32],
+            iconAnchor: [16, 16],
+            popupAnchor: [0, -16]
         });
-        console.log("Counters displayed.");
+    }
+
+    function addLayer(shape, color, shapeNote) {
+    var shapeLayer;
+    var shapeType = shape.shape_type;
+
+    if (shapeType === 'marker') {
+        var center = L.GeoJSON.coordsToLatLng(shape.shape_data.geometry.coordinates);
+        var customIcon = createColoredCircleIcon(color);
+        shapeLayer = L.marker(center, { icon: customIcon });
+    } else if (shapeType === 'circle' || shapeType === 'circlemarker') {
+        var center = L.GeoJSON.coordsToLatLng(shape.shape_data.geometry.coordinates);
+        var radius = shape.radius;
+        shapeLayer = L.circle(center, { color: color, radius: radius });
+    } else {
+        shapeLayer = L.geoJSON(shape.shape_data, {
+            style: function() { return { color: color }; }
+        });
+    }
+
+    if (shapeNote) {
+        var popupContent = '<div><strong></strong> ' + shapeNote + '</div>';
+        shapeLayer.bindPopup(popupContent, { keepInView: true });
+    }
+
+    if (!(color in shapeLayersByColor)) {
+        console.log('Color not initialized:', color);
+        return;
+    }
+
+    if (!shapeLayersByColor[color].includes(shapeLayer)) {
+        shapeLayersByColor[color].push(shapeLayer);
+        if (colorVisibilityState[color]) {
+            map.addLayer(shapeLayer);
+        }
+        console.log(`Layer added for color '${color}'. Layer:`, shapeLayer);
+    }
+
+    // Store the Leaflet layer with an identifier
+    leafletLayers[shape.id] = shapeLayer;
+	console.log(`Storing Leaflet layer for shape ID: ${shape.id}`, shapeLayer);
+
+}
+
+
+
+    function toggleVisibility(color) {
+        colorVisibilityState[color] = !colorVisibilityState[color];
+        selectedColors[color] = !colorVisibilityState[color]; // Update the selected colors tracking
+        updateVisibility(color);
+        updateSelectedEffect(color); // Update the selected effect
+        console.log('Toggled visibility for color:', color, 'New state:', colorVisibilityState[color]);
+    }
+
+    function updateSelectedEffect(color) {
+        var colorCircle = $(`.counter-color[style*='${color}']`);
+        colorCircle.css('opacity', selectedColors[color] ? '0.5' : '1');
+    }
+
+    function fetchAndUpdateCounts() {
+        $.getJSON('/get-category-order', function(categoryOrder) {
+            console.log('Category order:', categoryOrder);
+
+            $.getJSON('/count-objects', function(data) {
+                console.log('Updated counts fetched:', data);
+
+                var colorCounters = $('#color-counters');
+                colorCounters.empty(); // Clear current content
+
+                // Append new elements in the order received from categoryOrder
+                categoryOrder.forEach(function(color) {
+                    var count = data.color_counts[color];
+                    var colorCircle = $(`<span class="counter-color" style="background-color: ${color}; border: 2px solid white;"></span>`);
+                    var listItem = $(`<li style="margin-right: 5px;">`).append(colorCircle).append(` ${count}`);
+                    listItem.on('click', function() {
+                        toggleVisibility(color);
+                        updateSelectedEffect(color); // Update the selected effect
+                    });
+                    colorCounters.append(listItem);
+
+                    // Reapply the selected effect for each color
+                    updateSelectedEffect(color);
+                });
+
+               
+                
+            });
+        });
+    }
+
+    // Event listeners for counter-pill hover behavior
+    $(document).ready(function() {
+        var counterPill = document.getElementById('counter-pill');
+        if (counterPill) {
+            counterPill.addEventListener('mouseenter', function() {
+                isCounterPillHovered = true;
+                // Show popup code here
+            });
+            counterPill.addEventListener('mouseleave', function() {
+                isCounterPillHovered = false;
+                // Hide popup code here
+            });
+        }
+
+        initializeVisibilityStates();
+
+        $.getJSON('/api/shapes', function(data) {
+            console.log('Loading shapes from database. Total shapes:', data.shapes.length);
+            data.shapes.forEach(function(shape) {
+                addLayer(shape, shape.shape_color, shape.shape_note);
+            });
+            console.log('All shapes loaded from the database and added to dictionaries.');
+        });
+
+        // Fetch and update counts initially and periodically
+        fetchAndUpdateCounts();
+        setInterval(fetchAndUpdateCounts, 1000); // Update every 1 second
     });
+	
+	
 </script>
 
+
 <script>
+
+document.addEventListener('DOMContentLoaded', function() {
+    fetch('/api/all-shapes').then(response => response.json()).then(data => {
+        displayObjects(data.shapes);
+
+        // Add event listeners after the objects are displayed
+        const objectElements = document.querySelectorAll('.object-item');
+        objectElements.forEach(element => {
+            element.addEventListener('click', function() {
+                const objectID = this.getAttribute('data-object-id');
+                console.log(`Clicked on object with ID: ${objectID}`);
+
+                var layer = leafletLayers[objectID];
+                console.log(`Retrieving Leaflet layer for object ID: ${objectID}`, layer);
+
+                if (layer) {
+                    centerMapOnObject(layer);
+                } else {
+                    console.error('No Leaflet layer found for object ID:', objectID);
+                }
+            });
+        });
+    });
+});
+
 document.addEventListener('DOMContentLoaded', function() {
     fetch('/api/all-shapes').then(response => response.json()).then(data => {
         console.log('Objects loaded from the database:', data.shapes);
         displayObjects(data.shapes);
-        populateColorFilter(data.shapes);
     });
 });
 
-function populateColorFilter(shapes) {
-    const colorSet = new Set(shapes.map(shape => shape.shape_color));
-    const colorFilter = document.getElementById('color-filter');
-    colorSet.forEach(color => {
-        if (color) {
-            const option = document.createElement('option');
-            option.value = color;
-            option.textContent = color;
-            colorFilter.appendChild(option);
-        }
-    });
-}
+    // Function to populate the color filter with category names
+    function populateColorFilterWithCategories() {
+        $.getJSON('/get-categories', function(categories) {
+            const colorFilter = document.getElementById('color-filter');
+            categories.forEach(function(category) {
+                if (category.color !== 'null') {
+                    const option = document.createElement('option');
+                    option.value = category.color;
+                    option.textContent = category.text;
+                    colorFilter.appendChild(option);
+                }
+            });
+        });
+    }
+
+    // Call the function to populate the color filter
+    populateColorFilterWithCategories();
 
 function displayObjects(objects) {
     const objectList = document.getElementById('object-list');
     objectList.innerHTML = '';
     objects.forEach(object => {
+	
         console.log('Processing object:', object);
 
         const objectDiv = document.createElement('div');
@@ -3275,7 +3533,8 @@ function displayObjects(objects) {
                 break;
         }
         objectDiv.appendChild(shapeTypeEmoji);
-
+       objectDiv.classList.add('object-item');
+        objectDiv.setAttribute('data-object-id', object.id);
         const shapeNote = document.createElement('span');
         shapeNote.textContent = `${object.shape_note}`;
         const currentMode = document.documentElement.classList.contains('light-mode') ? 'light' : 'dark';
@@ -3289,27 +3548,45 @@ function displayObjects(objects) {
             console.log('objectDiv is present:', objectDiv);
         }
 
-        objectDiv.addEventListener('mouseenter', () => centerMapOnObject(object));
+           objectDiv.addEventListener('click', function() {
+            console.log(`Object clicked with ID: ${object.id}`);
+            var layer = leafletLayers[object.id];
 
-        const deleteBtn = document.createElement('button');
-        deleteBtn.textContent = 'Delete';
-        deleteBtn.addEventListener('click', () => deleteObject(object.id));
-        objectDiv.appendChild(deleteBtn);
+            if (layer) {
+                console.log(`Retrieving Leaflet layer for object ID: ${object.id}`, layer);
+                centerMapOnObject(layer);
+            } else {
+                console.error('No Leaflet layer found for object ID:', object.id);
+            }
+        });
 
+        // Append the objectDiv to the objectList
         objectList.appendChild(objectDiv);
     });
 }
-
-function centerMapOnObject(object) {
-    console.log(`Centering map on object: ${object.id}`);
-    if (object.shape_data && object.shape_data.coordinates) {
-        const lat = object.shape_data.coordinates[1];
-        const lng = object.shape_data.coordinates[0];
-        map.setView([lat, lng], 13);
+function centerMapOnObject(layer) {
+    if (layer) {
+        if (layer.getLatLng) {
+            // For markers and circles
+            const latLng = layer.getLatLng();
+            console.log(`Centering map on coordinates:`, latLng);
+            map.panTo(latLng);
+        } else if (layer.getBounds) {
+            // For rectangles, polygons, and other shapes that have bounds
+            const bounds = layer.getBounds();
+            const center = bounds.getCenter();
+            console.log(`Centering map on center of bounds:`, center);
+            map.panTo(center);
+        } else {
+            console.error('Layer does not have a getLatLng or getBounds method:', layer);
+        }
     } else {
-        console.error('Object does not have valid coordinates:', object);
+        console.error('Invalid or undefined Leaflet layer object:', layer);
     }
 }
+
+
+
 
 function deleteObject(objectId) {
     console.log(`Deleting object: ${objectId}`);
@@ -3479,5 +3756,106 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 </script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const iframe = document.getElementById('categories-iframe');
+    const overlay = document.getElementById('mobileCategoryOverlay');
+    const hamburgerButton = document.getElementById('hamburgerButton');
+
+   function checkOverlayVisibility() {
+    if (window.innerWidth > 768) {
+        overlay.style.display = 'none';
+        console.log("Overlay hidden because screen size is larger than 768px");
+    }
+	}
+	  // Event listener for window resize
+    window.addEventListener('resize', checkOverlayVisibility);
+	
+    // Function to clone and append category buttons to the overlay
+    function appendCategoriesToOverlay() {
+    const iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+    const categoryButtons = iframeDocument.querySelectorAll('.categorybutton');
+    
+    // Clear previous content
+    overlay.innerHTML = '';
+
+    // Create a container for the buttons
+    const buttonContainer = document.createElement('div');
+    buttonContainer.classList.add('button-container');
+    overlay.appendChild(buttonContainer);
+
+    categoryButtons.forEach((button, index) => {
+        // Clone and append to container
+        const clonedButton = button.cloneNode(true);
+        buttonContainer.appendChild(clonedButton);
+
+            // Add event listener to cloned buttons to hide overlay on click
+            clonedButton.addEventListener('click', () => overlay.style.display = 'none');
+
+            // Debugging: Log the category details
+            console.log(`Category ${index + 1}:`, clonedButton.innerHTML);
+
+            // Additional style adjustments for cloned buttons
+            clonedButton.style.display = 'flex'; // Ensure it's displayed
+            clonedButton.style.width = '100%'; // Full width
+            clonedButton.style.justifyContent = 'center'; // Center content
+            clonedButton.style.margin = '10px 0'; // Add some margin
+        });
+
+        if (categoryButtons.length === 0) {
+            console.log("No category buttons found in iframe.");
+        }
+
+        // Center the buttons vertically
+        overlay.style.display = 'flex';
+        overlay.style.flexDirection = 'column';
+        overlay.style.alignItems = 'center';
+    }
+
+    // Function to toggle overlay
+    function toggleOverlay(show) {
+        if (show) {
+            appendCategoriesToOverlay();
+            overlay.style.display = 'block';
+            console.log("Overlay displayed with categories");
+        } else {
+            overlay.style.display = 'none';
+            console.log("Overlay hidden");
+        }
+    }
+
+    // Event listener for messages from iframe
+    window.addEventListener('message', function(event) {
+        if (event.data === 'toggleOverlay') {
+            toggleOverlay(true);
+        }
+    });
+
+    // Listen to clicks on the overlay to hide it
+    overlay.addEventListener('click', function() {
+        toggleOverlay(false);
+    });
+
+      // Add a click event listener to the hamburger menu button
+    hamburgerButton.addEventListener('click', function() {
+        toggleOverlay(true);
+    });
+
+    // Check screen size initially
+    if (window.innerWidth > 768) {
+        overlay.style.display = 'none';
+        console.log("Overlay hidden because screen size is larger than 768px");
+    }
+});
+
+  // Event listener for window resize
+    window.addEventListener('resize', checkOverlayVisibility);
+
+    // Initial check
+    checkOverlayVisibility();
+
+</script>
+
+
 </body>
 </html>

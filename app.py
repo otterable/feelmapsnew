@@ -64,7 +64,7 @@ def favicon():
 
 
 @app.route('/api/shapes', methods=['POST'])
-def add_shape():
+def add_shape2():
     # Handle JSON data
     data = request.json if request.is_json else {}
     shape_data_json = json.dumps(data.get('shape_data', {}))
@@ -114,15 +114,29 @@ def get_shapes():
     shapes_data = [
         {
             'id': shape.id,
-            'shape_data': json.loads(shape.shape_data),  # Ensuring JSON deserialization
+            'shape_data': json.loads(shape.shape_data),
             'shape_type': shape.shape_type,
             'shape_color': shape.shape_color,
-            'radius': shape.radius,  # Include the radius in the response if it exists
-            'shape_note': shape.shape_note  # Include the note in the response
+            'radius': shape.radius,
+            'shape_note': shape.shape_note
         } for shape in shapes
     ]
     print('Shapes fetched:', len(shapes_data))
     return jsonify(shapes=shapes_data)
+
+
+@app.route('/api/add-shape', methods=['POST'])
+def add_shape():
+    shape_data = request.json.get('shape_data')
+    shape_note = request.json.get('shape_note', '')
+    shape_type = request.json.get('shape_type')
+    shape_color = request.json.get('shape_color', '#FFFFFF')
+
+    new_shape = Shape(shape_data=shape_data, shape_note=shape_note, shape_type=shape_type, shape_color=shape_color)
+    db.session.add(new_shape)
+    db.session.commit()
+
+    return jsonify({'success': True, 'id': new_shape.id})
     
 @app.route('/api/shapes/<int:shape_id>', methods=['DELETE'])
 def delete_shape(shape_id):
@@ -231,7 +245,7 @@ def upload_overlay_image():
 @app.route('/get-categories')
 def get_categories():
     try:
-        with open('templates/categories.html') as file:
+        with open('templates/categories.html', encoding='utf-8') as file:
             soup = BeautifulSoup(file, 'html.parser')
             categories = [{'color': button['style'].split(': ')[1].replace(';', '').strip(), 'text': button.h3.text}
                           for button in soup.find_all('button', {'class': 'categorybutton'})]
@@ -241,6 +255,7 @@ def get_categories():
     except Exception as e:
         print(f"Error occurred in get_categories: {e}")  # Debugging statement
         return jsonify(error=str(e)), 500
+
 
 
 
@@ -312,7 +327,7 @@ def rename_category():
     new_name = request.json.get('newName')
     
     try:
-        with open('templates/categories.html', 'r+') as file:
+        with open('templates/categories.html', 'r+', encoding='utf-8') as file:  # Specify UTF-8 encoding
             content = file.read()
             soup = BeautifulSoup(content, 'html.parser')
             buttons = soup.find_all('button', {'class': 'categorybutton'})
@@ -327,18 +342,17 @@ def rename_category():
         print(f"Error occurred while renaming category: {e}")
         return jsonify(success=False, error=str(e)), 500
 
+
+
 @app.route('/create-category', methods=['POST'])
 def create_category():
     name = request.json.get('name')
     color = request.json.get('color')
     
     try:
-        with open('templates/categories.html', 'r+') as file:
+        with open('templates/categories.html', 'r+', encoding='utf-8') as file:  # Specify UTF-8 encoding
             content = file.read()
             soup = BeautifulSoup(content, 'html.parser')
-            
-            # Locate the ENDING OF CATEGORY EDITING AREA comment
-            end_comment = soup.find(string=lambda text: isinstance(text, Comment) and 'ENDING OF CATEGORY EDITING AREA' in text)
             
             # Create a new button element for the category
             new_button = soup.new_tag('button', **{
@@ -351,6 +365,7 @@ def create_category():
             new_button.append(new_button_h3)
             
             # Insert the new button before the end comment
+            end_comment = soup.find(string=lambda text: isinstance(text, Comment) and 'ENDING OF CATEGORY EDITING AREA' in text)
             end_comment.insert_before(new_button)
 
             # Write the updated HTML back to the file
@@ -362,6 +377,7 @@ def create_category():
     except Exception as e:
         print(f"Error occurred while creating new category: {e}")
         return jsonify(success=False, error=str(e)), 500
+
 @app.route('/delete-category', methods=['POST'])
 def delete_category():
     color_to_delete = request.json.get('color')
@@ -668,6 +684,18 @@ def update_sizes():
 
     update_svg(pin_size, outline_size)
     return jsonify({'message': 'Sizes updated successfully'})
-    
+
+@app.route('/get-category-order')
+def get_category_order():
+    try:
+        with open('templates/categories.html', 'r', encoding='utf-8') as file:
+            soup = BeautifulSoup(file, 'html.parser')
+            categories = [button['style'].split(':')[1].strip().replace(';', '') 
+                          for button in soup.find_all('button', {'class': 'categorybutton'})]
+        return jsonify(categories)
+    except Exception as e:
+        print(f"Error occurred while fetching category order: {e}")
+        return jsonify(success=False, error=str(e)), 500
+   
 if __name__ == '__main__':
     app.run(debug=True)
