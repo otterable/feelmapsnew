@@ -9,6 +9,7 @@ from bs4 import BeautifulSoup, Comment
 from werkzeug.utils import secure_filename
 from datetime import datetime
 
+
 import logging
 import io
 import json
@@ -23,6 +24,7 @@ from datetime import timedelta
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///s.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['UPLOAD_FOLDER'] = 'static/imguploads'  # Set the upload folder here
 app.secret_key = 'ZDlGoz5V4/CWj+OGx8h2vQ=='  # You should use a secure, random secret key.
 CORS(app)  # This is to allow cross-origin requests, if needed.
 
@@ -33,11 +35,12 @@ class Shape(db.Model):
     shape_data = db.Column(db.JSON, nullable=False)
     shape_note = db.Column(db.String, nullable=True)
     shape_type = db.Column(db.String, nullable=False)
-    shape_color = db.Column(db.String, nullable=True)  # Add a new column for color
+    shape_color = db.Column(db.String, nullable=True)
+    shape_imagelink = db.Column(db.String, nullable=True)  # Column to store image link
     molen_id = db.Column(db.String, nullable=True, default="null")
     score = db.Column(db.String, nullable=True, default="null")
     highlight_id = db.Column(db.String, nullable=True, default="null")
-    radius = db.Column(db.Float, nullable=True) 
+    radius = db.Column(db.Float, nullable=True)
 
 @app.before_request
 def before_request():
@@ -63,38 +66,68 @@ def favicon():
     return url_for('static', filename='favicon.ico')
 
 
+
 @app.route('/api/shapes', methods=['POST'])
 def add_shape2():
-    # Handle JSON data
-    data = request.json if request.is_json else {}
-    shape_data_json = json.dumps(data.get('shape_data', {}))
+    try:
+        print("Request method:", request.method)
+        print("Is JSON:", request.is_json)
 
-    # Initialize the Shape object with available data
-    new_shape = Shape(
-        shape_data=shape_data_json,
-        shape_note=data.get('shape_note', ''),
-        shape_type=data.get('shape_type', ''),
-        shape_color=data.get('shape_color', '#212121'),
-        radius=data.get('radius'),
-        molen_id=data.get('molen_id', 'null'),
-        score=data.get('score', 'null'),
-        highlight_id=data.get('highlight_id', 'null')
-    )
+        # Check if the request is JSON
+        if request.is_json:
+            data = request.json
+            shape_data_json = json.dumps(data.get('shape_data', {}))
+            shape_note = data.get('shape_note', '')  # For JSON requests
+        else:
+            # Handling Form data
+            data = request.form
+            shape_data_json = data.get('shape_data', '{}')
+            shape_note = data.get('note', '')  # For form data, the key is 'note'
 
-    # Handle image upload
-    if 'shape_image' in request.files:
-        image = request.files['shape_image']
-        if image.filename != '':
-            filename = secure_filename(image.filename)
-            image_path = os.path.join('static/userimgs/', filename)
-            image.save(image_path)
-            new_shape.shape_imagelink = image_path  # Update shape object with image link
+        print("Shape Note:", shape_note)
+        print("Form Data:", data)
 
-    db.session.add(new_shape)
-    db.session.commit()
-    print('New shape added with ID:', new_shape.id)
+        new_shape = Shape(
+            shape_data=shape_data_json,
+            shape_note=shape_note,
+            shape_type=data.get('shape_type', ''),
+            shape_color=data.get('shape_color', '#212121'),
+            molen_id=data.get('molen_id', 'null'),
+            score=data.get('score', 'null'),
+            highlight_id=data.get('highlight_id', 'null')
+        )
 
-    return jsonify(success=True, id=new_shape.id, image_link=getattr(new_shape, 'shape_imagelink', None))
+        radius = data.get('radius')
+        if new_shape.shape_type == 'circle' and radius and radius != 'null':
+            new_shape.radius = float(radius)
+        else:
+            new_shape.radius = None
+
+        if 'shape_image' in request.files:
+            image = request.files['shape_image']
+            if image and image.filename != '':
+                filename = secure_filename(image.filename)
+                image_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+                if not os.path.exists(app.config['UPLOAD_FOLDER']):
+                    os.makedirs(app.config['UPLOAD_FOLDER'])
+                image.save(image_path)
+                new_shape.shape_imagelink = image_path
+                print(f"Image saved at {image_path}")
+            else:
+                print("No image uploaded")
+
+        if hasattr(new_shape, 'shape_imagelink'):
+            print("Image Link:", new_shape.shape_imagelink)
+
+        db.session.add(new_shape)
+        db.session.commit()
+        print(f"New shape added with ID: {new_shape.id}")
+
+        return jsonify(success=True, id=new_shape.id, image_link=getattr(new_shape, 'shape_imagelink', None))
+
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        return jsonify(success=False, error=str(e)), 500
     
 @app.route('/api/colorOrder')
 def color_order():
@@ -426,7 +459,8 @@ def export_geojson():
                 "molen_id": shape.molen_id,
                 "score": shape.score,
                 "highlight_id": shape.highlight_id,
-                "radius": shape.radius
+                "radius": shape.radius,
+                "imagelink": shape.shape_imagelink
             }
         }
         features.append(feature)

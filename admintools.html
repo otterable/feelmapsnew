@@ -518,111 +518,83 @@ function updateCategoryDropdowns() {
             width: 600px;
         }
     </style>
+
 <script>
-        var map = L.map('admin-map').setView([48.4102, 15.6022], 15);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            maxZoom: 19,
-            attribution: 'Stimmungskompass boundary editing tool | © OpenStreetMap contributors'
-        }).addTo(map);
+    var map = L.map('admin-map').setView([48.4102, 15.6022], 15);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: 'Stimmungskompass boundary editing tool | © OpenStreetMap contributors'
+    }).addTo(map);
 
-        var drawnItems = new L.FeatureGroup();
-        map.addLayer(drawnItems);
+    var drawnItems = new L.FeatureGroup();
+    map.addLayer(drawnItems);
 
-        var drawControl = new L.Control.Draw({
-            edit: {
-                featureGroup: drawnItems
-            },
-            draw: {
-                polyline: true,
-                polygon: true,
-                circle: true,
-                marker: false,
-                rectangle: false,
-                circlemarker: false
-            }
-        });
-        map.addControl(drawControl);
+    var drawControl = new L.Control.Draw({
+        edit: {
+            featureGroup: drawnItems
+        },
+        draw: {
+            polyline: true,
+            polygon: true,
+            circle: true,
+            marker: false,
+            rectangle: false,
+            circlemarker: false
+        }
+    });
+    map.addControl(drawControl);
 
-        map.on(L.Draw.Event.CREATED, function (e) {
-            var type = e.layerType,
-                layer = e.layer;
+    var currentLayer = null; // Global variable to keep track of the current layer
 
-            drawnItems.addLayer(layer);
+    map.on(L.Draw.Event.CREATED, function (e) {
+        var type = e.layerType,
+            layer = e.layer;
+        drawnItems.addLayer(layer);
+        currentLayer = layer; // Save the current layer
 
-            var shapeData = layer.toGeoJSON();
-            var shapeType = type;
-            var radius = type === 'circle' ? layer.getRadius() : null;
+        // Create a popup for adding a note and image
+        var popupContent = '<form id="shapeForm" enctype="multipart/form-data">' +
+                           '<label for="note">Note:</label>' +
+                           '<input type="text" id="note" name="note"><br>' +
+                           '<label for="image">Image:</label>' +
+                           '<input type="file" id="image" name="shape_image"><br>' +
+                           '<input type="button" value="Save" onclick="saveShapeData()">' +
+                           '</form>';
+        layer.bindPopup(popupContent).openPopup();
+    });
 
-            layer.bindPopup(getPopupContent(), {keepInView: true});
-            layer.on('popupopen', function() {
-                document.getElementById('save-shape').addEventListener('click', function() {
-                    var note = document.getElementById('shape-note').value;
-                    var imageFile = document.getElementById('shape-image').files[0];
-                    saveShapeWithData(shapeData, shapeType, radius, note, layer, imageFile);
-                });
-            });
-        });
-
-        function getPopupContent() {
-            return `
-                <form id="shape-form">
-                    <textarea id="shape-note" placeholder="Add a note..."></textarea>
-                    <input type="file" id="shape-image" accept="image/*">
-                    <button type="button" id="save-shape">Save</button>
-                </form>
-            `;
+    // Save shape data along with note and image
+    function saveShapeData() {
+        if (!currentLayer) {
+            console.error('No layer selected');
+            return;
         }
 
-        function saveShapeWithData(shapeData, shapeType, radius, note, layer, imageFile) {
-            var formData = new FormData();
-            formData.append('shape_data', JSON.stringify(shapeData));
-            formData.append('shape_type', shapeType);
-            formData.append('radius', radius);
-            formData.append('note', note);
-            if (imageFile) {
-                formData.append('image', imageFile);
-            }
+        var formData = new FormData(document.getElementById('shapeForm'));
+        var shapeData = currentLayer.toGeoJSON();
+        var shapeType = currentLayer instanceof L.Circle ? 'circle' : 'polygon';  // Adjust for your requirements
+        var radius = currentLayer instanceof L.Circle ? currentLayer.getRadius() : null;
 
-            fetch('/api/shapes', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                console.log('Shape saved with ID:', data.id);
-                layer.options.id = data.id;
-                bindPopupWithNoteAndImage(layer, note, data.imageUrl);
-            })
-            .catch(error => console.error('Error saving shape:', error));
-        }
+        formData.append('shape_data', JSON.stringify(shapeData));
+        formData.append('shape_type', shapeType);
+        formData.append('radius', radius);
 
-        function bindPopupWithNoteAndImage(layer, note, imageUrl) {
-            var popupContent = `<div><strong>Note:</strong> ${note}</div>`;
-            if (imageUrl) {
-                popupContent += `<img src="${imageUrl}" alt="Uploaded Image" style="width:100%;height:auto;">`;
-            }
-            layer.bindPopup(popupContent, {keepInView: true});
-        }
+        fetch('/api/shapes', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log('Shape saved with ID:', data.id);
+            currentLayer.options.id = data.id; // Assign ID to layer for further operations
+            currentLayer = null; // Reset the currentLayer after saving
+        })
+        .catch(error => console.error('Error saving shape:', error));
+    }
 
-        // Load existing shapes
-        function loadExistingShapes() {
-            fetch('/api/shapes')
-            .then(response => response.json())
-            .then(data => {
-                data.shapes.forEach(shape => {
-                    var layer;
-                    var shapeType = shape.shape_type;
-                    var shapeData = shape.shape_data;
-                    // ... (existing code to add shapes to the map)
-                });
-            })
-            .catch(error => console.error('Error loading shapes:', error));
-        }
-        loadExistingShapes();
-
-    </script>
-	
-	
+    // Load existing shapes function as before...
+    loadExistingShapes();
+</script>
 <!-- Object Type Restriction Section -->
      
 
