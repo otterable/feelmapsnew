@@ -281,6 +281,7 @@ display: none !important;
     font-size: 25px !important;
 }
 
+
 /* Your existing rules for .leaflet-control-layers and .leaflet-top leaflet-right had typos, corrected below */
 .leaflet-control-layers.leaflet-control {
     border-radius: 30px;
@@ -290,10 +291,20 @@ display: none !important;
     border-radius: 50px;
 }
 
+    .leaflet-popup .shape-image {
+        max-width: 512px;
+        max-height: 512px;
+        display: block;
+        margin: 0 auto;
+    }
+	
+	
+
     .leaflet-popup-content-wrapper {
     background-color: var(--popup-bg-color) !important;
     color: var(--popup-text-color) !important;
     border-radius: 30px !important;
+	width: auto !important;
 }
 
    .leaflet-popup-content {
@@ -2042,50 +2053,6 @@ function handleDelete(layer) {
     }
 }
  
-// Function to load shapes from the server
-function loadShapes() {
-    console.log('Loading shapes...');
-    $.get('/api/shapes', function(response) {
-        console.log('Shapes loaded:', response.shapes.length);
-        response.shapes.forEach(function(shape) {
-            var shapeLayer;
-            var center, radius, popupContent;
-            var shapeType = shape.shape_type.toLowerCase();
-
-            if (shapeType === 'marker') {
-                center = L.GeoJSON.coordsToLatLng(shape.shape_data.geometry.coordinates);
-                // Create a custom icon with the shape color
-                var customIcon = createColoredCircleIcon(shape.shape_color);
-                shapeLayer = L.marker(center, { icon: customIcon });
-            } else if (shapeType === 'circle' || shapeType === 'circlemarker') {
-                center = L.GeoJSON.coordsToLatLng(shape.shape_data.geometry.coordinates);
-                radius = shape.radius;
-                shapeLayer = L.circle(center, { color: shape.shape_color, radius: radius });
-            } else {
-                shapeLayer = L.geoJSON(shape.shape_data, {
-                    style: function() { return { color: shape.shape_color }; }
-                });
-            }
-
-            // Attach the ID to the layer
-            shapeLayer.options.id = shape.id;
-
-            // Bind popup and click event if a note is present
-            if (shape.shape_note) {
-                popupContent = '<div><strong></strong> ' + shape.shape_note + '</div>';
-                shapeLayer.bindPopup(popupContent, {
-                    keepInView: true
-                });
-            }
-
-            // Add the layer to the map
-            drawnItems.addLayer(shapeLayer);
-            console.log('Shape added to map:', shapeLayer);
-        });
-    }).fail(function(jqXHR, textStatus, errorThrown) {
-        console.error('Failed to load shapes:', textStatus, errorThrown);
-    });
-}
 
 
 function resetSelectedToolButton() {
@@ -3275,7 +3242,7 @@ document.addEventListener('DOMContentLoaded', function() {
     var colorVisibilityState = {};
     var selectedColors = {}; // Object to keep track of selected colors
     var isCounterPillHovered = false; // Flag to track hovering state of the counter-pill
-	var leafletLayers = {}; // Global object to store references to Leaflet layers
+    var leafletLayers = {}; // Global object to store references to Leaflet layers
 
     // Initialize visibility state dictionaries
     function initializeVisibilityStates() {
@@ -3305,7 +3272,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-
     function createColoredCircleIcon(color) {
         var svgIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
             <circle cx="16" cy="16" r="8" fill="${color}" />
@@ -3319,8 +3285,7 @@ document.addEventListener('DOMContentLoaded', function() {
             popupAnchor: [0, -16]
         });
     }
-
-    function addLayer(shape, color, shapeNote) {
+function addLayer(shape, color, shapeNote, imagelink) {
     var shapeLayer;
     var shapeType = shape.shape_type;
 
@@ -3338,31 +3303,78 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    if (shapeNote) {
-        var popupContent = '<div><strong></strong> ' + shapeNote + '</div>';
-        shapeLayer.bindPopup(popupContent, { keepInView: true });
-    }
+    if (shapeNote || imagelink) {
+        var popupContent = '<div class="popup-content" style="padding: 10px; box-sizing: border-box;">';
 
-    if (!(color in shapeLayersByColor)) {
-        console.log('Color not initialized:', color);
-        return;
-    }
-
-    if (!shapeLayersByColor[color].includes(shapeLayer)) {
-        shapeLayersByColor[color].push(shapeLayer);
-        if (colorVisibilityState[color]) {
-            map.addLayer(shapeLayer);
+        if (shapeNote) {
+            popupContent += '<div class="shape-note" style="margin-bottom: 10px;">' + shapeNote + '</div>';
         }
-        console.log(`Layer added for color '${color}'. Layer:`, shapeLayer);
+        if (imagelink) {
+            popupContent += `<img id="shape-image-${shape.id}" src="${imagelink}" alt="Shape Image" onload="resizePopupToFitImage(this)" style="max-width: 300px; display: block; margin: 0 auto; border-radius: 30px;">`;
+            console.log(`Image loaded for shape ID: ${shape.id}:`, imagelink);
+        }
+
+        popupContent += '</div>';
+        shapeLayer.bindPopup(popupContent, { keepInView: true });
+
+        if (!(color in shapeLayersByColor)) {
+            console.log('Color not initialized:', color);
+            return;
+        }
+
+        if (!shapeLayersByColor[color].includes(shapeLayer)) {
+            shapeLayersByColor[color].push(shapeLayer);
+            if (colorVisibilityState[color]) {
+                map.addLayer(shapeLayer);
+            }
+            console.log(`Layer added for color '${color}'. Layer:`, shapeLayer);
+        }
+
+        leafletLayers[shape.id] = shapeLayer;
+        console.log(`Storing Leaflet layer for shape ID: ${shape.id}`, shapeLayer);
     }
-
-    // Store the Leaflet layer with an identifier
-    leafletLayers[shape.id] = shapeLayer;
-	console.log(`Storing Leaflet layer for shape ID: ${shape.id}`, shapeLayer);
-
 }
 
+function resizePopupToFitImage(imgElement) {
+    var observer = new MutationObserver(function(mutations) {
+        mutations.forEach(function(mutation) {
+            if (mutation.addedNodes) {
+                var popupContentDiv = imgElement.closest('.leaflet-popup-content');
+                if (popupContentDiv) {
+                    var newWidth = Math.min(imgElement.offsetWidth, 300) + 20; // Maximum width 300px with a 10px buffer on each side
+                    popupContentDiv.style.width = newWidth + 'px';
+                    console.log('Adjusted popup width to fit image:', newWidth + 'px');
+                }
+                observer.disconnect(); // Stop observing after adjustment
+            }
+        });
+    });
 
+    observer.observe(document.body, { childList: true, subtree: true });
+
+
+
+
+        if (popupContent) {
+            shapeLayer.bindPopup(popupContent, { keepInView: true });
+        }
+
+        if (!(color in shapeLayersByColor)) {
+            console.log('Color not initialized:', color);
+            return;
+        }
+
+        if (!shapeLayersByColor[color].includes(shapeLayer)) {
+            shapeLayersByColor[color].push(shapeLayer);
+            if (colorVisibilityState[color]) {
+                map.addLayer(shapeLayer);
+            }
+            console.log(`Layer added for color '${color}'. Layer:`, shapeLayer);
+        }
+
+        leafletLayers[shape.id] = shapeLayer;
+        console.log(`Storing Leaflet layer for shape ID: ${shape.id}`, shapeLayer);
+    }
 
     function toggleVisibility(color) {
         colorVisibilityState[color] = !colorVisibilityState[color];
@@ -3387,38 +3399,30 @@ document.addEventListener('DOMContentLoaded', function() {
                 var colorCounters = $('#color-counters');
                 colorCounters.empty(); // Clear current content
 
-                // Append new elements in the order received from categoryOrder
                 categoryOrder.forEach(function(color) {
                     var count = data.color_counts[color];
                     var colorCircle = $(`<span class="counter-color" style="background-color: ${color}; border: 2px solid white;"></span>`);
                     var listItem = $(`<li style="margin-right: 5px;">`).append(colorCircle).append(` ${count}`);
                     listItem.on('click', function() {
                         toggleVisibility(color);
-                        updateSelectedEffect(color); // Update the selected effect
+                        updateSelectedEffect(color);
                     });
                     colorCounters.append(listItem);
 
-                    // Reapply the selected effect for each color
                     updateSelectedEffect(color);
                 });
-
-               
-                
             });
         });
     }
 
-    // Event listeners for counter-pill hover behavior
     $(document).ready(function() {
         var counterPill = document.getElementById('counter-pill');
         if (counterPill) {
             counterPill.addEventListener('mouseenter', function() {
                 isCounterPillHovered = true;
-                // Show popup code here
             });
             counterPill.addEventListener('mouseleave', function() {
                 isCounterPillHovered = false;
-                // Hide popup code here
             });
         }
 
@@ -3427,20 +3431,15 @@ document.addEventListener('DOMContentLoaded', function() {
         $.getJSON('/api/shapes', function(data) {
             console.log('Loading shapes from database. Total shapes:', data.shapes.length);
             data.shapes.forEach(function(shape) {
-                addLayer(shape, shape.shape_color, shape.shape_note);
+                addLayer(shape, shape.shape_color, shape.shape_note, shape.shape_imagelink);
             });
             console.log('All shapes loaded from the database and added to dictionaries.');
         });
 
-        // Fetch and update counts initially and periodically
         fetchAndUpdateCounts();
         setInterval(fetchAndUpdateCounts, 1000); // Update every 1 second
     });
-	
-	
 </script>
-
-
 <script>
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -3474,29 +3473,29 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
-    // Function to populate the color filter with category names
-    function populateColorFilterWithCategories() {
-        $.getJSON('/get-categories', function(categories) {
-            const colorFilter = document.getElementById('color-filter');
-            categories.forEach(function(category) {
-                if (category.color !== 'null') {
-                    const option = document.createElement('option');
-                    option.value = category.color;
-                    option.textContent = category.text;
-                    colorFilter.appendChild(option);
-                }
-            });
+// Function to populate the color filter with category names
+function populateColorFilterWithCategories() {
+    $.getJSON('/get-categories', function(categories) {
+        const colorFilter = document.getElementById('color-filter');
+        categories.forEach(function(category) {
+            if (category.color !== 'null') {
+                const option = document.createElement('option');
+                option.value = category.color;
+                option.textContent = category.text;
+                colorFilter.appendChild(option);
+            }
         });
-    }
+    });
+}
 
-    // Call the function to populate the color filter
-    populateColorFilterWithCategories();
+// Call the function to populate the color filter
+populateColorFilterWithCategories();
 
 function displayObjects(objects) {
     const objectList = document.getElementById('object-list');
     objectList.innerHTML = '';
     objects.forEach(object => {
-	
+
         console.log('Processing object:', object);
 
         const objectDiv = document.createElement('div');
@@ -3533,7 +3532,7 @@ function displayObjects(objects) {
                 break;
         }
         objectDiv.appendChild(shapeTypeEmoji);
-       objectDiv.classList.add('object-item');
+        objectDiv.classList.add('object-item');
         objectDiv.setAttribute('data-object-id', object.id);
         const shapeNote = document.createElement('span');
         shapeNote.textContent = `${object.shape_note}`;
@@ -3548,7 +3547,7 @@ function displayObjects(objects) {
             console.log('objectDiv is present:', objectDiv);
         }
 
-           objectDiv.addEventListener('click', function() {
+        objectDiv.addEventListener('click', function() {
             console.log(`Object clicked with ID: ${object.id}`);
             var layer = leafletLayers[object.id];
 
@@ -3562,8 +3561,18 @@ function displayObjects(objects) {
 
         // Append the objectDiv to the objectList
         objectList.appendChild(objectDiv);
+
+        // Add delete button
+        const deleteButton = document.createElement('button');
+        deleteButton.textContent = 'Delete';
+        deleteButton.addEventListener('click', function() {
+            const objectID = object.id;
+            deleteObject(objectID);
+        });
+        objectDiv.appendChild(deleteButton);
     });
 }
+
 function centerMapOnObject(layer) {
     if (layer) {
         if (layer.getLatLng) {
@@ -3585,17 +3594,26 @@ function centerMapOnObject(layer) {
     }
 }
 
-
-
-
 function deleteObject(objectId) {
     console.log(`Deleting object: ${objectId}`);
-    fetch(`/api/delete-object/${objectId}`, { method: 'DELETE' })
+    fetch(`/api/shapes/${objectId}`, { method: 'DELETE' })
         .then(response => response.json())
         .then(data => {
             if (data.success) {
                 console.log(`Object ${objectId} deleted successfully.`);
-                fetch('/api/all-shapes').then(response => response.json()).then(data => {
+                // Fetch all shapes from the server again
+                fetch('/api/shapes').then(response => response.json()).then(data => {
+                    // Clear existing layers from the map
+                    Object.values(leafletLayers).forEach(layer => map.removeLayer(layer));
+                    leafletLayers = {};
+
+                    // Add new layers for the updated shapes
+                    data.shapes.forEach(function(shape) {
+                        addLayer(shape, shape.shape_color, shape.shape_note, shape.shape_imagelink);
+                    });
+
+                    // Update the counts and visibility
+                    fetchAndUpdateCounts();
                     displayObjects(data.shapes);
                 });
             } else {
@@ -3603,6 +3621,7 @@ function deleteObject(objectId) {
             }
         });
 }
+
 
 function filterObjects() {
     const searchQuery = document.getElementById('search-box').value.toLowerCase();
@@ -3627,7 +3646,8 @@ function filterObjects() {
         displayObjects(filteredObjects);
     });
 }
-  </script>
+</script>
+
 <script>
    function toggleSearchFilter() {
     var searchFilterSection = document.getElementById('search-filter-section');

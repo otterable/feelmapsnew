@@ -91,7 +91,7 @@ def add_shape2():
             shape_data=shape_data_json,
             shape_note=shape_note,
             shape_type=data.get('shape_type', ''),
-            shape_color=data.get('shape_color', '#212121'),
+            shape_color=data.get('shape_color', '#212120'),
             molen_id=data.get('molen_id', 'null'),
             score=data.get('score', 'null'),
             highlight_id=data.get('highlight_id', 'null')
@@ -144,18 +144,30 @@ def color_order():
 @app.route('/api/shapes', methods=['GET'])
 def get_shapes():
     shapes = Shape.query.all()
-    shapes_data = [
-        {
+    shapes_data = []
+
+    for shape in shapes:
+        # Construct the shape data
+        shape_info = {
             'id': shape.id,
             'shape_data': json.loads(shape.shape_data),
             'shape_type': shape.shape_type,
             'shape_color': shape.shape_color,
             'radius': shape.radius,
-            'shape_note': shape.shape_note
-        } for shape in shapes
-    ]
+            'shape_note': shape.shape_note,
+            'shape_imagelink': shape.shape_imagelink
+        }
+        shapes_data.append(shape_info)
+
+        # Print the name of the image file if it exists
+        if shape.shape_imagelink:
+            image_name = os.path.basename(shape.shape_imagelink)
+            print(f"Image file fetched: {image_name}")
+
     print('Shapes fetched:', len(shapes_data))
     return jsonify(shapes=shapes_data)
+
+
 
 
 @app.route('/api/add-shape', methods=['POST'])
@@ -178,7 +190,10 @@ def delete_shape(shape_id):
         db.session.delete(shape)
         db.session.commit()
         print('Shape deleted with ID:', shape_id)
-        return jsonify(success=True), 200
+
+        # Call the get_shapes route to fetch the updated list of shapes
+        updated_shapes_data = get_shapes().get_json()
+        return jsonify(success=True, shapes=updated_shapes_data['shapes']), 200
     else:
         print('Shape not found with ID:', shape_id)
         return jsonify(success=False), 404
