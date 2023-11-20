@@ -1692,14 +1692,7 @@ function setCategory(category) {
     // Update the color of the cursor icon
     createOrUpdateCustomCursorIcon(currentCategory);
 
-    // Define a custom marker icon
-var customMarkerIcon = L.divIcon({
-    className: 'custom-marker-icon',
-    html: '<div style="width: 24px; height: 24px; border-radius: 50%; background-color: YOUR_CATEGORY_COLOR;"></div>',
-    iconSize: [24, 24],
-    iconAnchor: [12, 12], // Centers the icon
-    className: 'your-custom-class' // Add your custom class here
-});
+
 
 
     // Display the tool selection popup
@@ -3473,6 +3466,31 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
+document.addEventListener('DOMContentLoaded', function() {
+    fetch('/api/all-shapes').then(response => response.json()).then(data => {
+        displayObjects(data.shapes);
+
+        const objectElements = document.querySelectorAll('.object-item');
+        objectElements.forEach(element => {
+            element.addEventListener('click', function() {
+                const objectID = this.getAttribute('data-object-id');
+                var layer = leafletLayers[objectID];
+
+                if (layer) {
+                    centerMapOnObject(layer);
+                    // Open the popup for the selected object
+                    if (layer.openPopup) {
+                        layer.openPopup();
+                    }
+                } else {
+                    console.error('No Leaflet layer found for object ID:', objectID);
+                }
+            });
+        });
+    });
+});
+
+
 // Function to populate the color filter with category names
 function populateColorFilterWithCategories() {
     $.getJSON('/get-categories', function(categories) {
@@ -3547,45 +3565,46 @@ function displayObjects(objects) {
             console.log('objectDiv is present:', objectDiv);
         }
 
-        objectDiv.addEventListener('click', function() {
-            console.log(`Object clicked with ID: ${object.id}`);
-            var layer = leafletLayers[object.id];
+   document.addEventListener('DOMContentLoaded', function() {
+    fetch('/api/all-shapes').then(response => response.json()).then(data => {
+        displayObjects(data.shapes);
 
-            if (layer) {
-                console.log(`Retrieving Leaflet layer for object ID: ${object.id}`, layer);
-                centerMapOnObject(layer);
-            } else {
-                console.error('No Leaflet layer found for object ID:', object.id);
-            }
+        const objectElements = document.querySelectorAll('.object-item');
+        objectElements.forEach(element => {
+            element.addEventListener('click', function() {
+                const objectID = this.getAttribute('data-object-id');
+                var layer = leafletLayers[objectID];
+
+                if (layer) {
+                    centerMapOnObject(layer);
+                    // Open the popup for the selected object
+                    if (layer.openPopup) {
+                        layer.openPopup();
+                    }
+                } else {
+                    console.error('No Leaflet layer found for object ID:', objectID);
+                }
+            });
         });
+    });
+});
 
         // Append the objectDiv to the objectList
         objectList.appendChild(objectDiv);
 
-        // Add delete button
-        const deleteButton = document.createElement('button');
-        deleteButton.textContent = 'Delete';
-        deleteButton.addEventListener('click', function() {
-            const objectID = object.id;
-            deleteObject(objectID);
-        });
-        objectDiv.appendChild(deleteButton);
+ 
     });
 }
+
+
 
 function centerMapOnObject(layer) {
     if (layer) {
         if (layer.getLatLng) {
-            // For markers and circles
             const latLng = layer.getLatLng();
-            console.log(`Centering map on coordinates:`, latLng);
-            map.panTo(latLng);
         } else if (layer.getBounds) {
-            // For rectangles, polygons, and other shapes that have bounds
             const bounds = layer.getBounds();
             const center = bounds.getCenter();
-            console.log(`Centering map on center of bounds:`, center);
-            map.panTo(center);
         } else {
             console.error('Layer does not have a getLatLng or getBounds method:', layer);
         }
@@ -3593,6 +3612,8 @@ function centerMapOnObject(layer) {
         console.error('Invalid or undefined Leaflet layer object:', layer);
     }
 }
+
+
 
 function deleteObject(objectId) {
     console.log(`Deleting object: ${objectId}`);

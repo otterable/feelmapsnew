@@ -592,8 +592,89 @@ function updateCategoryDropdowns() {
         .catch(error => console.error('Error saving shape:', error));
     }
 
-    // Load existing shapes function as before...
-    loadExistingShapes();
+
+// Function to create a colored circle icon
+function createColoredCircleIcon(color) {
+    var svgIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
+        <circle cx="16" cy="16" r="8" fill="${color}" />
+        <circle cx="16" cy="16" r="8" stroke="${color}" stroke-width="16" fill="none" stroke-opacity="0.5" />
+    </svg>`;
+
+    return L.icon({
+        iconUrl: `data:image/svg+xml;base64,${btoa(svgIcon)}`,
+        iconSize: [32, 32],
+        iconAnchor: [16, 16],
+        popupAnchor: [0, -16]
+    });
+}
+
+// Global declaration of leafletLayers
+var leafletLayers = {};
+
+function addLayer(shape, color, note, imageLink) {
+    var layer;
+    var shapeType = shape.shape_type;
+    var shapeOptions = { color: color };
+
+    console.log('Adding shape:', shape);
+
+    if (shapeType === 'marker') {
+        var coords = shape.shape_data.geometry.coordinates;
+        var center = L.latLng(coords[1], coords[0]);
+        var customIcon = createColoredCircleIcon(color);
+        layer = L.marker(center, { icon: customIcon });
+    } else if (shapeType === 'circle') {
+        var coords = shape.shape_data.geometry.coordinates;
+        var center = L.latLng(coords[1], coords[0]);
+        var radius = shape.radius || 100; // Default radius if not provided
+        layer = L.circle(center, { color: color, radius: radius });
+    } else if (shapeType === 'polygon') {
+        if (shape.shape_data && shape.shape_data.geometry && Array.isArray(shape.shape_data.geometry.coordinates[0])) {
+            var latlngs = shape.shape_data.geometry.coordinates[0].map(coord => L.latLng(coord[1], coord[0]));
+            layer = L.polygon(latlngs, shapeOptions);
+        } else {
+            console.error('Shape data is invalid or missing for a polygon:', shape);
+        }
+       } else 
+       if (shapeType === 'rectangle') {
+        // Check if shape_data is properly structured for a rectangle
+        if (shape.shape_data && shape.shape_data.geometry && Array.isArray(shape.shape_data.geometry.coordinates)) {
+            var coordsArray = shape.shape_data.geometry.coordinates[0]; // Assuming the coordinates are in the first array
+            if (coordsArray.length >= 4) {
+                // Convert array of coordinates to array of LatLng objects
+                var latlngs = coordsArray.map(coord => L.latLng(coord[1], coord[0]));
+                layer = L.polygon(latlngs, { color: color }); // Using L.polygon to handle rectangle
+            } else {
+                console.error('Invalid rectangle coordinates format:', coordsArray);
+            }
+        } else {
+            console.error('Shape data is missing for a rectangle:', shape);
+        }
+    }
+
+    if (layer) {
+        var popupContent = `Note: ${note}<br>`;
+        if (imageLink) {
+            popupContent += `<img src="${imageLink}" alt="Image" style="width:100%;">`;
+        }
+        layer.bindPopup(popupContent);
+        drawnItems.addLayer(layer);
+
+        // Store the layer in leafletLayers with the shape's ID as the key
+        leafletLayers[shape.id] = layer;
+    }
+}
+
+// Load shapes from the database and add to the map
+$(document).ready(function() {
+    $.getJSON('/api/shapes', function(data) {
+        console.log('Loading shapes from database. Total shapes:', data.shapes.length);
+        data.shapes.forEach(function(shape) {
+            addLayer(shape, shape.shape_color, shape.shape_note, shape.shape_imagelink);
+        });
+        console.log('All shapes loaded from the database and added to dictionaries.');
+    });
+});
 </script>
 <!-- Object Type Restriction Section -->
      
@@ -627,4 +708,284 @@ document.getElementById('object-type-restriction-form').addEventListener('submit
         console.error('Error updating allowed object types:', error);
     });
 });
+</script>
+
+<div id="search-filter-section" style="display: block; max-height: 350px; overflow-y: auto; max-width: 97%; margin-left:auto; margin-bottom: 0; margin-top: 3px; margin-right: auto;">
+    <div class="filter-container">
+        <input id="search-box" style="border-radius: 30px; padding: 5px; border: 1.5px solid black;" oninput="filterObjects()" placeholder="Notiztext..." type="text" />
+        <select id="color-filter" style="border-radius: 30px; padding: 5px; border: 1.5px solid black;" onchange="filterObjects()">
+            <option style="border-radius: 30px; padding: 5px;" value="">
+                Alle Kategorien
+            </option>
+            <!-- Dynamically populate color options here -->
+        </select>
+        <select id="type-filter" style="border-radius: 30px; padding: 5px; margin-bottom: 7.5px; border: 1.5px solid black;" onchange="filterObjects()">
+            <option value="">
+                Alle Markierungsarten
+            </option>
+			<option value="marker">
+                Marker
+            </option>
+			<option value="circle">
+                Kreis
+            </option>
+            <option value="rectangle">
+                Rechteck
+            </option>
+            <option value="polygon">
+                Polygon
+            </option>
+            <!-- Add more object types as needed -->
+        </select>
+    </div>
+
+    <!-- Object List Section -->
+    <div id="object-list" style="position: relative;" class="custom-scrollbar">
+        <!-- Dynamically populated object list will go here -->
+        <!-- Sidebar -->
+    </div>
+	
+	<script>
+    var leafletLayers = {}; // Global object to store references to Leaflet layers
+
+document.addEventListener('DOMContentLoaded', function() {
+    fetch('/api/all-shapes').then(response => response.json()).then(data => {
+        displayObjects(data.shapes);
+
+        // Add event listeners after the objects are displayed
+        const objectElements = document.querySelectorAll('.object-item');
+        objectElements.forEach(element => {
+            element.addEventListener('click', function() {
+                const objectID = this.getAttribute('data-object-id');
+                console.log(`Clicked on object with ID: ${objectID}`);
+
+                var layer = leafletLayers[objectID];
+                console.log(`Retrieving Leaflet layer for object ID: ${objectID}`, layer);
+
+                if (layer) {
+                    centerMapOnObject(layer);
+                } else {
+                    console.error('No Leaflet layer found for object ID:', objectID);
+                }
+            });
+        });
+    });
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+    fetch('/api/all-shapes').then(response => response.json()).then(data => {
+        console.log('Objects loaded from the database:', data.shapes);
+        displayObjects(data.shapes);
+    });
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+    fetch('/api/all-shapes').then(response => response.json()).then(data => {
+        displayObjects(data.shapes);
+
+        const objectElements = document.querySelectorAll('.object-item');
+        objectElements.forEach(element => {
+            element.addEventListener('click', function() {
+                const objectID = this.getAttribute('data-object-id');
+                var layer = leafletLayers[objectID];
+
+                if (layer) {
+                    centerMapOnObject(layer);
+                    // Open the popup for the selected object
+                    if (layer.openPopup) {
+                        layer.openPopup();
+                    }
+                } else {
+                    console.error('No Leaflet layer found for object ID:', objectID);
+                }
+            });
+        });
+    });
+});
+
+
+// Function to populate the color filter with category names
+function populateColorFilterWithCategories() {
+    $.getJSON('/get-categories', function(categories) {
+        const colorFilter = document.getElementById('color-filter');
+        categories.forEach(function(category) {
+            if (category.color !== 'null') {
+                const option = document.createElement('option');
+                option.value = category.color;
+                option.textContent = category.text;
+                colorFilter.appendChild(option);
+            }
+        });
+    });
+}
+
+// Call the function to populate the color filter
+populateColorFilterWithCategories();
+
+function displayObjects(objects) {
+    const objectList = document.getElementById('object-list');
+    objectList.innerHTML = '';
+    objects.forEach(object => {
+
+        console.log('Processing object:', object);
+
+        const objectDiv = document.createElement('div');
+        objectDiv.style.display = 'flex';
+        objectDiv.style.alignItems = 'center';
+
+        const colorCircle = document.createElement('span');
+        colorCircle.style.width = '20px';
+        colorCircle.style.height = '20px';
+        colorCircle.style.borderRadius = '50%';
+        colorCircle.style.border = '2px solid white';
+        colorCircle.style.backgroundColor = object.shape_color;
+        colorCircle.style.display = 'inline-block';
+        colorCircle.style.marginRight = '5px';
+        colorCircle.style.flexShrink = '0';
+
+        objectDiv.appendChild(colorCircle);
+
+        const shapeTypeEmoji = document.createElement('span');
+        shapeTypeEmoji.style.marginRight = '5px';
+        shapeTypeEmoji.style.fontSize = '20px';
+        switch (object.shape_type) {
+            case 'marker':
+                shapeTypeEmoji.textContent = '📍';
+                break;
+            case 'rectangle':
+                shapeTypeEmoji.textContent = '◼️';
+                break;
+            case 'circle':
+                shapeTypeEmoji.textContent = '⚪';
+                break;
+            case 'polygon':
+                shapeTypeEmoji.textContent = '🔺';
+                break;
+        }
+        objectDiv.appendChild(shapeTypeEmoji);
+        objectDiv.classList.add('object-item');
+        objectDiv.setAttribute('data-object-id', object.id);
+        const shapeNote = document.createElement('span');
+        shapeNote.textContent = `${object.shape_note}`;
+        const currentMode = document.documentElement.classList.contains('light-mode') ? 'light' : 'dark';
+        shapeNote.style.color = currentMode === 'light' ? 'black' : 'white';
+        objectDiv.appendChild(shapeNote);
+
+        // Debugging to check if objectDiv is present
+        if (!objectDiv) {
+            console.error('objectDiv is not present.');
+        } else {
+            console.log('objectDiv is present:', objectDiv);
+        }
+
+   document.addEventListener('DOMContentLoaded', function() {
+    fetch('/api/all-shapes').then(response => response.json()).then(data => {
+        displayObjects(data.shapes);
+
+        const objectElements = document.querySelectorAll('.object-item');
+        objectElements.forEach(element => {
+            element.addEventListener('click', function() {
+                const objectID = this.getAttribute('data-object-id');
+                var layer = leafletLayers[objectID];
+
+                if (layer) {
+                    centerMapOnObject(layer);
+                    // Open the popup for the selected object
+                    if (layer.openPopup) {
+                        layer.openPopup();
+                    }
+                } else {
+                    console.error('No Leaflet layer found for object ID:', objectID);
+                }
+            });
+        });
+    });
+});
+
+        // Append the objectDiv to the objectList
+        objectList.appendChild(objectDiv);
+
+        // Add delete button
+        const deleteButton = document.createElement('button');
+        deleteButton.textContent = 'Delete';
+        deleteButton.addEventListener('click', function() {
+            const objectID = object.id;
+            deleteObject(objectID);
+        });
+        objectDiv.appendChild(deleteButton);
+    });
+}
+
+
+
+function centerMapOnObject(layer) {
+    if (layer) {
+        if (layer.getLatLng) {
+            const latLng = layer.getLatLng();
+        } else if (layer.getBounds) {
+            const bounds = layer.getBounds();
+            const center = bounds.getCenter();
+        } else {
+            console.error('Layer does not have a getLatLng or getBounds method:', layer);
+        }
+    } else {
+        console.error('Invalid or undefined Leaflet layer object:', layer);
+    }
+}
+
+
+
+function deleteObject(objectId) {
+    console.log(`Deleting object: ${objectId}`);
+    fetch(`/api/shapes/${objectId}`, { method: 'DELETE' })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                console.log(`Object ${objectId} deleted successfully.`);
+                
+                // Remove the layer from the map
+                var layer = leafletLayers[objectId];
+                if (layer) {
+                    map.removeLayer(layer);
+                    delete leafletLayers[objectId]; // Remove from the tracking object
+                } else {
+                    console.error(`No layer found for object ID ${objectId} to remove from map.`);
+                }
+
+                // Optional: Update the object list displayed on the page
+                displayObjects(data.shapes);
+            } else {
+                console.error(`Failed to delete object ${objectId}.`);
+            }
+        })
+        .catch(error => {
+            console.error('Error deleting shape:', error);
+        });
+}
+
+
+
+function filterObjects() {
+    const searchQuery = document.getElementById('search-box').value.toLowerCase();
+    const colorFilter = document.getElementById('color-filter').value;
+    const typeFilter = document.getElementById('type-filter').value;
+
+    fetch('/api/shapes').then(response => response.json()).then(data => {
+        let filteredObjects = data.shapes;
+
+        if (colorFilter) {
+            filteredObjects = filteredObjects.filter(object => object.shape_color === colorFilter);
+        }
+
+        if (typeFilter) {
+            filteredObjects = filteredObjects.filter(object => object.shape_type === typeFilter);
+        }
+
+        if (searchQuery) {
+            filteredObjects = filteredObjects.filter(object => object.shape_note.toLowerCase().includes(searchQuery));
+        }
+
+        displayObjects(filteredObjects);
+    });
+}
 </script>
