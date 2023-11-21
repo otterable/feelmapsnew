@@ -320,7 +320,9 @@ display: none !important;
         display: none; /* Optional: hides the tip arrow for a cleaner look */
 
     }
-	
+.leaflet-popup.image-popup .leaflet-popup-tip {
+    display: none;
+}	
   
 
    #shape-note {
@@ -912,6 +914,11 @@ margin-bottom: 50px;
 }
 #search-filter-section {
     display: none;
+	
+	      #admin-map {
+            height: 400px;
+            width: 600px;
+        }
  </style>
 <style>
 
@@ -1088,6 +1095,18 @@ margin-bottom: 50px;
         padding: 20px;
         border-radius: 10px;
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+    }
+}
+
+@media only screen and (max-width: 768px) {
+    .key-div {
+        display: none !important;
+    }
+}
+
+@media only screen and (max-width: 767px) {
+    .pinlist-div {
+        display: none !important;
     }
 }
  </style>
@@ -3192,10 +3211,203 @@ document.addEventListener('DOMContentLoaded', function() {
         } else if (event.target.id === 'toggle-create-category') {
             var createCategoryContent = document.getElementById('create-category-content');
             createCategoryContent.style.display = createCategoryContent.style.display === 'none' ? 'block' : 'none';
+        } else if (event.target.id === 'toggle-delete-category') {
+            var deleteCategoryContent = document.getElementById('delete-category-content');
+            deleteCategoryContent.style.display = deleteCategoryContent.style.display === 'none' ? 'block' : 'none';
+        } else if (event.target.id === 'delete-category') {
+            var color = document.getElementById('delete-category-select').value;
+            console.log(`Deleting category with color ${color}`);
+            fetch('/delete-category', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ color: color })
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Category deleted successfully:', data);
+                fetchCategories();
+            })
+            .catch(error => {
+                console.error('Error deleting category:', error);
+            });
+        } else if (event.target.id === 'toggle-geojson-options') {
+            var geojsonOptionsContent = document.getElementById('geojson-options-content');
+            geojsonOptionsContent.style.display = geojsonOptionsContent.style.display === 'none' ? 'block' : 'none';
+        } else if (event.target.id === 'delete-category-objects') {
+            var color = document.getElementById('delete-category-select').value;
+            console.log(`Deleting objects with category color ${color}`);
+            fetch('/delete-objects-by-category', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ color: color })
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Objects deleted successfully:', data);
+            })
+            .catch(error => {
+                console.error('Error deleting objects by category:', error);
+            });
+        } else if (event.target.id === 'delete-object-type-objects') {
+            var objectType = document.getElementById('delete-object-type-select').value;
+            console.log(`Deleting objects of type ${objectType}`);
+            fetch('/delete-objects-by-object-type', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ objectType: objectType })
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Objects deleted successfully:', data);
+            })
+            .catch(error => {
+                console.error('Error deleting objects by object type:', error);
+            });
+        } else if (event.target.id === 'toggle-object-type-restriction') {
+            var objectTypeRestrictionContent = document.getElementById('object-type-restriction-content');
+            objectTypeRestrictionContent.style.display = objectTypeRestrictionContent.style.display === 'none' ? 'block' : 'none';
+        }
+		
+		    // Toggle 'search-filter-section' visibility
+    var toggleSearchFilterButton = document.getElementById('toggle-search-filter');
+    var searchFilterSection = document.getElementById('search-filter-section');
+
+    if (toggleSearchFilterButton) {
+        toggleSearchFilterButton.addEventListener('click', function() {
+            if (searchFilterSection.style.display === 'none' || searchFilterSection.style.display === '') {
+                searchFilterSection.style.display = 'block';
+            } else {
+                searchFilterSection.style.display = 'none';
+            }
+        });
+    }
+    });
+	
+	   
+
+    // Event listener for form submission
+    document.body.addEventListener('submit', function(event) {
+        if (event.target.id === 'object-type-restriction-form') {
+            event.preventDefault();
+
+            var formData = {
+                marker: document.getElementById('allow-marker').checked,
+                rectangle: document.getElementById('allow-rectangle').checked,
+                circle: document.getElementById('allow-circle').checked,
+                polygon: document.getElementById('allow-polygon').checked
+            };
+
+            console.log('Submitting allowed object types:', formData);
+
+            fetch('/update-allowed-object-types', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(formData)
+            })
+            .then(response => response.json())
+            .then(result => {
+                console.log('Allowed object types updated:', result);
+            })
+            .catch(error => {
+                console.error('Error updating allowed object types:', error);
+            });
         }
     });
+
+    function fetchCategories() {
+        fetch('/get-categories')
+            .then(response => response.json())
+            .then(data => {
+                var categorySelect = document.getElementById('delete-category-select');
+                categorySelect.innerHTML = '';
+                data.forEach(category => {
+                    var option = document.createElement('option');
+                    option.value = category.color;
+                    option.textContent = category.text;
+                    categorySelect.appendChild(option);
+                });
+            })
+            .catch(error => {
+                console.error('Error fetching categories:', error);
+            });
+    }
+
+    fetchCategories();
+
+    // Map initialization and functionalities
+    var map = L.map('admin-map').setView([48.4102, 15.6022], 15);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: 'Stimmungskompass boundary editing tool | © OpenStreetMap contributors'
+    }).addTo(map);
+
+    var drawnItems = new L.FeatureGroup();
+    map.addLayer(drawnItems);
+
+    var drawControl = new L.Control.Draw({
+        edit: {
+            featureGroup: drawnItems
+        },
+        draw: {
+            polyline: true,
+            polygon: true,
+            circle: true,
+            marker: false,
+            rectangle: false,
+            circlemarker: false
+        }
+    });
+    map.addControl(drawControl);
+
+    var currentLayer = null;
+    map.on(L.Draw.Event.CREATED, function (e) {
+        var type = e.layerType,
+            layer = e.layer;
+        drawnItems.addLayer(layer);
+        currentLayer = layer;
+
+        var popupContent = '<form id="shapeForm" enctype="multipart/form-data">' +
+                           '<label for="note">Note:</label>' +
+                           '<input type="text" id="note" name="note"><br>' +
+                           '<label for="image">Image:</label>' +
+                           '<input type="file" id="image" name="shape_image"><br>' +
+                           '<input type="button" value="Save" onclick="saveShapeData()">' +
+                           '</form>';
+        layer.bindPopup(popupContent).openPopup();
+    });
+
+    function saveShapeData() {
+        if (!currentLayer) {
+            console.error('No layer selected');
+            return;
+        }
+
+        var formData = new FormData(document.getElementById('shapeForm'));
+        var shapeData = currentLayer.toGeoJSON();
+        var shapeType = currentLayer instanceof L.Circle ? 'circle' : 'polygon';
+        var radius = currentLayer instanceof L.Circle ? currentLayer.getRadius() : null;
+
+        formData.append('shape_data', JSON.stringify(shapeData));
+        formData.append('shape_type', shapeType);
+        formData.append('radius', radius);
+
+        fetch('/api/shapes', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log('Shape saved with ID:', data.id);
+            currentLayer.options.id = data.id;
+            currentLayer = null;
+        })
+        .catch(error => console.error('Error saving shape:', error));
+    }
 });
 </script>
+
 	
 <script>
    function toggleHeatmapMenu() {
@@ -3295,20 +3507,23 @@ function addLayer(shape, color, shapeNote, imagelink) {
             style: function() { return { color: color }; }
         });
     }
+    var popupOptions = { keepInView: true };
 
-    if (shapeNote || imagelink) {
+     if (shapeNote || imagelink) {
         var popupContent = '<div class="popup-content" style="padding: 10px; box-sizing: border-box;">';
 
         if (shapeNote) {
             popupContent += '<div class="shape-note" style="margin-bottom: 10px;">' + shapeNote + '</div>';
         }
-        if (imagelink) {
-            popupContent += `<img id="shape-image-${shape.id}" src="${imagelink}" alt="Shape Image" onload="resizePopupToFitImage(this)" style="max-width: 300px; display: block; margin: 0 auto; border-radius: 30px;">`;
-            console.log(`Image loaded for shape ID: ${shape.id}:`, imagelink);
-        }
 
-        popupContent += '</div>';
-        shapeLayer.bindPopup(popupContent, { keepInView: true });
+    if (imagelink) {
+        popupContent += `<a href="https://stimmungskompass.at/vis" target="_blank"><img id="shape-image-${shape.id}" src="${imagelink}" alt="Shape Image" onload="resizePopupToFitImage(this)" style="max-width: 300px; display: block; margin: 0 auto; border-radius: 30px;"></a>`;
+        popupOptions.className = 'image-popup';
+        console.log(`Image loaded for shape ID: ${shape.id}:`, imagelink);
+    }
+
+    popupContent += '</div>';
+    shapeLayer.bindPopup(popupContent, popupOptions); // Pass popupOptions here
 
         if (!(color in shapeLayersByColor)) {
             console.log('Color not initialized:', color);
