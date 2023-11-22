@@ -1590,8 +1590,12 @@ function updateCustomCursorIconPosition(e) {
     // Check if the cursor is inside the map div
     if (e.clientX >= mapRect.left && e.clientX <= mapRect.right && e.clientY >= mapRect.top && e.clientY <= mapRect.bottom) {
         customCursorIcon.style.display = 'block'; // Show the cursor icon
-        customCursorIcon.style.left = e.clientX + 'px';
-        customCursorIcon.style.top = e.clientY + 'px';
+
+        // Center the icon over the cursor
+        var iconWidth = 24; // Width of the icon
+        var iconHeight = 24; // Height of the icon
+        customCursorIcon.style.left = (e.clientX - iconWidth / 2) + 'px';
+        customCursorIcon.style.top = (e.clientY - iconHeight / 2) + 'px';
     } else {
         customCursorIcon.style.display = 'none'; // Hide the cursor icon outside the map
     }
@@ -1761,7 +1765,6 @@ function isCategorySelected() {
 }
 
 let popupTimer;
-
 function showToolSelectionPopup() {
   fetch('/get-allowed-object-types')
   .then(response => response.json())
@@ -1783,7 +1786,6 @@ function showToolSelectionPopup() {
     // Handle error or set default behavior
   });
 }
-
 
 function resetToolSelectionPopupTimer() {
   clearTimeout(popupTimer);
@@ -1813,6 +1815,14 @@ function selectTool(selector, button) {
     if (toolButton) {
         toolButton.click();
         console.log(`Tool ${selector} activated programmatically`);
+        
+        // Trigger a hover event on the selected tool button
+        var hoverEvent = new MouseEvent('mouseover', {
+            bubbles: true,
+            cancelable: true,
+            view: window
+        });
+        toolButton.dispatchEvent(hoverEvent);
     } else {
         console.log(`Tool button for ${selector} not found`);
     }
@@ -1833,6 +1843,14 @@ function setCategory(category) {
 
     // Update the color of the cursor icon
     createOrUpdateCustomCursorIcon(currentCategory);
+
+
+    // Send message to categories.html to update the selected button
+    var categoriesIframe = document.getElementById('categories-iframe'); // Ensure this is the correct ID
+    if (categoriesIframe) {
+        categoriesIframe.contentWindow.postMessage({ type: 'selectCategory', category: category }, '*');
+    }
+
 
 
 
@@ -2223,42 +2241,20 @@ map.on('draw:deletestop', function(event) {
 <script>
     console.log("Dark and light mode switcher successfully loaded.");
 
-    // Helper functions for cookie manipulation
-    function setCookie(name, value, days) {
-        var expires = "";
-        if (days) {
-            var date = new Date();
-            date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
-            expires = "; expires=" + date.toUTCString();
-        }
-        document.cookie = name + "=" + (value || "")  + expires + "; path=/";
-    }
+    let isLightMode = localStorage.getItem('lightMode') === 'true';
 
-    function getCookie(name) {
-        var nameEQ = name + "=";
-        var ca = document.cookie.split(';');
-        for(var i = 0; i < ca.length; i++) {
-            var c = ca[i];
-            while (c.charAt(0) == ' ') c = c.substring(1, c.length);
-            if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length, c.length);
+    function applyCloseButtonColor() {
+        const closeButton = document.getElementById('closeButton'); // Replace with your button's ID
+        if (closeButton) {
+            const closeButtonColor = getComputedStyle(document.documentElement).getPropertyValue('--button-close-color').trim();
+            closeButton.style.color = closeButtonColor;
         }
-        return null;
     }
-
-    let isLightMode = getCookie('lightMode') === 'true';
-	
-function applyCloseButtonColor() {
-    const closeButton = document.getElementById('closeButton'); // Replace with your button's ID
-    if (closeButton) {
-        const closeButtonColor = getComputedStyle(document.documentElement).getPropertyValue('--button-close-color').trim();
-        closeButton.style.color = closeButtonColor;
-    }
-}
 
     function getDarkModeProperties() {
         return {
             '--background-color': '#1b1b1b',
-			'--category-button-outline': 'white', // Outline color for dark mode
+            '--category-button-outline': 'white',
             '--text-color': 'white',
             '--leaflet-control-bg-dark': '#3a3a3a',
             '--leaflet-control-color-dark': 'white',
@@ -2274,14 +2270,14 @@ function applyCloseButtonColor() {
             '--leaflet-control-layers-selector-text': 'white',
             '--leaflet-control-layers-list-text': 'white',
             '--leaflet-control-layers-before-bg': 'url("static/mapicon2.png")',
-			'--button-close-color': 'var(--button-close-color-dark)'
+            '--button-close-color': 'var(--button-close-color-dark)'
         };
     }
 
     function getLightModeProperties() {
         return {
             '--background-color': '#ffffff',
-			'--category-button-outline': 'black',
+            '--category-button-outline': 'black',
             '--text-color': 'black',
             '--leaflet-control-bg-light': '#f3f4f8',
             '--leaflet-control-color-light': 'black',
@@ -2297,7 +2293,7 @@ function applyCloseButtonColor() {
             '--leaflet-control-layers-selector-text': 'black',
             '--leaflet-control-layers-list-text': 'black',
             '--leaflet-control-layers-before-bg': 'url("static/mapicon2b.png")',
-			'--button-close-color': 'var(--button-close-color-light)'
+            '--button-close-color': 'var(--button-close-color-light)'
         };
     }
 
@@ -2307,8 +2303,7 @@ function applyCloseButtonColor() {
             document.documentElement.style.setProperty(property, themeProperties[property]);
         }
         updateImageSources(mode);
-		    applyCloseButtonColor(); // Update the button color based on the mode
-
+        applyCloseButtonColor();
     }
 
     function updateImageSources(mode) {
@@ -2325,38 +2320,45 @@ function applyCloseButtonColor() {
         });
     }
 
-function toggleLightMode() {
-    isLightMode = !isLightMode;
-    setCookie('lightMode', isLightMode, 7); 
-    setThemeStyles(isLightMode ? 'light' : 'dark');
-    updateObjectItemTextColor(); // Update text color when toggling the mode
 
-    // Update the close button color based on the theme mode
-    const closeButton = document.getElementById('closeButton'); // Replace with your button's ID
-    if (closeButton) {
-        closeButton.style.color = isLightMode ? 'black' : 'white';
+
+    function updateCircleElementBorders() {
+        const circleElements = document.querySelectorAll('.circle-element');
+        circleElements.forEach(circleElement => {
+            // Correcting the color based on the mode
+            circleElement.style.border = `2px solid ${isLightMode ? 'black' : 'white'}`;
+        });
     }
 
-    // Update the border color of all circle elements based on the theme mode
-    updateCircleElementBorders();
-    window.postMessage({ lightModeChanged: true }, '*');
+    function updateObjectItemTextColor() {
+        const objectItems = document.querySelectorAll('.object-item span');
+        objectItems.forEach(item => {
+            // Correcting the color based on the mode
+            item.style.color = isLightMode ? 'black' : 'white';
+        });
+    }
+	
+	    function toggleLightMode() {
+        isLightMode = !isLightMode;
+        localStorage.setItem('lightMode', isLightMode);
+        setThemeStyles(isLightMode ? 'light' : 'dark');
+        updateObjectItemTextColor();
+        applyCloseButtonColor();
+    }
 
-}
+    document.getElementById('lightswitchDiv').addEventListener('click', toggleLightMode);
 
-function updateCircleElementBorders() {
-    const circleElements = document.querySelectorAll('.circle-element');
-
-    circleElements.forEach(circleElement => {
-        circleElement.style.border = `2px solid ${isLightMode ? 'white' : 'black'}`;
+    document.addEventListener('DOMContentLoaded', function () {
+        if (localStorage.getItem('lightMode') === null) {
+            localStorage.setItem('lightMode', 'true');
+            isLightMode = true;
+        } else {
+            isLightMode = localStorage.getItem('lightMode') === 'true';
+        }
+        setThemeStyles(isLightMode ? 'light' : 'dark');
+        updateObjectItemTextColor();
+        updateCircleElementBorders();
     });
-}
-
-document.getElementById('lightswitchDiv').addEventListener('click', toggleLightMode);
-
-document.addEventListener('DOMContentLoaded', function() {
-    setThemeStyles(isLightMode ? 'light' : 'dark');
-    updateCircleElementBorders(); // Ensure correct border color on initial load
-});
 
 
 
@@ -3812,21 +3814,21 @@ document.addEventListener('DOMContentLoaded', function () {
         return objectDiv;
     }
 
-function createColorCircle(color) {
-    const circleElement = document.createElement('span');
-    circleElement.style.width = '20px';
-    circleElement.style.height = '20px';
-    circleElement.style.borderRadius = '50%';
-    circleElement.style.backgroundColor = color;
-    circleElement.style.display = 'inline-block';
-    circleElement.style.marginRight = '5px';
-    circleElement.style.flexShrink = '0';
+   function createColorCircle(color) {
+        const circleElement = document.createElement('span');
+        circleElement.style.width = '20px';
+        circleElement.style.height = '20px';
+        circleElement.style.borderRadius = '50%';
+        circleElement.style.backgroundColor = color;
+        circleElement.style.display = 'inline-block';
+        circleElement.style.marginRight = '5px';
+        circleElement.style.flexShrink = '0';
 
-    // Set border color based on current light mode
-    circleElement.style.border = `2px solid ${isLightMode ? 'black' : 'white'}`;
+        // Set border color based on the isLightMode variable
+        circleElement.style.border = `2px solid ${isLightMode ? 'black' : 'white'}`;
 
-    return circleElement;
-}
+        return circleElement;
+    }
 
 
     function createShapeTypeEmoji(shapeType) {
@@ -3909,12 +3911,6 @@ function refreshCircleElements() {
         // Set the theme styles based on the mode
     }
 
-    function updateObjectItemTextColor(mode) {
-        const objectItems = document.querySelectorAll('.object-item span');
-        objectItems.forEach(item => {
-            item.style.color = mode === 'light' ? 'black' : 'white';
-        });
-    }
 
     function setCookie(name, value, days) {
         var expires = "";

@@ -44,19 +44,20 @@ body, html {
     padding: 0.5px; /* Initial padding */
     margin: 8px auto; /* Small vertical margin and auto horizontal margin for centering */
 }
-
+:root {
+    --outline-color-light: black; /* Outline color for light mode */
+    --outline-color-dark: white; /* Outline color for dark mode */
+}
 
 .categorybutton:hover {
     filter: brightness(85%);
-    outline-offset: -3px;
+    outline: 3px solid var(--outline-color-light); /* Use variable for outline color */
 }
 
-
-    .categorybutton.selected {
-        filter: brightness(85%);
-        outline: 5px solid white;
-        outline-offset: -5px;
-    }
+.categorybutton.selected {
+    filter: brightness(85%);
+    outline: 5px solid var(--outline-color-light); /* Use variable for outline color */
+}
      
         .categorybutton h3 {
             margin: 0; /* Removes any default margin */
@@ -231,63 +232,38 @@ window.makeButtonsVisible = makeButtonsVisible; // Expose the function to be cal
 </script>
 <script>
     function applyCategoryButtonStyles() {
-        let isLightMode = localStorage.getItem('lightMode') === 'true'; // Get theme state from localStorage
-        let buttons = document.querySelectorAll('.categorybutton');
+        let isLightMode = localStorage.getItem('lightMode') === 'true';
+        // Update CSS variables based on the light or dark mode
+        document.documentElement.style.setProperty('--outline-color-light', isLightMode ? 'black' : 'white');
+        document.documentElement.style.setProperty('--outline-color-dark', isLightMode ? 'white' : 'black');
 
+        let buttons = document.querySelectorAll('.categorybutton');
         buttons.forEach(button => {
-            button.onmouseover = function() {
-                this.style.outline = isLightMode ? '3px solid black' : '3px solid white';
-            };
-            button.onmouseout = function() {
-                this.style.outline = 'none';
-            };
+            button.addEventListener('click', function() {
+                let categoryMatch = this.getAttribute('onclick').match(/'([^']+)'/);
+                if (categoryMatch && categoryMatch[1]) {
+                    let category = categoryMatch[1];
+                    console.log('Button clicked, category:', category);
+                    updateSelectedButton(category); // Update the selected button immediately
+                    parent.postMessage({ type: 'selectCategory', category: category }, '*');
+                }
+            });
         });
     }
 
-    // Listen for changes in localStorage
-    window.addEventListener('storage', function(event) {
-        if (event.key === 'lightMode') {
-            applyCategoryButtonStyles(); // Reapply styles when light mode changes
-        }
-    });
-
-    // Apply styles on page load
-    document.addEventListener('DOMContentLoaded', applyCategoryButtonStyles);
-</script>
-
-
-<script>
-    function getIsLightModeFromStorage() {
-        // Fallback to 'true' if the item is not set
-        return localStorage.getItem('lightMode') === 'true';
-    }
-
-    function applyCategoryButtonStyles() {
-        let isLightMode = getIsLightModeFromStorage();
-        let buttons = document.querySelectorAll('.categorybutton');
-
+    function updateSelectedButton(selectedCategory) {
+        const buttons = document.querySelectorAll('.categorybutton');
         buttons.forEach(button => {
-            button.onmouseover = function() {
-                this.style.outline = isLightMode ? '3px solid black' : '3px solid white';
-            };
-            button.onmouseout = function() {
-                this.style.outline = 'none';
-            };
+            button.classList.toggle('selected', button.getAttribute('onclick').includes(selectedCategory));
         });
     }
 
-    // Apply styles immediately and on DOMContentLoaded
-    applyCategoryButtonStyles();
     document.addEventListener('DOMContentLoaded', applyCategoryButtonStyles);
-
-    // Reapply styles when light mode changes
     window.addEventListener('storage', function(event) {
         if (event.key === 'lightMode') {
             applyCategoryButtonStyles();
         }
     });
 </script>
-
-
 
 </body></html>
