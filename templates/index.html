@@ -30,9 +30,6 @@
 <!-- Include Spectrum's JavaScript from CDN -->
 <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/spectrum/1.8.1/spectrum.min.js"></script>
 
-<style type="text/css">
-   body { background-color: #1b1b1b; }
-  </style>
 <!-- The categories will be loaded from 'categories.html' -->
 <iframe id="categories-frame" src="/categories" style="display:none;">
 </iframe>
@@ -42,8 +39,17 @@
     <img id="anti-rotate-image" src="static/antirotate.png" alt="Rotate Device" style="max-width: 30%; height: auto; display: block; margin: 0 auto;">
 </div>
 
+<div id="portrait-blocker" style="display: none;">
+    <p>Der Stimmungskompass ist nur im Querformat verfügbar.</p>
+    <img id="anti-rotate-image" src="static/antirotate_ipad.png" alt="Rotate Device" style="max-width: 30%; height: auto; display: block; margin: 0 auto;">
+</div>
 
+
+<style type="text/css">
+  background-color: var(--background-color); /* Apply background color */
+    color: var(--text-color); /* Apply text color */  </style>
 </head>
+
 <style>
   /* BASIC CSS START */
 body, html {
@@ -52,7 +58,15 @@ body, html {
     overflow: hidden; /* Prevent scrolling */
     box-sizing: border-box; /* Include padding and border in the element's total width and height */
     font-family: 'Roboto', sans-serif !important;
+    background-color: var(--background-color); /* Apply background color */
+    color: var(--text-color); /* Apply text color */
 }
+
+.resistant-h3 {
+    color: var(--text-color); /* Use the text color based on the current theme */
+    /* Add other styles as needed */
+}
+
 
 #landscape-blocker {
     display: none; /* Initially hidden */
@@ -70,10 +84,37 @@ body, html {
     text-align: center; /* Ensure text alignment is centered */
 }
 
+.object-item-text {
+    color: var(--text-color); /* Use CSS variable for dynamic color */
+}
+
 /* Optional: Add media query for smaller screens if the text is too large */
 @media (max-width: 768px) {
     #landscape-blocker {
         font-size: 16px;
+    }
+}
+
+#portrait-blocker {
+    display: none; /* Initially hidden */
+    position: fixed; /* Overlay the whole screen */
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: black; /* Black background */
+    color: white; /* White text color */
+    z-index: 9999; /* Ensure it's on top of other elements */
+    display: flex;
+    justify-content: center; /* Center horizontally */
+    align-items: center; /* Center vertically */
+    text-align: center; /* Ensure text alignment is centered */
+}
+
+/* Optional: Add media query for larger screens */
+@media (min-width: 768px) {
+    #portrait-blocker {
+        font-size: 20px;
     }
 }
 
@@ -87,6 +128,7 @@ body, html {
         position: absolute;
         top: 15px;
         bottom: 15px;
+
         border-radius: 30px;
         overflow: hidden;
     }
@@ -96,11 +138,16 @@ body, html {
         right: calc(30% + 15px);
     }
 
-    #sidebar {
+     #sidebar {
+        position: absolute;
         width: calc(30% - 15px);
         right: 15px;
-        background: #111111;
+        top: 15px;
+        bottom: 15px;
         padding: 10px;
+        border-radius: 30px;
+        overflow: hidden;
+        background: var(--sidebar-bg); /* Use variable for background */
     }
 }
 
@@ -115,7 +162,6 @@ body, html {
 #sidebar {
     width: calc(30% - 15px); /* Sidebar takes up 30% width minus right margin */
     right: 15px; /* Consistent margin from the right */
-    background: #111111;
     padding: 10px;
 }
 
@@ -201,12 +247,7 @@ border-radius: 30px;"
 }
 /* LEAFLET MAP ICONS CSS END */
 
-:root {
-  --leaflet-control-bg-dark: #3a3a3a; /* Dark mode background color */
-  --leaflet-control-color-dark: white; /* Dark mode symbol color */
-  --leaflet-control-bg-light: #f3f4f8; /* Light mode background color */
-  --leaflet-control-color-light: black; /* Light mode symbol color */
-}
+
 
 .leaflet-draw-draw-marker {
 display: none !important;
@@ -258,7 +299,6 @@ display: none !important;
     font-weight: bold;
     text-align: center;
     border-radius: 30px;
-    background-color: transparent;
     background-repeat: no-repeat;
     background-position: center;
     width: 36px;
@@ -442,12 +482,34 @@ display: none !important;
     }
 
     /* Make the containers hidden when screen width is less than 1271px */
-    @media (max-width: 1271px) and (min-width: 769px) {
+    @media (max-width: 1271px) and (min-width: 768px) {
 	  .left-container, .right-container, .togglebuttoncontainer {
-		display: none;
+		display: in-line;
 	  }
 	}
 	
+	@media (min-width: 768px) and (max-width: 1271px) {
+    #keyDiv img, 
+    #infoDiv img, 
+    #pinlistdiv img, 
+    #lightswitchDiv img {
+        max-width: 30px !important; /* Set the max-width to 30px for tablet screens */
+        height: auto; /* Maintain the aspect ratio of the images */
+        border-radius: 30px; /* Maintain the border radius */
+    }
+}
+
+@media (min-width: 768px) and (max-width: 1271px) {
+    .button-s {
+        max-height: 30px !important; /* Set the max height to 30px for tablet screens */
+        padding: 10px; /* Adjust padding as needed */
+    }
+  .button-s h3 {
+        font-size: 16px; /* Adjust the font size as needed for tablet screens */
+        margin: 0; /* You might want to reset any default margin */
+    }
+}
+
 		/* Icon scaler */
         #keyDiv {
             cursor: pointer;
@@ -636,11 +698,11 @@ display: none !important;
     justify-content: center;
     border-radius: 30px;
     padding: 8px 12px; /* Increased left and right padding */
-    z-index: 10000;
+    z-index: 1000;
     font-size: 25px;
     font-weight: bold;
     gap: 5px;
-    background-color: var(--counter-pill-bg-color);
+   background-color: var(--counter-pill-bg-color);
     color: var(--counter-pill-text-color);
     white-space: nowrap;
     overflow: hidden;
@@ -787,12 +849,29 @@ display: none !important;
     /* Define default dark mode colors */
     --counter-pill-bg-color: #111111;
     --counter-pill-text-color: white;
+	--background-color: #111111; /* Dark mode background */
+    --text-color: white; /* Dark mode text */
+    --sidebar-bg: #111111; /* Dark mode sidebar background */
+    --counter-pill-bg-color: #111111; /* Dark mode counter pill background */
+    --counter-pill-text-color: white; /* Dark mode counter pill text */
+	--leaflet-control-bg-dark: #3a3a3a; /* Dark mode background color */
+	--leaflet-control-color-dark: white; /* Dark mode symbol color */
+	    --button-close-color-dark: white; /* Color for dark mode */
+    --button-close-color-light: black; /* Color for light mode */
 }
+
 
 .light-mode {
     /* Define light mode colors */
     --counter-pill-bg-color: #f3f4f8;
     --counter-pill-text-color: black;
+	--background-color: #ffffff; /* Light mode background */
+    --text-color: black; /* Light mode text */
+    --sidebar-bg: #D4D7DA; /* Light mode sidebar background */
+    --counter-pill-bg-color: #f3f4f8; /* Light mode counter pill background */
+    --counter-pill-text-color: black; /* Light mode counter pill text */
+	--leaflet-control-bg-light: #f3f4f8; /* Light mode background color */
+	--leaflet-control-color-light: black; /* Light mode symbol color */
 }
 
  .leaflet-draw-draw-polyline, .leaflet-draw-draw-polygon, .leaflet-draw-draw-rectangle, .leaflet-draw-draw-circle, .leaflet-draw-draw-marker, .leaflet-draw-draw-circlemarker, .leaflet-draw-edit-edit, .leaflet-draw-section {
@@ -886,7 +965,7 @@ margin-bottom: 50px;
 }
 
         /* Responsive design */
-        @media screen and (min-width: 769px) {
+        @media screen and (min-width: 768px) {
             #mobileCategoryOverlay {
                 display: none; /* Hide on non-mobile devices */
             }
@@ -987,6 +1066,7 @@ margin-bottom: 50px;
         margin-bottom: 15px;
         overflow: hidden;
 		width: auto;
+		background: var(--sidebar-bg); /* Use variable for background */
     }
 
 #sidebar-mobileheader {
@@ -1001,7 +1081,7 @@ margin-bottom: 50px;
     padding: 7.5px;
     max-height: 81px;
     z-index: 500!important; /* High z-index */
-    background-color: red; /* Bright background color for testing */
+    background: var(--sidebar-bg); /* Use variable for background */
     width: auto; /* Fixed width for testing */
     display: block !important; /* Force display */
 }
@@ -1098,6 +1178,7 @@ margin-bottom: 50px;
         bottom: 15px; /* Consistent margin from the bottom */
         padding: 10px; /* Maintain padding */
         border-radius: 30px; /* Maintain border radius */
+		background: var(--sidebar-bg); /* Use variable for background */
     }
 	
 }
@@ -1142,7 +1223,7 @@ margin-bottom: 50px;
 <body>
     <div id="mobileCategoryOverlay"></div>
 
-<div class="color-111111" id="sidebar-mobileheader" style="display: none; background-color: #111111;">
+<div id="sidebar-mobileheader" style="display: none;">
 <img class="logo-img appear-on-mobile" src="static/logo_long.png" style="display: none; max-width: 97%; height: auto; display: block; margin-bottom: 0px; border-radius: 0px;"/>
 <h3 class="appear-on-mobiledisabled resistant-h3" style="display: none; color: white; text-align: center; margin-top: 5px;">
     Wie stehen Sie zu den Orten in Ihrer Gemeinde?
@@ -1179,17 +1260,18 @@ margin-bottom: 50px;
 </div>
 <?php MAP END ?>
 <?php SIDEBAR BODY START ?>
-<div class="color-111111" id="sidebar" style="background-color: #111111;">
+<div id="sidebar">
 <?php LOGO START ?>
 <img class="logo-img hide-on-mobile" src="static/logo_long.png" style="max-width: 97%; height: auto; display: block; margin-bottom: 7px; border-radius: 0px;"/>
 <?php LOGO END ?>
 <?php WEBSITE DESCRIPTION START ?>
-<h3 class="hide-on-mobile resistant-h3" style="color: white; text-align: center; margin-top: 5px;">
+<h3 class="hide-on-mobile resistant-h3" style="text-align: center; margin-top: 5px;">
     Wie stehen Sie zu den Orten in Ihrer Gemeinde?
-   </h3>
-<h3 class="hide-on-mobile resistant-h3" style="color: white; text-align: center; margin-top: -12px; margin-bottom: 7px">
+</h3>
+<h3 class="hide-on-mobile resistant-h3" style="text-align: center; margin-top: -12px; margin-bottom: 7px">
     Lassen Sie es uns auf dieser Karte wissen!
-   </h3>
+</h3>
+
 <?php WEBSITE DESCRIPTION END ?>
 <!-- Popup HTML Structure -->
 
@@ -2136,154 +2218,152 @@ map.on('draw:deletestop', function(event) {
   </script>
 
   
-<?php DARK AND LIGHT MODE SWITCH START ?>
- <script>
-        // Dark and light mode switcher
-        console.log("Dark and light mode switcher successfully loaded.");
-        let isLightMode = false;  // Initialize with dark mode
-
-        let objectsData = []; // Global variable to store objects data
-
-        // Fetch and display all objects and populate filters when the page loads
-        document.addEventListener('DOMContentLoaded', function() {
-            fetch('/api/all-shapes').then(response => response.json()).then(data => {
-                console.log('Objects loaded from the database:', data.shapes);
-                objectsData = data.shapes; // Store data globally
-                populateColorFilter(objectsData);
-            });
-        });
-
-        // Ensure the dark mode is set on initial load
-        document.documentElement.classList.add('dark-mode');
-        document.documentElement.style.setProperty('--popup-bg-color', '#111111');
-        document.documentElement.style.setProperty('--popup-text-color', 'white');
-        document.documentElement.style.setProperty('--leaflet-control-layers-expanded-bg', '#111111');
-        document.documentElement.style.setProperty('--leaflet-control-layers-expanded-text', 'white');
-        document.documentElement.style.setProperty('--leaflet-control-layers-selector-text', 'white');
-        document.documentElement.style.setProperty('--leaflet-control-layers-list-text', 'white');
-        document.documentElement.style.setProperty('--leaflet-control-layers-before-bg', 'url("static/mapicon2.png")');
-        document.documentElement.style.setProperty('--leaflet-disabled-bg', '#111111');
-        document.documentElement.style.setProperty('--leaflet-disabled-color', 'white');
-        document.documentElement.style.setProperty('--note-text-color', 'white'); // Default to white for dark mode
-
-        // Function to switch between light and dark mode
-        function toggleLightMode() {
-            // Toggle the mode first before applying the classes
-            isLightMode = !isLightMode;
-            document.documentElement.classList.toggle('dark-mode', !isLightMode);
-            document.documentElement.classList.toggle('light-mode', isLightMode);
-
-            // Update color variables for popup based on the mode
-            if (isLightMode) {
-                document.documentElement.style.setProperty('--popup-bg-color', '#ffffff');
-                document.documentElement.style.setProperty('--counter-pill-bg-color', '#f3f4f8');
-                document.documentElement.style.setProperty('--counter-pill-text-color', 'black');
-                document.documentElement.style.setProperty('--leaflet-control-bg-dark', '#f3f4f8');
-                document.documentElement.style.setProperty('--leaflet-control-color-dark', 'black');
-                document.documentElement.style.setProperty('--leaflet-control-layers-list-text', 'black');
-                document.documentElement.style.setProperty('--leaflet-control-layers-before-bg', 'url("static/mapicon2b.png")');
-                document.documentElement.style.setProperty('--leaflet-disabled-bg', '#d4d7da');
-                document.documentElement.style.setProperty('--leaflet-disabled-color', 'black');
-                document.documentElement.style.setProperty('--note-text-color', 'black');
-                document.documentElement.style.setProperty('--counter-color-border', '2px solid #111111');
-                document.documentElement.style.setProperty('--popup-text-color', 'black');
-                document.documentElement.style.setProperty('--border-hover-color', '#666666'); // Custom border color for hover in light mode
-                document.documentElement.style.setProperty('--border-selected-color', '#444444'); // Custom border color for selected in light mode
-                document.documentElement.style.setProperty('--leaflet-control-layers-expanded-bg', '#f3f4f8');
-                document.documentElement.style.setProperty('--leaflet-control-layers-expanded-text', 'black');
-                document.documentElement.style.setProperty('--leaflet-control-layers-selector-text', 'black');
-            } else {
-                document.documentElement.style.setProperty('--popup-bg-color', '#111111');
-                document.documentElement.style.setProperty('--counter-pill-bg-color', '#111111');
-                document.documentElement.style.setProperty('--counter-pill-text-color', 'white');
-                document.documentElement.style.setProperty('--leaflet-control-bg-dark', '#3a3a3a');
-                document.documentElement.style.setProperty('--leaflet-control-color-dark', 'white');
-                document.documentElement.style.setProperty('--leaflet-control-layers-list-text', 'white');
-                document.documentElement.style.setProperty('--leaflet-control-layers-before-bg', 'url("static/mapicon2.png")');
-                document.documentElement.style.setProperty('--leaflet-disabled-bg', '#111111');
-                document.documentElement.style.setProperty('--leaflet-disabled-color', 'white');
-                document.documentElement.style.setProperty('--note-text-color', 'white');
-                document.documentElement.style.setProperty('--counter-color-border', '2px solid white');
-                document.documentElement.style.setProperty('--popup-text-color', 'white');
-                document.documentElement.style.setProperty('--border-hover-color', '#cccccc'); // Reset to dark mode colors
-                document.documentElement.style.setProperty('--border-selected-color', '#aaaaaa');
-                document.documentElement.style.setProperty('--leaflet-control-layers-expanded-bg', '#111111');
-                document.documentElement.style.setProperty('--leaflet-control-layers-expanded-text', 'white');
-                document.documentElement.style.setProperty('--leaflet-control-layers-selector-text', 'white');
-            }
-
-            // Helper function to safely set the src attribute for all elements matching the selector
-            function setImgSrc(selector, lightSrc, darkSrc) {
-                const elements = document.querySelectorAll(selector);
-                elements.forEach(element => {
-                    element.src = isLightMode ? lightSrc : darkSrc;
-                });
-            }
-
-            // Update the image sources based on the mode
-            setImgSrc('.logo-img', 'static/logo_long2.png', 'static/logo_long.png');
-            setImgSrc('#pinlistdiv img', 'static/pinlisticon2.png', 'static/pinlisticon.png');
-            setImgSrc('#infoDiv img', 'static/infoicon2.png', 'static/infoicon.png');
-            setImgSrc('#lightswitchDiv img', 'static/sunicon2.png', 'static/sunicon.png');
-            setImgSrc('#keyDiv img', 'static/keyicon2.png', 'static/keyicon.png');
-
-            // Update the body's background color
-            document.body.style.backgroundColor = isLightMode ? '#f3f4f8' : '#1b1b1b';
-
-            // Update the border property for counter-color class
-            const counterColorElements = document.querySelectorAll('.counter-color');
-            counterColorElements.forEach(el => {
-                el.style.border = isLightMode ? '2px solid #111111' : '2px solid white';
-            });
-
-            // Update the sidebar background color
-            const sidebar = document.getElementById('sidebar');
-            const sidebarMobileHeader = document.getElementById('sidebar-mobileheader');
-            if (sidebar) {
-                sidebar.style.backgroundColor = isLightMode ? '#D4D7DA' : '#111111';
-            }
-            if (sidebarMobileHeader) {
-                sidebarMobileHeader.style.backgroundColor = isLightMode ? '#D4D7DA' : '#111111';
-            }
-
-            // Update the button's background color
-            const buttonS = document.getElementById('buttonS');
-            if (buttonS) {
-                buttonS.style.backgroundColor = isLightMode ? '#111111' : '#3a3a3a';
-            }
-
-            // Update the text color for h3 elements with 'resistant-h3' class
-            const h3Elements = document.querySelectorAll('.resistant-h3');
-            h3Elements.forEach(el => {
-                el.style.color = isLightMode ? 'black' : 'white';
-            });
-
-            // Update the text color for text elements with 'text-color' class
-            const textElements = document.querySelectorAll('.text-color');
-            textElements.forEach(el => {
-                el.style.color = isLightMode ? 'black' : 'white';
-            });
-
-            displayObjects(objectsData);
-
-            console.log("Light mode is now " + (isLightMode ? "enabled" : "disabled") + ".");
-        }
-
-        // Add event listener to the light switch div
-        document.getElementById('lightswitchDiv').addEventListener('click', toggleLightMode);
-    </script>
+<?php // DARK AND LIGHT MODE SWITCH START ?>
 
 <script>
-   // On website launch, the layout is DARK.
-let isDarkMode = true;
+    console.log("Dark and light mode switcher successfully loaded.");
 
-function togglePopup() {
-    isDarkMode = !isDarkMode;
-    document.documentElement.classList.toggle('dark-mode', isDarkMode);
-    document.documentElement.classList.toggle('light-mode', !isDarkMode);
+    // Helper functions for cookie manipulation
+    function setCookie(name, value, days) {
+        var expires = "";
+        if (days) {
+            var date = new Date();
+            date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+            expires = "; expires=" + date.toUTCString();
+        }
+        document.cookie = name + "=" + (value || "")  + expires + "; path=/";
+    }
+
+    function getCookie(name) {
+        var nameEQ = name + "=";
+        var ca = document.cookie.split(';');
+        for(var i = 0; i < ca.length; i++) {
+            var c = ca[i];
+            while (c.charAt(0) == ' ') c = c.substring(1, c.length);
+            if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length, c.length);
+        }
+        return null;
+    }
+
+    let isLightMode = getCookie('lightMode') === 'true';
+	
+function applyCloseButtonColor() {
+    const closeButton = document.getElementById('closeButton'); // Replace with your button's ID
+    if (closeButton) {
+        const closeButtonColor = getComputedStyle(document.documentElement).getPropertyValue('--button-close-color').trim();
+        closeButton.style.color = closeButtonColor;
+    }
 }
-  </script>
-<?php DARK AND LIGHT MODE SWITCH END ?>
+
+    function getDarkModeProperties() {
+        return {
+            '--background-color': '#1b1b1b',
+			'--category-button-outline': 'white', // Outline color for dark mode
+            '--text-color': 'white',
+            '--leaflet-control-bg-dark': '#3a3a3a',
+            '--leaflet-control-color-dark': 'white',
+            '--sidebar-bg': '#111111',
+            '--leaflet-disabled-bg': '#111111',
+            '--leaflet-disabled-color': 'white',
+            '--popup-bg-color': '#111111',
+            '--popup-text-color': 'white',
+            '--counter-pill-bg-color': '#111111',
+            '--counter-pill-text-color': 'white',
+            '--leaflet-control-layers-expanded-bg': '#111111',
+            '--leaflet-control-layers-expanded-text': 'white',
+            '--leaflet-control-layers-selector-text': 'white',
+            '--leaflet-control-layers-list-text': 'white',
+            '--leaflet-control-layers-before-bg': 'url("static/mapicon2.png")',
+			'--button-close-color': 'var(--button-close-color-dark)'
+        };
+    }
+
+    function getLightModeProperties() {
+        return {
+            '--background-color': '#ffffff',
+			'--category-button-outline': 'black',
+            '--text-color': 'black',
+            '--leaflet-control-bg-light': '#f3f4f8',
+            '--leaflet-control-color-light': 'black',
+            '--sidebar-bg': '#D4D7DA',
+            '--leaflet-disabled-bg': '#d4d7da',
+            '--leaflet-disabled-color': 'black',
+            '--popup-bg-color': '#ffffff',
+            '--popup-text-color': 'black',
+            '--counter-pill-bg-color': '#f3f4f8',
+            '--counter-pill-text-color': 'black',
+            '--leaflet-control-layers-expanded-bg': '#f3f4f8',
+            '--leaflet-control-layers-expanded-text': 'black',
+            '--leaflet-control-layers-selector-text': 'black',
+            '--leaflet-control-layers-list-text': 'black',
+            '--leaflet-control-layers-before-bg': 'url("static/mapicon2b.png")',
+			'--button-close-color': 'var(--button-close-color-light)'
+        };
+    }
+
+    function setThemeStyles(mode) {
+        var themeProperties = mode === 'light' ? getLightModeProperties() : getDarkModeProperties();
+        for (var property in themeProperties) {
+            document.documentElement.style.setProperty(property, themeProperties[property]);
+        }
+        updateImageSources(mode);
+		    applyCloseButtonColor(); // Update the button color based on the mode
+
+    }
+
+    function updateImageSources(mode) {
+        setImgSrc('.logo-img', mode === 'light' ? 'static/logo_long2.png' : 'static/logo_long.png');
+        setImgSrc('#pinlistdiv img', mode === 'light' ? 'static/pinlisticon2.png' : 'static/pinlisticon.png');
+        setImgSrc('#infoDiv img', mode === 'light' ? 'static/infoicon2.png' : 'static/infoicon.png');
+        setImgSrc('#lightswitchDiv img', mode === 'light' ? 'static/sunicon2.png' : 'static/sunicon.png');
+        setImgSrc('#keyDiv img', mode === 'light' ? 'static/keyicon2.png' : 'static/keyicon.png');
+    }
+
+    function setImgSrc(selector, src) {
+        document.querySelectorAll(selector).forEach(function(element) {
+            element.src = src;
+        });
+    }
+
+function toggleLightMode() {
+    isLightMode = !isLightMode;
+    setCookie('lightMode', isLightMode, 7); 
+    setThemeStyles(isLightMode ? 'light' : 'dark');
+    updateObjectItemTextColor(); // Update text color when toggling the mode
+
+    // Update the close button color based on the theme mode
+    const closeButton = document.getElementById('closeButton'); // Replace with your button's ID
+    if (closeButton) {
+        closeButton.style.color = isLightMode ? 'black' : 'white';
+    }
+
+    // Update the border color of all circle elements based on the theme mode
+    updateCircleElementBorders();
+    window.postMessage({ lightModeChanged: true }, '*');
+
+}
+
+function updateCircleElementBorders() {
+    const circleElements = document.querySelectorAll('.circle-element');
+
+    circleElements.forEach(circleElement => {
+        circleElement.style.border = `2px solid ${isLightMode ? 'white' : 'black'}`;
+    });
+}
+
+document.getElementById('lightswitchDiv').addEventListener('click', toggleLightMode);
+
+document.addEventListener('DOMContentLoaded', function() {
+    setThemeStyles(isLightMode ? 'light' : 'dark');
+    updateCircleElementBorders(); // Ensure correct border color on initial load
+});
+
+
+
+</script>
+
+
+<?php // DARK AND LIGHT MODE SWITCH END ?>
 <?php BUTTON CLICK AUDIO EFFECTS START ?>
 <audio id="buttonClickAudio" preload="auto">
 <source src="static/buttonclick.mp3" type="audio/mp3"/>
@@ -2528,8 +2608,8 @@ popup.appendChild(text);
     closeButton.style.right = "10px";
     closeButton.style.border = "none";
     closeButton.style.background = "none";
-    closeButton.style.color = info.color;
-    closeButton.style.fontSize = "20px";
+	closeButton.style.color = "#3a3a3a";
+    closeButton.style.fontSize = "30px";
     closeButton.style.cursor = "pointer";
 
     // Append the close button to the popup
@@ -3395,7 +3475,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
             })
             .catch(error => {
-                console.error('Error fetching categories:', error);
+               // console.error('Error fetching categories:', error);
             });
     }
 
@@ -3523,7 +3603,7 @@ document.addEventListener('DOMContentLoaded', function() {
             colorVisibilityState[color] = true; // All colors visible by default
             shapeLayersByColor[color] = []; // Initialize an empty array for each color
             selectedColors[color] = false; // Initialize selected colors
-            console.log('Initialized visibility state for color', color);
+          //  console.log('Initialized visibility state for color', color);
         });
     }
 
@@ -3585,7 +3665,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (imagelink) {
                 popupContent += `<a href="https://stimmungskompass.at/vis" target="_blank"><img id="shape-image-${shape.id}" src="${imagelink}" alt="Shape Image" onload="resizePopupToFitImage(this)" style="max-width: 300px; display: block; margin: 0 auto; border-radius: 30px;"></a>`;
                 popupOptions.className = 'image-popup';
-                console.log(`Image loaded for shape ID: ${shape.id}:`, imagelink);
+               // console.log(`Image loaded for shape ID: ${shape.id}:`, imagelink);
             }
 
             popupContent += '</div>';
@@ -3602,11 +3682,11 @@ document.addEventListener('DOMContentLoaded', function() {
             if (colorVisibilityState[color]) {
                 map.addLayer(shapeLayer);
             }
-            console.log(`Layer added for color '${color}'. Layer:`, shapeLayer);
+           // console.log(`Layer added for color '${color}'. Layer:`, shapeLayer);
         }
 
         leafletLayers[shape.id] = shapeLayer;
-        console.log(`Storing Leaflet layer for shape ID: ${shape.id}`, shapeLayer);
+      //  console.log(`Storing Leaflet layer for shape ID: ${shape.id}`, shapeLayer);
     }
 
    function resizePopupToFitImage(imgElement) {
@@ -3639,18 +3719,19 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function fetchAndUpdateCounts() {
         $.getJSON('/get-category-order', function(categoryOrder) {
-            console.log('Category order:', categoryOrder);
+            // console.log('Category order:', categoryOrder);
 
             $.getJSON('/count-objects', function(data) {
-                console.log('Updated counts fetched:', data);
+                // console.log('Updated counts fetched:', data);
 
                 var colorCounters = $('#color-counters');
                 colorCounters.empty();
 
                 categoryOrder.forEach(function(color) {
                     var count = data.color_counts[color];
-                    var colorCircle = $(`<span class="counter-color" style="background-color: ${color}; border: 2px solid white;"></span>`);
-                    var listItem = $(`<li style="margin-right: 5px;">`).append(colorCircle).append(` ${count}`);
+                    var colorCircle = $(`<span class="counter-color" style="background-color: ${color}; border: 2px solid ${isLightMode ? 'black' : 'white'};"></span>`);
+					var listItem = $(`<li style="margin-right: 5px;">`).append(colorCircle).append(` ${count}`);
+
                     listItem.on('click', function() {
                         toggleVisibility(color);
                         updateSelectedEffect(color);
@@ -3688,110 +3769,71 @@ document.addEventListener('DOMContentLoaded', function() {
         setInterval(fetchAndUpdateCounts, 1000); // Update every 1 second
     });
 </script>
-
 <script>
+document.addEventListener('DOMContentLoaded', function () {
+    let isLightMode = getCookie('lightMode') === 'true';
 
-document.addEventListener('DOMContentLoaded', function() {
-    fetch('/api/all-shapes').then(response => response.json()).then(data => {
-        displayObjects(data.shapes);
+    fetch('/api/all-shapes')
+        .then(response => response.json())
+        .then(data => {
+            displayObjects(data.shapes);
+            updateObjectItemTextColor(isLightMode ? 'light' : 'dark');
+        });
 
-        // Add event listeners after the objects are displayed
-        const objectElements = document.querySelectorAll('.object-item');
-        objectElements.forEach(element => {
-            element.addEventListener('click', function() {
-                const objectID = this.getAttribute('data-object-id');
-                console.log(`Clicked on object with ID: ${objectID}`);
+    document.getElementById('lightswitchDiv').addEventListener('click', toggleLightMode);
 
-                var layer = leafletLayers[objectID];
-                console.log(`Retrieving Leaflet layer for object ID: ${objectID}`, layer);
-
-                if (layer) {
-                    centerMapOnObject(layer);
-                } else {
-                    console.error('No Leaflet layer found for object ID:', objectID);
-                }
+    function displayObjects(objects) {
+        const objectList = document.getElementById('object-list');
+        objectList.innerHTML = '';
+        objects.forEach(object => {
+            const objectDiv = createObjectDiv(object, isLightMode ? 'light' : 'dark');
+            objectDiv.addEventListener('click', function () {
+                handleClickOnObjectItem(object.id);
             });
+            objectList.appendChild(objectDiv);
         });
-    });
-});
+    }
 
-document.addEventListener('DOMContentLoaded', function() {
-    fetch('/api/all-shapes').then(response => response.json()).then(data => {
-        console.log('Objects loaded from the database:', data.shapes);
-        displayObjects(data.shapes);
-    });
-});
-
-document.addEventListener('DOMContentLoaded', function() {
-    fetch('/api/all-shapes').then(response => response.json()).then(data => {
-        displayObjects(data.shapes);
-
-        const objectElements = document.querySelectorAll('.object-item');
-        objectElements.forEach(element => {
-            element.addEventListener('click', function() {
-                const objectID = this.getAttribute('data-object-id');
-                var layer = leafletLayers[objectID];
-
-                if (layer) {
-                    centerMapOnObject(layer);
-                    // Open the popup for the selected object
-                    if (layer.openPopup) {
-                        layer.openPopup();
-                    }
-                } else {
-                    console.error('No Leaflet layer found for object ID:', objectID);
-                }
-            });
-        });
-    });
-});
-
-
-// Function to populate the color filter with category names
-function populateColorFilterWithCategories() {
-    $.getJSON('/get-categories', function(categories) {
-        const colorFilter = document.getElementById('color-filter');
-        categories.forEach(function(category) {
-            if (category.color !== 'null') {
-                const option = document.createElement('option');
-                option.value = category.color;
-                option.textContent = category.text;
-                colorFilter.appendChild(option);
-            }
-        });
-    });
-}
-
-// Call the function to populate the color filter
-populateColorFilterWithCategories();
-
-function displayObjects(objects) {
-    const objectList = document.getElementById('object-list');
-    objectList.innerHTML = '';
-    objects.forEach(object => {
-
-        console.log('Processing object:', object);
-
+    function createObjectDiv(object, mode) {
         const objectDiv = document.createElement('div');
+        objectDiv.classList.add('object-item');
+        objectDiv.setAttribute('data-object-id', object.id);
         objectDiv.style.display = 'flex';
         objectDiv.style.alignItems = 'center';
 
-        const colorCircle = document.createElement('span');
-        colorCircle.style.width = '20px';
-        colorCircle.style.height = '20px';
-        colorCircle.style.borderRadius = '50%';
-        colorCircle.style.border = '2px solid white';
-        colorCircle.style.backgroundColor = object.shape_color;
-        colorCircle.style.display = 'inline-block';
-        colorCircle.style.marginRight = '5px';
-        colorCircle.style.flexShrink = '0';
+        const colorCircle = createColorCircle(object.shape_color);
+        const shapeTypeEmoji = createShapeTypeEmoji(object.shape_type);
+        const shapeNote = createShapeNote(object.shape_note, mode);
 
         objectDiv.appendChild(colorCircle);
+        objectDiv.appendChild(shapeTypeEmoji);
+        objectDiv.appendChild(shapeNote);
 
+        return objectDiv;
+    }
+
+function createColorCircle(color) {
+    const circleElement = document.createElement('span');
+    circleElement.style.width = '20px';
+    circleElement.style.height = '20px';
+    circleElement.style.borderRadius = '50%';
+    circleElement.style.backgroundColor = color;
+    circleElement.style.display = 'inline-block';
+    circleElement.style.marginRight = '5px';
+    circleElement.style.flexShrink = '0';
+
+    // Set border color based on current light mode
+    circleElement.style.border = `2px solid ${isLightMode ? 'black' : 'white'}`;
+
+    return circleElement;
+}
+
+
+    function createShapeTypeEmoji(shapeType) {
         const shapeTypeEmoji = document.createElement('span');
         shapeTypeEmoji.style.marginRight = '5px';
         shapeTypeEmoji.style.fontSize = '20px';
-        switch (object.shape_type) {
+        switch (shapeType) {
             case 'marker':
                 shapeTypeEmoji.textContent = '📍';
                 break;
@@ -3805,125 +3847,140 @@ function displayObjects(objects) {
                 shapeTypeEmoji.textContent = '🔺';
                 break;
         }
-        objectDiv.appendChild(shapeTypeEmoji);
-        objectDiv.classList.add('object-item');
-        objectDiv.setAttribute('data-object-id', object.id);
+        return shapeTypeEmoji;
+    }
+
+    function createShapeNote(note, mode) {
         const shapeNote = document.createElement('span');
-        shapeNote.textContent = `${object.shape_note}`;
-        const currentMode = document.documentElement.classList.contains('light-mode') ? 'light' : 'dark';
-        shapeNote.style.color = currentMode === 'light' ? 'black' : 'white';
-        objectDiv.appendChild(shapeNote);
+        shapeNote.textContent = note;
+        shapeNote.style.color = mode === 'light' ? 'black' : 'white';
+        return shapeNote;
+    }
 
-        // Debugging to check if objectDiv is present
-        if (!objectDiv) {
-            console.error('objectDiv is not present.');
+    function handleClickOnObjectItem(objectID) {
+        var layer = leafletLayers[objectID];
+        if (layer) {
+            // centerMapOnObject(layer);
+            if (layer.openPopup) {
+                layer.openPopup();
+            }
         } else {
-            console.log('objectDiv is present:', objectDiv);
+            console.error('No Leaflet layer found for object ID:', objectID);
         }
+    }
 
-   document.addEventListener('DOMContentLoaded', function() {
-    fetch('/api/all-shapes').then(response => response.json()).then(data => {
-        displayObjects(data.shapes);
+    function centerMapOnObject(layer) {
+        if (layer.getLatLng) {
+            map.panTo(layer.getLatLng());
+        } else if (layer.getBounds) {
+            map.fitBounds(layer.getBounds());
+        }
+    }
 
-        const objectElements = document.querySelectorAll('.object-item');
-        objectElements.forEach(element => {
-            element.addEventListener('click', function() {
-                const objectID = this.getAttribute('data-object-id');
-                var layer = leafletLayers[objectID];
+    function toggleLightMode() {
+    isLightMode = !isLightMode;
+    setCookie('lightMode', isLightMode, 7);
+    setThemeStyles(isLightMode ? 'light' : 'dark');
+    updateObjectItemTextColor();
+    applyCloseButtonColor();
+    window.dispatchEvent(new CustomEvent('themeChanged', { detail: { isLightMode } }));
 
-                if (layer) {
-                    centerMapOnObject(layer);
-                    // Open the popup for the selected object
-                    if (layer.openPopup) {
-                        layer.openPopup();
-                    }
-                } else {
-                    console.error('No Leaflet layer found for object ID:', objectID);
+    // Refresh elements that depend on the light mode
+    refreshCircleElements();
+}
+// Function to provide the current theme state
+window.getCurrentTheme = function() {
+    let currentTheme = localStorage.getItem('lightMode') === 'true';
+    console.log("Current theme is light mode:", currentTheme);
+    return currentTheme;
+};
+
+function refreshCircleElements() {
+    // Assuming your objects are stored and can be retrieved again
+    // You might need to adjust this to fit your application's structure
+    fetch('/api/all-shapes')
+        .then(response => response.json())
+        .then(data => {
+            displayObjects(data.shapes);
+        });
+}
+
+    function setThemeStyles(mode) {
+        // Set the theme styles based on the mode
+    }
+
+    function updateObjectItemTextColor(mode) {
+        const objectItems = document.querySelectorAll('.object-item span');
+        objectItems.forEach(item => {
+            item.style.color = mode === 'light' ? 'black' : 'white';
+        });
+    }
+
+    function setCookie(name, value, days) {
+        var expires = "";
+        if (days) {
+            var date = new Date();
+            date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+            expires = "; expires=" + date.toUTCString();
+        }
+        document.cookie = name + "=" + (value || "") + expires + "; path=/";
+    }
+
+    function getCookie(name) {
+        var nameEQ = name + "=";
+        var ca = document.cookie.split(';');
+        for (var i = 0; i < ca.length; i++) {
+            var c = ca[i];
+            while (c.charAt(0) == ' ') c = c.substring(1, c.length);
+            if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length, c.length);
+        }
+        return null;
+    }
+
+    populateColorFilterWithCategories();
+
+    function populateColorFilterWithCategories() {
+        $.getJSON('/get-categories', function (categories) {
+            const colorFilter = document.getElementById('color-filter');
+            categories.forEach(function (category) {
+                if (category.color !== 'null') {
+                    const option = document.createElement('option');
+                    option.value = category.color;
+                    option.textContent = category.text;
+                    colorFilter.appendChild(option);
                 }
             });
         });
-    });
-});
-
-        // Append the objectDiv to the objectList
-        objectList.appendChild(objectDiv);
-
- 
-    });
-}
-
-
-
-function centerMapOnObject(layer) {
-    if (layer) {
-        if (layer.getLatLng) {
-            const latLng = layer.getLatLng();
-        } else if (layer.getBounds) {
-            const bounds = layer.getBounds();
-            const center = bounds.getCenter();
-        } else {
-            console.error('Layer does not have a getLatLng or getBounds method:', layer);
-        }
-    } else {
-        console.error('Invalid or undefined Leaflet layer object:', layer);
     }
-}
 
+    function filterObjects() {
+        const searchQuery = document.getElementById('search-box').value.toLowerCase();
+        const colorFilter = document.getElementById('color-filter').value;
+        const typeFilter = document.getElementById('type-filter').value;
 
+        fetch('/api/shapes')
+            .then(response => response.json())
+            .then(data => {
+                let filteredObjects = data.shapes;
 
-function deleteObject(objectId) {
-    console.log(`Deleting object: ${objectId}`);
-    fetch(`/api/shapes/${objectId}`, { method: 'DELETE' })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                console.log(`Object ${objectId} deleted successfully.`);
-                // Fetch all shapes from the server again
-                fetch('/api/shapes').then(response => response.json()).then(data => {
-                    // Clear existing layers from the map
-                    Object.values(leafletLayers).forEach(layer => map.removeLayer(layer));
-                    leafletLayers = {};
+                if (colorFilter) {
+                    filteredObjects = filteredObjects.filter(object => object.shape_color === colorFilter);
+                }
 
-                    // Add new layers for the updated shapes
-                    data.shapes.forEach(function(shape) {
-                        addLayer(shape, shape.shape_color, shape.shape_note, shape.shape_imagelink);
-                    });
+                if (typeFilter) {
+                    filteredObjects = filteredObjects.filter(object => object.shape_type === typeFilter);
+                }
 
-                    // Update the counts and visibility
-                    fetchAndUpdateCounts();
-                    displayObjects(data.shapes);
-                });
-            } else {
-                console.error(`Failed to delete object ${objectId}.`);
-            }
-        });
-}
+                if (searchQuery) {
+                    filteredObjects = filteredObjects.filter(object => object.shape_note.toLowerCase().includes(searchQuery));
+                }
 
-
-function filterObjects() {
-    const searchQuery = document.getElementById('search-box').value.toLowerCase();
-    const colorFilter = document.getElementById('color-filter').value;
-    const typeFilter = document.getElementById('type-filter').value;
-
-    fetch('/api/shapes').then(response => response.json()).then(data => {
-        let filteredObjects = data.shapes;
-
-        if (colorFilter) {
-            filteredObjects = filteredObjects.filter(object => object.shape_color === colorFilter);
-        }
-
-        if (typeFilter) {
-            filteredObjects = filteredObjects.filter(object => object.shape_type === typeFilter);
-        }
-
-        if (searchQuery) {
-            filteredObjects = filteredObjects.filter(object => object.shape_note.toLowerCase().includes(searchQuery));
-        }
-
-        displayObjects(filteredObjects);
-    });
-}
+                displayObjects(filteredObjects);
+            });
+    }
+});
 </script>
+
 
 <script>
    function toggleSearchFilter() {
@@ -4152,30 +4209,50 @@ document.addEventListener('DOMContentLoaded', function() {
     checkOverlayVisibility();
 
 </script>
-
-
 <script>
 function isMobileDevice() {
     const userAgent = navigator.userAgent || navigator.vendor || window.opera;
-    return /android|iphone|ipad|ipod/i.test(userAgent);
+    return /android|iphone|ipod/i.test(userAgent);
 }
 
-function updateLandscapeBlockerVisibility() {
+function isTabletDevice() {
+    // Using screen dimensions and touch points to detect tablets
+    const minTabletSize = 600; // Minimum screen size to consider as tablet
+    const aspectRatio = window.screen.width / window.screen.height;
+    const likelyTablet = aspectRatio > 0.5 && aspectRatio < 1.5; // Aspect ratio check for tablets
+
+    return !isMobileDevice() && (window.screen.width >= minTabletSize || window.screen.height >= minTabletSize) && likelyTablet;
+}
+
+function updateBlockerVisibility() {
     const landscapeBlocker = document.getElementById('landscape-blocker');
+    const portraitBlocker = document.getElementById('portrait-blocker');
     const counterPill = document.getElementById('counter-pill');
+
     if (isMobileDevice() && window.matchMedia("(orientation: landscape)").matches) {
+        // Block landscape mode for mobile devices
         landscapeBlocker.style.display = 'block';
-        counterPill.style.visibility = 'hidden';
-    } else {
+        portraitBlocker.style.display = 'none';
+    } else if (isTabletDevice() && window.matchMedia("(orientation: portrait)").matches) {
+        // Block portrait mode for all tablets
+        portraitBlocker.style.display = 'block';
         landscapeBlocker.style.display = 'none';
-        counterPill.style.visibility = 'visible';
+    } else {
+        // No blockers for other cases
+        landscapeBlocker.style.display = 'none';
+        portraitBlocker.style.display = 'none';
     }
+
+    counterPill.style.visibility = (landscapeBlocker.style.display === 'none' && portraitBlocker.style.display === 'none') ? 'visible' : 'hidden';
 }
 
-window.addEventListener("orientationchange", updateLandscapeBlockerVisibility, false);
-window.addEventListener("resize", updateLandscapeBlockerVisibility, false);
+window.addEventListener("orientationchange", updateBlockerVisibility, false);
+window.addEventListener("resize", updateBlockerVisibility, false);
 
-document.addEventListener("DOMContentLoaded", updateLandscapeBlockerVisibility);
+document.addEventListener("DOMContentLoaded", updateBlockerVisibility);
 </script>
+
+
+
 </body>
 </html>
