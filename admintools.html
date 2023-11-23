@@ -417,22 +417,6 @@ $(document).ready(function() {
 });
 </script>
 
-<div style="text-align: center; margin: auto; width: 97%;">
-    <button class="toggle-button" id="toggle-search-filter">Andere Einstellungen</button>
-    <div id="object-type-restriction-content" style="display: none;">
-        <h3>Objekttypauswahl einschränken:</h3>
-        <form id="object-type-restriction-form">
-            <div style="margin: auto; display: inline-block; text-align: left;">
-                <input type="checkbox" id="allow-marker" name="marker" checked> <label for="allow-marker">Marker</label><br>
-                <input type="checkbox" id="allow-rectangle" name="rectangle" checked> <label for="allow-rectangle">Rechteck</label><br>
-                <input type="checkbox" id="allow-circle" name="circle" checked> <label for="allow-circle">Kreis</label><br>
-                <input type="checkbox" id="allow-polygon" name="polygon" checked> <label for="allow-polygon">Polygon</label><br>
-                <button type="submit" style="margin-top: 20px;">Einschränken</button>
-            </div>
-        </form>
-    </div>
-</div>
-
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         var searchFilterSection = document.getElementById('search-filter-section');
@@ -834,6 +818,22 @@ function filterObjects() {
 }
 </script>
  <div id="admin-map"></div>
+
+<div style="text-align: center; margin: auto; width: 97%;">
+    <button class="toggle-button" id="toggle-search-filter">Andere Einstellungen</button>
+    <div id="object-type-restriction-content" style="display: none;">
+        <h3>Objekttypauswahl einschränken:</h3>
+        <form id="object-type-restriction-form">
+            <div style="margin: auto; display: inline-block; text-align: left;">
+                <input type="checkbox" id="allow-marker" name="marker" checked> <label for="allow-marker">Marker</label><br>
+                <input type="checkbox" id="allow-rectangle" name="rectangle" checked> <label for="allow-rectangle">Rechteck</label><br>
+                <input type="checkbox" id="allow-circle" name="circle" checked> <label for="allow-circle">Kreis</label><br>
+                <input type="checkbox" id="allow-polygon" name="polygon" checked> <label for="allow-polygon">Polygon</label><br>
+                <button type="submit" style="margin-top: 20px;">Einschränken</button>
+            </div>
+        </form>
+    </div>
+</div>
 
     <style>
         #admin-map {

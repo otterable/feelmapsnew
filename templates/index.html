@@ -151,6 +151,11 @@ body, html {
     }
 }
 
+@media (max-width: 768px) {
+    .desktop-only {
+        display: none;
+    }
+}
 
 
 
@@ -611,6 +616,7 @@ display: none !important;
     text-decoration: none;
 	    white-space: normal;
     border-radius: 30px;
+    background-color: var(--button-bg-color); /* Use a general variable */
     transition: background-color 0.2s ease-in-out;
     color: white;
     text-align: center;
@@ -628,10 +634,9 @@ display: none !important;
         .pinlist-div:hover,
         .info-div:hover,
         .lightswitch-div:hover {
-            filter: brightness(85%) !important;
-            outline: 3px solid var(--border-hover-color) !important; /* Use custom property for outline color */
-            outline-offset: -3px !important; /* Offset to align with the border edge */
-        }
+             filter: brightness(115%) !important;
+    outline: 3px solid var(--outline-hover-color) !important; /* Use custom property */
+}
 
 
 /* INFO-POPUP CONTAINER CSS START */
@@ -725,6 +730,20 @@ display: none !important;
     padding: 0;
     margin: 0;
     gap: 5px;
+}
+.iframe-container {
+    position: relative;
+    width: 100%;
+    padding-bottom: 56.25%; /* Aspect ratio: 16/9 */
+    height: 0;
+}
+
+.iframe-container iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
 }
 
 #color-counters li, #category-counters li {
@@ -858,6 +877,8 @@ display: none !important;
 	--leaflet-control-color-dark: white; /* Dark mode symbol color */
 	    --button-close-color-dark: white; /* Color for dark mode */
     --button-close-color-light: black; /* Color for light mode */
+	 --outline-hover-color-dark: white; /* Outline color for dark mode */
+    --outline-hover-color-light: black; /* Outline color for light mode */
 }
 
 
@@ -867,7 +888,7 @@ display: none !important;
     --counter-pill-text-color: black;
 	--background-color: #ffffff; /* Light mode background */
     --text-color: black; /* Light mode text */
-    --sidebar-bg: #D4D7DA; /* Light mode sidebar background */
+    --sidebar-bg: #EDF2F4; /* Light mode sidebar background */
     --counter-pill-bg-color: #f3f4f8; /* Light mode counter pill background */
     --counter-pill-text-color: black; /* Light mode counter pill text */
 	--leaflet-control-bg-light: #f3f4f8; /* Light mode background color */
@@ -921,19 +942,18 @@ display: none !important;
     width: auto;
     height: 30px;
 	border-radius: 10px;
-    transition: transform 0.2s;
+    transition: transform 0.2s, outline 0.2s; /* Added transition for outline */
 }
 
 .tool-btn:hover img {
     transform: scale(1.1);
-    outline: 3px solid white;
+    outline: var(--tool-btn-hover-outline);
 }
 
 .tool-btn.selected img {
-    background-color: rgba(255, 255, 255, 0.3); /* Example style */
+    background-color: rgba(255, 255, 255, 0.3);
+    outline: var(--tool-btn-selected-outline);
 }
-
-
 
 .filter-container {
     display: flex;
@@ -994,13 +1014,13 @@ margin-bottom: 50px;
 
 
     .categorybutton:hover {
-        filter: brightness(85%);
+        filter: brightness(115%);
         outline: 3px solid white;
         outline-offset: -3px;
     }
 
     .categorybutton.selected {
-        filter: brightness(85%);
+        filter: brightness(115%);
         outline: 5px solid white;
         outline-offset: -5px;
     }
@@ -1042,7 +1062,6 @@ margin-bottom: 50px;
 	margin-top: -2.5px !important;
 			margin-bottom: 7.5px;
 	}
-
 
     #map {
         position: absolute;
@@ -1238,9 +1257,6 @@ margin-bottom: 50px;
 <ul id="color-counters" style="list-style: none; display: flex; padding: 0; margin: 0;">
 <!-- Color circles will be inserted here -->
 </ul>
-<ul id="category-counters" style="list-style: none; display: flex; padding: 0; margin: 0;">
-<!-- Category symbols will be inserted here -->
-</ul>
 </div>
 <div id="tool-selection-popup" style="display:none;">
   <button id="marker-btn" class="tool-btn" onclick="selectTool('.leaflet-draw-draw-marker', this)">
@@ -1288,7 +1304,7 @@ margin-bottom: 50px;
 <img src="static/infoicon.png"/>
 </div>
 </div>
-<div class="button-s color-3a3a3a" id="buttonS" onclick="addAndRemoveClass()" style="background-color: #3a3a3a; width: auto; height: auto; padding: 15px;">
+<div class="button-s" id="buttonS" onclick="addAndRemoveClass()" style="width: auto; height: auto; padding: 15px;">
 <h3>
       Wie funktioniert's?
      </h3>
@@ -1505,14 +1521,17 @@ var baseLayers = {
         baseLayers["Standardkarte"].addTo(map);
 
 
-function createIcon(pinSize, outlineSize) {
+map.on('baselayerchange', function(e) {
+    console.log('Map base layer switched to:', e.name);
+});
+
+function createIcon(pinSize, outlineSize, strokeColor) {
     var svgIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="${pinSize}" height="${pinSize}" viewBox="0 0 ${pinSize} ${pinSize}">
         <circle cx="${pinSize / 2}" cy="${pinSize / 2}" r="${pinSize / 4}" />
-        <circle cx="${pinSize / 2}" cy="${pinSize / 2}" r="${pinSize / 4}" stroke-width="${outlineSize}" fill="none" stroke-opacity="0.5" />
+        <circle cx="${pinSize / 2}" cy="${pinSize / 2}" r="${pinSize / 4}" stroke="${strokeColor}" stroke-width="${outlineSize}" fill="none" stroke-opacity="0.5" />
     </svg>`;
 
-    console.log("SVG Icon:", svgIcon); // Debugging statement
-
+    console.log("SVG Icon:", svgIcon);
 
     return L.icon({
         iconUrl: `data:image/svg+xml;base64,${btoa(svgIcon)}`,
@@ -1521,6 +1540,7 @@ function createIcon(pinSize, outlineSize) {
         popupAnchor: [0, -pinSize / 2]
     });
 }
+
 
 
 // Define a custom marker icon
@@ -1765,27 +1785,27 @@ function isCategorySelected() {
 }
 
 let popupTimer;
+
 function showToolSelectionPopup() {
   fetch('/get-allowed-object-types')
-  .then(response => response.json())
-  .then(data => {
-    const popup = document.getElementById('tool-selection-popup');
-    if (popup) {
-      document.getElementById('marker-btn').style.display = data.marker ? 'inline-block' : 'none';
-      document.getElementById('rectangle-btn').style.display = data.rectangle ? 'inline-block' : 'none';
-      document.getElementById('circle-btn').style.display = data.circle ? 'inline-block' : 'none';
-      document.getElementById('polygon-btn').style.display = data.polygon ? 'inline-block' : 'none';
+    .then(response => response.json())
+    .then(data => {
+      const popup = document.getElementById('tool-selection-popup');
+      if (popup) {
+        document.getElementById('marker-btn').style.display = data.marker ? 'inline-block' : 'none';
+        document.getElementById('rectangle-btn').style.display = data.rectangle ? 'inline-block' : 'none';
+        document.getElementById('circle-btn').style.display = data.circle ? 'inline-block' : 'none';
+        document.getElementById('polygon-btn').style.display = data.polygon ? 'inline-block' : 'none';
 
-      popup.style.display = 'flex'; // Apply flex display
-      popup.style.flexDirection = 'row'; // Ensure horizontal layout
-      resetToolSelectionPopupTimer();
-    }
-  })
-  .catch(error => {
-    console.error('Error fetching allowed object types:', error);
-    // Handle error or set default behavior
-  });
+        popup.style.display = 'flex';
+        resetToolSelectionPopupTimer();
+      }
+    })
+    .catch(error => {
+      console.error('Error fetching allowed object types:', error);
+    });
 }
+
 
 function resetToolSelectionPopupTimer() {
   clearTimeout(popupTimer);
@@ -1794,41 +1814,7 @@ function resetToolSelectionPopupTimer() {
     if (popup) {
       popup.style.display = 'none';
     }
-  }, 10000); // Hide after 10 seconds
-}
-
-function selectTool(selector, button) {
-    // Remove 'selected' class from all buttons
-    var buttons = document.querySelectorAll('#tool-selection-popup .tool-btn');
-    buttons.forEach(function(btn) {
-        btn.classList.remove('selected');
-    });
-
-    // Add 'selected' class to the clicked button
-    button.classList.add('selected');
-
-    // Set the global variable to the currently selected button
-    selectedToolButton = button;
-
-    // Find and click the corresponding Leaflet tool button
-    var toolButton = document.querySelector(selector);
-    if (toolButton) {
-        toolButton.click();
-        console.log(`Tool ${selector} activated programmatically`);
-        
-        // Trigger a hover event on the selected tool button
-        var hoverEvent = new MouseEvent('mouseover', {
-            bubbles: true,
-            cancelable: true,
-            view: window
-        });
-        toolButton.dispatchEvent(hoverEvent);
-    } else {
-        console.log(`Tool button for ${selector} not found`);
-    }
-
-    // Reset popup timer on each click
-    resetToolSelectionPopupTimer();
+  }, 60000); // Hide after 10 seconds
 }
 
 // Add click event listener to popup to reset timer on click
@@ -1844,16 +1830,11 @@ function setCategory(category) {
     // Update the color of the cursor icon
     createOrUpdateCustomCursorIcon(currentCategory);
 
-
-    // Send message to categories.html to update the selected button
-    var categoriesIframe = document.getElementById('categories-iframe'); // Ensure this is the correct ID
+    // Send message to categories.html to update selected button
+    var categoriesIframe = document.getElementById('categories-iframe'); // Replace with your iframe ID
     if (categoriesIframe) {
         categoriesIframe.contentWindow.postMessage({ type: 'selectCategory', category: category }, '*');
     }
-
-
-
-
 
     // Display the tool selection popup
     var popup = document.getElementById('tool-selection-popup');
@@ -1864,22 +1845,56 @@ function setCategory(category) {
         console.log('Popup element not found');
     }
 
-    // Default to Marker tool
+    // Default to Marker tool and apply 'selected' class to marker tool-button
     selectTool('.leaflet-draw-draw-marker');
+    var markerToolButton = document.getElementById('marker-btn');
+    if (markerToolButton) {
+        clearSelectedTools(); // Clear any existing selections
+        markerToolButton.classList.add('selected');
+        console.log('Marker tool-button selected programmatically');
+    }
     showToolSelectionPopup();
 }
 
-
-function selectTool(selector) {
-    var toolButton = document.querySelector(selector);
-    if (toolButton) {
-        console.log(`Tool button for ${selector} found:`, toolButton);
-        toolButton.click(); // Simulate a click on the tool button
-        console.log(`Tool ${selector} activated programmatically`);
-    } else {
-        console.log(`Tool button for ${selector} not found`);
+// Function to set the active tool button based on the Leaflet draw event
+function setActiveToolButton(layerType) {
+    clearSelectedTools();
+    var buttonId = layerType + '-btn'; // Construct the button ID
+    var button = document.getElementById(buttonId);
+    if (button) {
+        button.classList.add('selected');
+        console.log('Active tool set to:', layerType);
     }
 }
+// Function to select a tool
+function selectTool(selector) {
+    var leafletDrawButton = document.querySelector('.leaflet-draw-toolbar').querySelector(selector);
+    if (leafletDrawButton) {
+        console.log('Leaflet draw button found for selector:', selector);
+        leafletDrawButton.click(); // Trigger the click event on the Leaflet draw toolbar button
+    } else {
+        console.log('Leaflet draw button not found for selector:', selector);
+    }
+}
+
+// Function to clear selected tools
+function clearSelectedTools() {
+    var selectedButtons = document.querySelectorAll('.tool-btn.selected');
+    selectedButtons.forEach(button => {
+        button.classList.remove('selected');
+        console.log('Removed selected outline from:', button);
+    });
+}
+
+// Function to clear selected tools
+function clearSelectedTools() {
+    var selectedButtons = document.querySelectorAll('.tool-btn.selected');
+    selectedButtons.forEach(button => {
+        button.classList.remove('selected');
+        console.log('Removed selected outline from:', button);
+    });
+}
+
 
 // Function to programmatically activate the marker tool
 function activateMarkerTool() {
@@ -1908,6 +1923,7 @@ var currentLayer = null;
 
 // Event listener for when the marker tool is selected
 map.on(L.Draw.Event.DRAWSTART, function(event) {
+    setActiveToolButton(event.layerType);
     console.log('Draw start:', event.layerType);
 	  isDrawing = true; // Set the flag to indicate that drawing has started
     currentLayer = null; // Reset the current layer
@@ -1930,6 +1946,8 @@ map.on(L.Draw.Event.DRAWSTART, function(event) {
 
 // Update event listener for when drawing is stopped
 map.on(L.Draw.Event.DRAWSTOP, function(event) {
+    clearSelectedTools();
+
     console.log('Draw stop:', event.layerType);
     if (currentLayer) {
         var type = currentLayer instanceof L.Marker ? 'marker' : ''; // Check if currentLayer is a Marker
@@ -2256,6 +2274,9 @@ map.on('draw:deletestop', function(event) {
             '--background-color': '#1b1b1b',
             '--category-button-outline': 'white',
             '--text-color': 'white',
+			'--button-bg-color': '#3a3a3a', // Dark mode button background
+	     '--tool-btn-hover-outline': '3px solid white', // Dark mode hover outline
+        '--tool-btn-selected-outline': '5px solid white', // Dark mode selected outline
             '--leaflet-control-bg-dark': '#3a3a3a',
             '--leaflet-control-color-dark': 'white',
             '--sidebar-bg': '#111111',
@@ -2279,10 +2300,13 @@ map.on('draw:deletestop', function(event) {
             '--background-color': '#ffffff',
             '--category-button-outline': 'black',
             '--text-color': 'black',
+			'--button-bg-color': '#111111', // Light mode button background
+			'--tool-btn-hover-outline': '3px solid #111111', // Outline for hover in light mode
+			'--tool-btn-selected-outline': '5px solid #111111', // Outline for selected in light mode
             '--leaflet-control-bg-light': '#f3f4f8',
             '--leaflet-control-color-light': 'black',
-            '--sidebar-bg': '#D4D7DA',
-            '--leaflet-disabled-bg': '#d4d7da',
+            '--sidebar-bg': '#EDF2F4',
+            '--leaflet-disabled-bg': '#EDF2F4',
             '--leaflet-disabled-color': 'black',
             '--popup-bg-color': '#ffffff',
             '--popup-text-color': 'black',
@@ -2296,29 +2320,37 @@ map.on('draw:deletestop', function(event) {
             '--button-close-color': 'var(--button-close-color-light)'
         };
     }
-
-    function setThemeStyles(mode) {
-        var themeProperties = mode === 'light' ? getLightModeProperties() : getDarkModeProperties();
-        for (var property in themeProperties) {
-            document.documentElement.style.setProperty(property, themeProperties[property]);
-        }
-        updateImageSources(mode);
-        applyCloseButtonColor();
+	
+function setThemeStyles(mode) {
+    var themeProperties = mode === 'light' ? getLightModeProperties() : getDarkModeProperties();
+    for (var property in themeProperties) {
+        document.documentElement.style.setProperty(property, themeProperties[property]);
     }
+    // Update the hover outline color based on the mode
+    var hoverOutlineColor = mode === 'light' ? 'var(--outline-hover-color-light)' : 'var(--outline-hover-color-dark)';
+    document.documentElement.style.setProperty('--outline-hover-color', hoverOutlineColor);
+    console.log("Mode set to " + mode + ", hover outline color: " + hoverOutlineColor);
 
-    function updateImageSources(mode) {
-        setImgSrc('.logo-img', mode === 'light' ? 'static/logo_long2.png' : 'static/logo_long.png');
-        setImgSrc('#pinlistdiv img', mode === 'light' ? 'static/pinlisticon2.png' : 'static/pinlisticon.png');
-        setImgSrc('#infoDiv img', mode === 'light' ? 'static/infoicon2.png' : 'static/infoicon.png');
-        setImgSrc('#lightswitchDiv img', mode === 'light' ? 'static/sunicon2.png' : 'static/sunicon.png');
-        setImgSrc('#keyDiv img', mode === 'light' ? 'static/keyicon2.png' : 'static/keyicon.png');
-    }
+    updateImageSources(mode); // Ensure this function is called to update images
+    applyCloseButtonColor();
+}
 
-    function setImgSrc(selector, src) {
-        document.querySelectorAll(selector).forEach(function(element) {
-            element.src = src;
-        });
-    }
+function updateImageSources(mode) {
+    console.log("Updating image sources for mode:", mode);
+    setImgSrc('.logo-img', mode === 'light' ? 'static/logo_long2.png' : 'static/logo_long.png');
+    setImgSrc('#pinlistdiv img', mode === 'light' ? 'static/pinlisticon2.png' : 'static/pinlisticon.png');
+    setImgSrc('#infoDiv img', mode === 'light' ? 'static/infoicon2.png' : 'static/infoicon.png');
+    setImgSrc('#lightswitchDiv img', mode === 'light' ? 'static/sunicon2.png' : 'static/sunicon.png');
+    setImgSrc('#keyDiv img', mode === 'light' ? 'static/keyicon2.png' : 'static/keyicon.png');
+}
+
+function setImgSrc(selector, src) {
+    console.log("Setting image source for", selector, "to", src);
+    document.querySelectorAll(selector).forEach(function(element) {
+        element.src = src;
+    });
+}
+
 
 
 
@@ -2493,12 +2525,7 @@ document.addEventListener('DOMContentLoaded', function() {
             color: 'white',
             persist: true
         },
-        'uigif-counter': {
-            title: 'So funktioniert Filtern:',
-            text: '<img src="static/uigif-counter.gif" alt="uigif-counter" style="max-width: 100%; max-height: 800px; width: auto; height: auto;">',
-            color: '#f77f00',
-            persist: true  // Keep this popup visible forever
-        },
+      
 		'admin-pindelete': {
         title: 'Einzelne Pins löschen:',
         text: '<img src="static/uigif-deletebyid.gif" alt="uigif-deletebyid" style="max-width: 100%; max-height: 800px; width: auto; height: auto;">',
@@ -2523,42 +2550,37 @@ document.addEventListener('DOMContentLoaded', function() {
             color: 'green',
             persist: false
         },
-        'Willkommen auf der Stimmungskarte!': {
-            title: 'Willkommen auf der Stimmungskarte!',
+        'Willkommen beim Stimmungskompass!': {
+            title: 'Willkommen beim Stimmungskompass!',
             text: 'Diese Karte ist eine bequeme und einfache Möglichkeit, Ihrer Stadt zu zeigen, wie Sie sich darin fühlen.<br><br>Sie können Hinweise an Orten anbringen, die Sie entweder als angenehm oder problematisch empfinden.<br><br><span style="color: #f77f00; font-weight: bold;">Und so funktioniert es:</span><br><span style="color: #f77f00; font-weight: bold;">1.</span> Wählen Sie eine Kategorie.<br><span style="color: #f77f00; font-weight: bold;">2.</span> Platzieren Sie einen Pin auf der Karte.<br><span style="color: #f77f00; font-weight: bold;">3.</span> Teilen Sie uns Ihre Meinung mit!<br><br><span style="font-weight: bold;">Ihre Beiträge sind anonym und können von der Gemeinde zur Verbesserung des öffentlichen Raums genutzt werden.</span> ',
             color: '#f77f00'
         },
 		<!-- CATEGORY EDITING AREA START -->
-        'Dieser Ort gefällt mir.': {
-            title: 'Was kann man zum Beispiel aufschreiben?',
-            text: 'Dieser Ort strahlt eine beruhigende Ruhe aus und bietet eine angenehme Atmosphäre, die zum Entspannen einlädt.  Ob durch seine natürliche Schönheit oder aufregende Aktivitäten, er vermag es, einen positiven Eindruck zu hinterlassen.',
-            color: '#FF7043'
-        },
-        'Hier fühle ich mich unsicher.': {
-            title: 'Was kann man zum Beispiel aufschreiben?',
-            text: 'Die schlechte Straßenbeleuchtung lässt ein Gefühl der Unsicherheit aufkommen, während betrunkene oder obdachlose Personen die Unbehaglichkeit weiter verstärken.   Hier wäre eine Aufwertung der öffentlichen Infrastruktur und mehr soziale Dienste wünschenswert.',
-            color: '#B71C1C'
-        },
-        'Hier gibt es Probleme mit dem Parken.': {
-            title: 'Was kann man zum Beispiel aufschreiben?',
-            text: 'Die knappen Parkmöglichkeiten und rücksichtslos abgestellte Fahrzeuge erschweren die Durchfahrt und schaffen ein chaotisches Straßenbild.   Eine bessere Regulierung und Beschilderung könnte hier Abhilfe schaffen.',
-            color: '#1565C0'
-        },
-        'Hier verbringe ich gerne meine Freizeit.': {
-            title: 'Was kann man zum Beispiel aufschreiben?',
-            text: 'Dieser Ort bietet eine friedliche Oase zum Abschalten oder ein lebendiges Markttreiben, das zum Stöbern einlädt.   Die angenehme Umgebung, sei es ein Bauernmarkt oder ein Kino, macht ihn zu einem beliebten Freizeitziel.',
-            color: '#4CAF50'
-        },
-        'Dieser Ort braucht eine Verbesserung.': {
-            title: 'Was kann man zum Beispiel aufschreiben?',
-            text: 'Die fehlende Fußgängerüberquerung und der heruntergekommene Anblick, gepaart mit Schlaglöchern im Straßenbelag, rufen nach Verbesserungen.   Eine Aufwertung der Ästhetik und Sicherheit würde den Ort deutlich attraktiver machen.',
-            color: '#4E342E'
-        },
-        'An diesem Ort fehlt ein Service.': {
-            title: 'Was kann man zum Beispiel aufschreiben?',
-            text: 'Die mangelhafte Busanbindung und geschlossene Apotheken erschweren den Alltag und lassen den Ort weniger serviceorientiert erscheinen.   Eine Verbesserung der öffentlichen Dienstleistungen wäre hier von Vorteil.',
-            color: 'white'
-        },
+     
+ 
+'Stimmungskompass grüßt Sie!': {
+    title: 'Stimmungskompass grüßt Sie!',
+    text: `<div class="desktop-only">Der Kompass ist eine nette Möglichkeit, Ihre Meinung über Ihre Stadt zu äußern.</div>
+           <div class="desktop-only">Für weitere Informationen klicken Sie auf „Video ansehen“ oder auf die Hilfeschaltflächen.</div><br>
+           <div class="iframe-container">
+              <iframe src="https://www.youtube.com/embed/RnCeDG0wzy4" frameborder="0" 
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                      allowfullscreen style="border-radius: 30px;"></iframe>
+           </div><br>
+           <div class="desktop-only" style="display: flex; align-items: center; justify-content: space-between;">
+               <div>
+                   <input type="checkbox" id="enableCookies" name="enableCookies" checked>
+                   <label for="enableCookies">Cookies zulassen</label>
+               </div>
+               <div id="dontShowAgainContainer" style="display: block; margin-left: 5px;">
+                   <button id="dontShowAgain" style="padding: 8px; border-radius: 30px; background-color: #2d9cd9; border: none; cursor: pointer; color: white;">
+                       Nicht mehr anzeigen
+                   </button>
+               </div>
+           </div>`,
+    color: '#f77f00',
+    persist: true
+},
 		<!-- CATEGORY EDITING AREA END -->
 
     };
@@ -2655,7 +2677,7 @@ adjustFontSizeForMobile();
         }, 0);
 
         let timeout = 5000;  // Default timeout in milliseconds
-        if (info.title === 'Willkommen auf der Stimmungskarte!') {
+        if (info.title === 'Willkommen beim Stimmungskompass!!') {
             timeout = 15000;  // 15 seconds for 'Willkommen' popup
         } else if (info.title === 'Dieses Bild wird ersetzt:') {
             timeout = -1;  // Infinite for 'Overlay' popup
@@ -2671,19 +2693,28 @@ adjustFontSizeForMobile();
 
 		}
 		
-        if (!info.persist) {
-            clearTimeout(popupTimer);
-            popupTimer = setTimeout(() => {
-                popup.style.opacity = "0";
-                setTimeout(() => {
-                    popup.remove();
-                }, 500);
-            }, timeout);
-        }
+       if (!info.persist) {
+        clearTimeout(popupTimer);
+        popupTimer = setTimeout(() => {
+            popup.style.opacity = "0";
+            setTimeout(() => {
+                popup.remove();
+                // Update visibility tracking variable when the popup is hidden
+                if (info.title === 'So funktioniert Filtern:') {
+                    isUIGifCounterPopupVisible = false;
+                }
+            }, 500);
+        }, timeout);
     }
 
+    // Update visibility tracking variable when the popup is shown
+    if (info.title === 'So funktioniert Filtern:') {
+        isUIGifCounterPopupVisible = true;
+    }
+}
+
     function activatePopup() {
-        const info = popupTexts['Willkommen auf der Stimmungskarte!'];
+        const info = popupTexts['Willkommen beim Stimmungskompass!'];
         showPopup(info);
     }
 
@@ -2740,6 +2771,84 @@ adjustFontSizeForMobile();
         }
     }
 	
+	
+	 
+   
+    // Function to set a cookie
+    function setCookie(name, value, days) {
+        var expires = "";
+        if (days) {
+            var date = new Date();
+            date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+            expires = "; expires=" + date.toUTCString();
+        }
+        document.cookie = name + "=" + (value || "") + expires + "; path=/";
+    }
+
+    // Function to get a cookie value
+    function getCookie(name) {
+        var nameEQ = name + "=";
+        var ca = document.cookie.split(';');
+        for (var i = 0; i < ca.length; i++) {
+            var c = ca[i];
+            while (c.charAt(0) === ' ') c = c.substring(1, c.length);
+            if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
+        }
+        return null;
+    }
+
+    // Function to show the test popup on page load
+       function showTestPopup() {
+        if (!getCookie('noTestPopup')) {
+            const info = popupTexts['Stimmungskompass grüßt Sie!'];
+            showPopup(info);
+
+            setTimeout(() => {
+                const dontShowButton = document.getElementById("dontShowAgain");
+                const enableCookiesCheckbox = document.getElementById("enableCookies");
+                const dontShowAgainContainer = document.getElementById("dontShowAgainContainer");
+
+                // Function to toggle the display of "Don't show again" button
+                function toggleDontShowButton() {
+                    dontShowAgainContainer.style.display = enableCookiesCheckbox.checked ? "block" : "none";
+                }
+
+                // Initial toggle on popup display
+                toggleDontShowButton();
+
+                // Event listener for the "Enable Cookies" checkbox
+                if (enableCookiesCheckbox) {
+                    enableCookiesCheckbox.addEventListener('change', function() {
+                        console.log("Enable Cookies Checkbox is now " + (this.checked ? "checked" : "unchecked"));
+                        toggleDontShowButton();
+                    });
+                }
+
+                // Event listener for the "Don't show again" button
+                if (dontShowButton) {
+                    dontShowButton.addEventListener('click', function() {
+                        if (enableCookiesCheckbox && enableCookiesCheckbox.checked) {
+                            setCookie('noTestPopup', 'true', 7); // Set the cookie for 7 days
+                        } else {
+                            console.log("Cookies are disabled. Not setting the cookie.");
+                        }
+                        const popup = document.getElementById("info-popup");
+                        if (popup) {
+                            popup.style.opacity = "0";
+                            setTimeout(() => {
+                                popup.remove();
+                            }, 500);
+                        }
+                    });
+                }
+            }, 0);
+        }
+    }
+
+    // Call the showTestPopup function to display the popup
+    showTestPopup();
+
+	
 // Add new code here
 const counterContainer = document.getElementById('counter-container');
 let isUIGifCounterPopupVisible = false;
@@ -2770,34 +2879,6 @@ if (adminPinDelete) {
     });
 }
 
-
-     // Add event listeners to the counter-pill element
-        const counterPill = document.getElementById('counter-pill'); // Ensure this is the correct ID
-        if (counterPill) {
-		   // Function to stop event propagation
-            function stopPropagation(event) {
-                event.stopPropagation();
-            }
-            counterPill.addEventListener('mouseenter', () => {
-                // Show the 'uigif-counter' popup when hovered over
-                const uigifCounterInfo = popupTexts['uigif-counter'];
-                showPopup(uigifCounterInfo);
-            });
- // Add event listeners to stop propagation of mouse events
-            ['mousedown', 'mouseup', 'click', 'dblclick'].forEach(eventType => {
-                counterPill.addEventListener(eventType, stopPropagation);
-            });
-            counterPill.addEventListener('mouseleave', () => {
-                // Hide the popup when the mouse leaves the counter-pill element
-                const existingPopup = document.getElementById("info-popup");
-                if (existingPopup) {
-                    existingPopup.style.opacity = "0";
-                    setTimeout(() => {
-                        existingPopup.remove();
-                    }, 500);
-                }
-            });
-        }
 
 // New code for admin-pinresize
 const adminPinResize = document.getElementById('adminpinresize');
@@ -2880,6 +2961,8 @@ if (adminPinResize) {
         });
     });
 });
+
+
   </script>
 <?php BOTTOM RIGHT CORNER INFOPOPUP LOGIC END ?>
 <script>
@@ -4018,98 +4101,53 @@ document.addEventListener('click', function(e) {
   document.addEventListener('DOMContentLoaded', function() {
     const iframe = document.getElementById('categories-iframe');
 
-    // Combined function to adjust iframe height and show buttons
     function adjustIframeHeightAndShowButtons() {
         const overlayImage = document.getElementById('overlay-image');
         const overlayBottom = overlayImage.getBoundingClientRect().bottom;
         const availableHeight = window.innerHeight - overlayBottom;
 
-        // Set the height of the iframe
         iframe.style.height = availableHeight + 'px';
 
-        // Call function inside iframe to adjust padding
-        if (iframe.contentWindow.adjustButtonPadding) {
+        // Call functions inside iframe only if fully loaded
+        if (iframe.contentWindow.adjustButtonPadding && iframe.contentWindow.makeButtonsVisible) {
             iframe.contentWindow.adjustButtonPadding();
-        }
-
-        // Make the buttons visible
-        if (iframe.contentWindow.makeButtonsVisible) {
             iframe.contentWindow.makeButtonsVisible();
         }
     }
 
-    // Set the onload event handler for the iframe
     iframe.onload = adjustIframeHeightAndShowButtons;
 
-    // Call the function once on load and on resize
     adjustIframeHeightAndShowButtons();
     window.addEventListener('resize', adjustIframeHeightAndShowButtons);
-});
+  });
 </script>
 
-<div id="popup-container"></div>
 
-  <script>
-    $(document).ready(function() {
-      if (!getCookie('hidePopup')) {
-        $('#popup-container').load('/popup_content.html', function() {
-          // Popup content loaded
-          $('#popup-container').find('#dismiss-popup').click(function() {
-            setCookie('hidePopup', 'true', 7); // Hide for 7 days
-            $('#popup-container').hide();
-          });
-        });
-      }
+
+<script>
+// Event listener for DOMContentLoaded
+document.addEventListener('DOMContentLoaded', function() {
+  var toolSelectionPopup = document.getElementById('tool-selection-popup');
+  if (toolSelectionPopup) {
+    toolSelectionPopup.addEventListener('click', function(event) {
+      event.stopPropagation();
     });
 
-    function setCookie(name, value, days) {
-      var expires = "";
-      if (days) {
-        var date = new Date();
-        date.setTime(date.getTime() + (days*24*60*60*1000));
-        expires = "; expires=" + date.toUTCString();
-      }
-      document.cookie = name + "=" + (value || "")  + expires + "; path=/";
-    }
-
-    function getCookie(name) {
-      var nameEQ = name + "=";
-      var ca = document.cookie.split(';');
-      for(var i=0; i < ca.length; i++) {
-        var c = ca[i];
-        while (c.charAt(0) == ' ') c = c.substring(1,c.length);
-        if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length,c.length);
-      }
-      return null;
-    }
-  </script>
-
-
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Select the tool-selection-popup element
-    var toolSelectionPopup = document.getElementById('tool-selection-popup');
-    
-    if (toolSelectionPopup) {
-        // Stop click events from propagating to underlying elements
-        toolSelectionPopup.addEventListener('click', function(event) {
-            event.stopPropagation();
-        });
-
-        // If there are clickable elements inside the popup, apply the same logic
-        var clickableElements = toolSelectionPopup.querySelectorAll('.clickable');
-        clickableElements.forEach(function(element) {
-            element.addEventListener('click', function(event) {
-                event.stopPropagation();
-            });
-        });
-    }
+    var clickableElements = toolSelectionPopup.querySelectorAll('.clickable');
+    clickableElements.forEach(function(element) {
+      element.addEventListener('click', function(event) {
+        event.stopPropagation();
+      });
+    });
+  }
 });
 </script>
 <script>
+
 document.addEventListener('DOMContentLoaded', function() {
     const iframe = document.getElementById('categories-iframe');
     const overlay = document.getElementById('mobileCategoryOverlay');
+	
     const hamburgerButton = document.getElementById('hamburgerButton');
 
    function checkOverlayVisibility() {
@@ -4152,7 +4190,7 @@ document.addEventListener('DOMContentLoaded', function() {
             clonedButton.style.margin = '10px 0'; // Add some margin
         });
 
-        if (categoryButtons.length === 0) {
+        if (categoryButtons.length === 1000) {
             console.log("No category buttons found in iframe.");
         }
 
