@@ -3570,6 +3570,8 @@ document.addEventListener('DOMContentLoaded', function() {
     var map = L.map('admin-map').setView([48.4102, 15.6022], 15);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         maxZoom: 19,
+		tap: true, // Enable tap support for touch devices
+		tapTolerance: 30 // Tap tolerance in pixels (default is 15)
         attribution: 'Stimmungskompass boundary editing tool | © OpenStreetMap contributors'
     }).addTo(map);
 
@@ -3588,6 +3590,8 @@ document.addEventListener('DOMContentLoaded', function() {
             rectangle: false,
             circlemarker: false
         }
+		    touchIcon: new L.Icon({ /* Your touch-specific icon configuration */ })
+
     });
     map.addControl(drawControl);
 
@@ -4279,6 +4283,8 @@ function updateBlockerVisibility() {
 
     counterPill.style.visibility = (landscapeBlocker.style.display === 'none' && portraitBlocker.style.display === 'none') ? 'visible' : 'hidden';
 }
+
+
 
 window.addEventListener("orientationchange", updateBlockerVisibility, false);
 window.addEventListener("resize", updateBlockerVisibility, false);
