@@ -1704,7 +1704,7 @@ function updateDrawHandlers() {
 }
 
 // Event listener for shape creation end
-map.on('touchend click', L.Draw.Event.CREATED, function(event) {
+map.on(L.Draw.Event.CREATED, function(event) {
     console.log('Shape created:', event.layerType);
     var layer = event.layer;
     drawnItems.addLayer(layer); // Add to feature group
@@ -2003,7 +2003,7 @@ return L.icon({
 var postButtonClicked = false;
 var currentLayer;
 
-map.on('touchend click', L.Draw.Event.CREATED, function(event) {
+map.on(L.Draw.Event.CREATED, function(event) {
     console.log('Shape creation event triggered'); // Debug: Confirm the event is firing
     console.log('Created shape type:', event.layerType); // Debug: Log the actual type of created shape
     resetSelectedToolButton();
@@ -2259,6 +2259,31 @@ map.on('draw:deletestop', function(event) {
 <script>
     console.log("Dark and light mode switcher successfully loaded.");
 
+
+	
+    // Helper functions for cookie manipulation
+    function setCookie(name, value, days) {
+        var expires = "";
+        if (days) {
+            var date = new Date();
+            date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+            expires = "; expires=" + date.toUTCString();
+        }
+        document.cookie = name + "=" + (value || "")  + expires + "; path=/";
+    }
+
+    function getCookie(name) {
+        var nameEQ = name + "=";
+        var ca = document.cookie.split(';');
+        for(var i = 0; i < ca.length; i++) {
+            var c = ca[i];
+            while (c.charAt(0) == ' ') c = c.substring(1, c.length);
+            if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length, c.length);
+        }
+        return null;
+    }
+
+
     let isLightMode = localStorage.getItem('lightMode') === 'true';
 
     function applyCloseButtonColor() {
@@ -2268,6 +2293,15 @@ map.on('draw:deletestop', function(event) {
             closeButton.style.color = closeButtonColor;
         }
     }
+	
+	function updatePopupStyles() {
+    const popup = document.getElementById("info-popup");
+    if (popup) {
+        popup.style.backgroundColor = isLightMode ? "rgba(244, 244, 237, 1)" : "rgba(17, 17, 17, 1)";
+        popup.style.color = isLightMode ? "black" : "white";
+        // Add other style changes here if necessary
+    }
+}
 
     function getDarkModeProperties() {
         return {
@@ -2376,6 +2410,8 @@ function setImgSrc(selector, src) {
         setThemeStyles(isLightMode ? 'light' : 'dark');
         updateObjectItemTextColor();
         applyCloseButtonColor();
+		updatePopupStyles(); // Update popup styles when the mode is toggled
+
     }
 
     document.getElementById('lightswitchDiv').addEventListener('click', toggleLightMode);
@@ -2594,6 +2630,8 @@ document.addEventListener('DOMContentLoaded', function() {
         const existingPopup = document.getElementById("info-popup");
         if (existingPopup) {
             existingPopup.remove();
+			    updatePopupStyles();
+
         }
 		
 		const popup = document.createElement("div");
@@ -3571,7 +3609,7 @@ document.addEventListener('DOMContentLoaded', function() {
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         maxZoom: 19,
 		tap: true, // Enable tap support for touch devices
-		tapTolerance: 30, // Tap tolerance in pixels (default is 15)
+		tapTolerance: 30 // Tap tolerance in pixels (default is 15)
         attribution: 'Stimmungskompass boundary editing tool | © OpenStreetMap contributors'
     }).addTo(map);
 
@@ -3590,6 +3628,7 @@ document.addEventListener('DOMContentLoaded', function() {
             rectangle: false,
             circlemarker: false
         }
+		    touchIcon: new L.Icon({ /* Your touch-specific icon configuration */ })
 
     });
     map.addControl(drawControl);
@@ -3820,7 +3859,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     var colorCircle = $(`<span class="counter-color" style="background-color: ${color}; border: 2px solid ${isLightMode ? 'black' : 'white'};"></span>`);
 					var listItem = $(`<li style="margin-right: 5px;">`).append(colorCircle).append(` ${count}`);
 
-                    listItem.on("click touchend", function() {
+                    listItem.on('click', function() {
                         toggleVisibility(color);
                         updateSelectedEffect(color);
                     });
