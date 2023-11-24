@@ -1704,7 +1704,7 @@ function updateDrawHandlers() {
 }
 
 // Event listener for shape creation end
-map.on(L.Draw.Event.CREATED, function(event) {
+map.on('touchend click', L.Draw.Event.CREATED, function(event) {
     console.log('Shape created:', event.layerType);
     var layer = event.layer;
     drawnItems.addLayer(layer); // Add to feature group
@@ -2003,7 +2003,7 @@ return L.icon({
 var postButtonClicked = false;
 var currentLayer;
 
-map.on(L.Draw.Event.CREATED, function(event) {
+map.on('touchend click', L.Draw.Event.CREATED, function(event) {
     console.log('Shape creation event triggered'); // Debug: Confirm the event is firing
     console.log('Created shape type:', event.layerType); // Debug: Log the actual type of created shape
     resetSelectedToolButton();
@@ -3571,7 +3571,7 @@ document.addEventListener('DOMContentLoaded', function() {
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         maxZoom: 19,
 		tap: true, // Enable tap support for touch devices
-		tapTolerance: 30 // Tap tolerance in pixels (default is 15)
+		tapTolerance: 30, // Tap tolerance in pixels (default is 15)
         attribution: 'Stimmungskompass boundary editing tool | © OpenStreetMap contributors'
     }).addTo(map);
 
@@ -3590,7 +3590,6 @@ document.addEventListener('DOMContentLoaded', function() {
             rectangle: false,
             circlemarker: false
         }
-		    touchIcon: new L.Icon({ /* Your touch-specific icon configuration */ })
 
     });
     map.addControl(drawControl);
@@ -3821,7 +3820,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     var colorCircle = $(`<span class="counter-color" style="background-color: ${color}; border: 2px solid ${isLightMode ? 'black' : 'white'};"></span>`);
 					var listItem = $(`<li style="margin-right: 5px;">`).append(colorCircle).append(` ${count}`);
 
-                    listItem.on('click', function() {
+                    listItem.on("click touchend", function() {
                         toggleVisibility(color);
                         updateSelectedEffect(color);
                     });
