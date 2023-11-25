@@ -2254,15 +2254,18 @@ map.on('draw:deletestop', function(event) {
   </script>
 
   
-<?php // DARK AND LIGHT MODE SWITCH START ?>
-
 <script>
-    console.log("Dark and light mode switcher successfully loaded.");
+   console.log("Dark and light mode switcher successfully loaded.");
 
+    function areCookiesEnabled() {
+        return document.getElementById("enableCookies")?.checked;
+    }
 
-	
-    // Helper functions for cookie manipulation
     function setCookie(name, value, days) {
+        if (!areCookiesEnabled()) {
+            console.log(`Cookie 3: Not permitted to set '${name}' cookie.`);
+            return;
+        }
         var expires = "";
         if (days) {
             var date = new Date();
@@ -2270,47 +2273,63 @@ map.on('draw:deletestop', function(event) {
             expires = "; expires=" + date.toUTCString();
         }
         document.cookie = name + "=" + (value || "")  + expires + "; path=/";
+        console.log(`Cookie 3: Saved '${name}' cookie.`);
     }
 
     function getCookie(name) {
+        if (!areCookiesEnabled()) {
+            console.log(`Cookie 3: Not permitted to access '${name}' cookie.`);
+            return null;
+        }
         var nameEQ = name + "=";
         var ca = document.cookie.split(';');
         for(var i = 0; i < ca.length; i++) {
             var c = ca[i];
             while (c.charAt(0) == ' ') c = c.substring(1, c.length);
-            if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length, c.length);
+            if (c.indexOf(nameEQ) == 0) {
+                console.log(`Cookie 3: Loaded '${name}' cookie.`);
+                return c.substring(nameEQ.length, c.length);
+            }
         }
         return null;
     }
 
-
+function refreshCircleElements() {
+    // Assuming your objects are stored and can be retrieved again
+    // You might need to adjust this to fit your application's structure
+    fetch('/api/all-shapes')
+        .then(response => response.json())
+        .then(data => {
+            displayObjects(data.shapes);
+        });
+}
+	
     let isLightMode = localStorage.getItem('lightMode') === 'true';
 
     function applyCloseButtonColor() {
-        const closeButton = document.getElementById('closeButton'); // Replace with your button's ID
+        const closeButton = document.getElementById('closeButton');
         if (closeButton) {
             const closeButtonColor = getComputedStyle(document.documentElement).getPropertyValue('--button-close-color').trim();
             closeButton.style.color = closeButtonColor;
         }
     }
-	
-	function updatePopupStyles() {
-    const popup = document.getElementById("info-popup");
-    if (popup) {
-        popup.style.backgroundColor = isLightMode ? "rgba(244, 244, 237, 1)" : "rgba(17, 17, 17, 1)";
-        popup.style.color = isLightMode ? "black" : "white";
-        // Add other style changes here if necessary
+
+    function updatePopupStyles() {
+        const popup = document.getElementById("info-popup");
+        if (popup) {
+            popup.style.backgroundColor = isLightMode ? "rgba(244, 244, 237, 1)" : "rgba(17, 17, 17, 1)";
+            popup.style.color = isLightMode ? "black" : "white";
+        }
     }
-}
 
     function getDarkModeProperties() {
         return {
             '--background-color': '#1b1b1b',
             '--category-button-outline': 'white',
             '--text-color': 'white',
-			'--button-bg-color': '#3a3a3a', // Dark mode button background
-	     '--tool-btn-hover-outline': '3px solid white', // Dark mode hover outline
-        '--tool-btn-selected-outline': '5px solid white', // Dark mode selected outline
+            '--button-bg-color': '#3a3a3a', // Dark mode button background
+            '--tool-btn-hover-outline': '3px solid white', // Dark mode hover outline
+            '--tool-btn-selected-outline': '5px solid white', // Dark mode selected outline
             '--leaflet-control-bg-dark': '#3a3a3a',
             '--leaflet-control-color-dark': 'white',
             '--sidebar-bg': '#111111',
@@ -2334,9 +2353,9 @@ map.on('draw:deletestop', function(event) {
             '--background-color': '#ffffff',
             '--category-button-outline': 'black',
             '--text-color': 'black',
-			'--button-bg-color': '#111111', // Light mode button background
-			'--tool-btn-hover-outline': '3px solid #111111', // Outline for hover in light mode
-			'--tool-btn-selected-outline': '5px solid #111111', // Outline for selected in light mode
+            '--button-bg-color': '#111111', // Light mode button background
+            '--tool-btn-hover-outline': '3px solid #111111', // Outline for hover in light mode
+            '--tool-btn-selected-outline': '5px solid #111111', // Outline for selected in light mode
             '--leaflet-control-bg-light': '#f3f4f8',
             '--leaflet-control-color-light': 'black',
             '--sidebar-bg': '#EDF2F4',
@@ -2354,83 +2373,242 @@ map.on('draw:deletestop', function(event) {
             '--button-close-color': 'var(--button-close-color-light)'
         };
     }
-	
-function setThemeStyles(mode) {
-    var themeProperties = mode === 'light' ? getLightModeProperties() : getDarkModeProperties();
-    for (var property in themeProperties) {
-        document.documentElement.style.setProperty(property, themeProperties[property]);
+
+    function setThemeStyles(mode) {
+        var themeProperties = mode === 'light' ? getLightModeProperties() : getDarkModeProperties();
+        for (var property in themeProperties) {
+            document.documentElement.style.setProperty(property, themeProperties[property]);
+        }
+        // Update the hover outline color based on the mode
+        var hoverOutlineColor = mode === 'light' ? 'var(--outline-hover-color-light)' : 'var(--outline-hover-color-dark)';
+        document.documentElement.style.setProperty('--outline-hover-color', hoverOutlineColor);
+        console.log("Mode set to " + mode + ", hover outline color: " + hoverOutlineColor);
+
+        updateImageSources(mode); // Ensure this function is called to update images
+        applyCloseButtonColor();
+        updateObjectItemTextColor(); // Update text color immediately after setting theme
+        updateCircleElementBorders(); // Update circle borders immediately after setting theme
+		updatePopupStyles(); // Added updatePopupStyles here
+
+	}
+
+    function updateImageSources(mode) {
+        console.log("Updating image sources for mode:", mode);
+        setImgSrc('.logo-img', mode === 'light' ? 'static/logo_long2.png' : 'static/logo_long.png');
+        setImgSrc('#pinlistdiv img', mode === 'light' ? 'static/pinlisticon2.png' : 'static/pinlisticon.png');
+        setImgSrc('#infoDiv img', mode === 'light' ? 'static/infoicon2.png' : 'static/infoicon.png');
+        setImgSrc('#lightswitchDiv img', mode === 'light' ? 'static/sunicon2.png' : 'static/sunicon.png');
+        setImgSrc('#keyDiv img', mode === 'light' ? 'static/keyicon2.png' : 'static/keyicon.png');
     }
-    // Update the hover outline color based on the mode
-    var hoverOutlineColor = mode === 'light' ? 'var(--outline-hover-color-light)' : 'var(--outline-hover-color-dark)';
-    document.documentElement.style.setProperty('--outline-hover-color', hoverOutlineColor);
-    console.log("Mode set to " + mode + ", hover outline color: " + hoverOutlineColor);
 
-    updateImageSources(mode); // Ensure this function is called to update images
-    applyCloseButtonColor();
-}
-
-function updateImageSources(mode) {
-    console.log("Updating image sources for mode:", mode);
-    setImgSrc('.logo-img', mode === 'light' ? 'static/logo_long2.png' : 'static/logo_long.png');
-    setImgSrc('#pinlistdiv img', mode === 'light' ? 'static/pinlisticon2.png' : 'static/pinlisticon.png');
-    setImgSrc('#infoDiv img', mode === 'light' ? 'static/infoicon2.png' : 'static/infoicon.png');
-    setImgSrc('#lightswitchDiv img', mode === 'light' ? 'static/sunicon2.png' : 'static/sunicon.png');
-    setImgSrc('#keyDiv img', mode === 'light' ? 'static/keyicon2.png' : 'static/keyicon.png');
-}
-
-function setImgSrc(selector, src) {
-    console.log("Setting image source for", selector, "to", src);
-    document.querySelectorAll(selector).forEach(function(element) {
-        element.src = src;
-    });
-}
-
-
-
+    function setImgSrc(selector, src) {
+        console.log("Setting image source for", selector, "to", src);
+        document.querySelectorAll(selector).forEach(function (element) {
+            element.src = src;
+        });
+    }
 
     function updateCircleElementBorders() {
         const circleElements = document.querySelectorAll('.circle-element');
         circleElements.forEach(circleElement => {
-            // Correcting the color based on the mode
-            circleElement.style.border = `2px solid ${isLightMode ? 'black' : 'white'}`;
+            circleElement.style.border = isLightMode ? '2px solid black' : '2px solid white';
         });
     }
 
     function updateObjectItemTextColor() {
         const objectItems = document.querySelectorAll('.object-item span');
         objectItems.forEach(item => {
-            // Correcting the color based on the mode
             item.style.color = isLightMode ? 'black' : 'white';
         });
     }
-	
-	    function toggleLightMode() {
+
+    function toggleLightMode() {
         isLightMode = !isLightMode;
         localStorage.setItem('lightMode', isLightMode);
         setThemeStyles(isLightMode ? 'light' : 'dark');
-        updateObjectItemTextColor();
-        applyCloseButtonColor();
-		updatePopupStyles(); // Update popup styles when the mode is toggled
 
+		
     }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        isLightMode = localStorage.getItem('lightMode') === 'true';
+        setThemeStyles(isLightMode ? 'light' : 'dark');
+    });
+
+    document.getElementById('lightswitchDiv').addEventListener('click', toggleLightMode);
+	
+	document.addEventListener('DOMContentLoaded', function () {
+    let isLightMode = getCookie('lightMode') === 'true';
+
+    fetch('/api/all-shapes')
+        .then(response => response.json())
+        .then(data => {
+            displayObjects(data.shapes);
+            updateObjectItemTextColor(isLightMode ? 'light' : 'dark');
+        });
 
     document.getElementById('lightswitchDiv').addEventListener('click', toggleLightMode);
 
-    document.addEventListener('DOMContentLoaded', function () {
-        if (localStorage.getItem('lightMode') === null) {
-            localStorage.setItem('lightMode', 'true');
-            isLightMode = true;
-        } else {
-            isLightMode = localStorage.getItem('lightMode') === 'true';
+    function displayObjects(objects) {
+        const objectList = document.getElementById('object-list');
+        objectList.innerHTML = '';
+        objects.forEach(object => {
+            const objectDiv = createObjectDiv(object, isLightMode ? 'light' : 'dark');
+            objectDiv.addEventListener('click', function () {
+                handleClickOnObjectItem(object.id);
+            });
+            objectList.appendChild(objectDiv);
+        });
+    }
+
+    function createObjectDiv(object, mode) {
+        const objectDiv = document.createElement('div');
+        objectDiv.classList.add('object-item');
+        objectDiv.setAttribute('data-object-id', object.id);
+        objectDiv.style.display = 'flex';
+        objectDiv.style.alignItems = 'center';
+
+        const colorCircle = createColorCircle(object.shape_color);
+        const shapeTypeEmoji = createShapeTypeEmoji(object.shape_type);
+        const shapeNote = createShapeNote(object.shape_note, mode);
+
+        objectDiv.appendChild(colorCircle);
+        objectDiv.appendChild(shapeTypeEmoji);
+        objectDiv.appendChild(shapeNote);
+
+        return objectDiv;
+    }
+
+   function createColorCircle(color) {
+        const circleElement = document.createElement('span');
+        circleElement.style.width = '20px';
+        circleElement.style.height = '20px';
+        circleElement.style.borderRadius = '50%';
+        circleElement.style.backgroundColor = color;
+        circleElement.style.display = 'inline-block';
+        circleElement.style.marginRight = '5px';
+        circleElement.style.flexShrink = '0';
+
+        // Set border color based on the isLightMode variable
+        circleElement.style.border = isLightMode ? '2px solid black' : '2px solid white';
+
+        return circleElement;
+    }
+
+
+    function createShapeTypeEmoji(shapeType) {
+        const shapeTypeEmoji = document.createElement('span');
+        shapeTypeEmoji.style.marginRight = '5px';
+        shapeTypeEmoji.style.fontSize = '20px';
+        switch (shapeType) {
+            case 'marker':
+                shapeTypeEmoji.textContent = '📍';
+                break;
+            case 'rectangle':
+                shapeTypeEmoji.textContent = '◼️';
+                break;
+            case 'circle':
+                shapeTypeEmoji.textContent = '⚪';
+                break;
+            case 'polygon':
+                shapeTypeEmoji.textContent = '🔺';
+                break;
         }
-        setThemeStyles(isLightMode ? 'light' : 'dark');
-        updateObjectItemTextColor();
-        updateCircleElementBorders();
-    });
+        return shapeTypeEmoji;
+    }
+
+    function createShapeNote(note, mode) {
+        const shapeNote = document.createElement('span');
+        shapeNote.textContent = note;
+        shapeNote.style.color = mode === 'light' ? 'black' : 'white';
+        return shapeNote;
+    }
+
+    function handleClickOnObjectItem(objectID) {
+        var layer = leafletLayers[objectID];
+        if (layer) {
+            // centerMapOnObject(layer);
+            if (layer.openPopup) {
+                layer.openPopup();
+            }
+        } else {
+            console.error('No Leaflet layer found for object ID:', objectID);
+        }
+    }
+
+    function centerMapOnObject(layer) {
+        if (layer.getLatLng) {
+            map.panTo(layer.getLatLng());
+        } else if (layer.getBounds) {
+            map.fitBounds(layer.getBounds());
+        }
+    }
+	
+	    if (areCookiesEnabled()) {
+        isLightMode = getCookie2('lightMode') === 'true';
+    }
+
+
+// Function to provide the current theme state
+window.getCurrentTheme = function() {
+    let currentTheme = localStorage.getItem('lightMode') === 'true';
+    console.log("Current theme is light mode:", currentTheme);
+    return currentTheme;
+};
 
 
 
+    function setThemeStyles(mode) {
+        // Set the theme styles based on the mode
+    }
+
+// COOKIE 2 Functions
+
+
+    populateColorFilterWithCategories();
+
+    function populateColorFilterWithCategories() {
+        $.getJSON('/get-categories', function (categories) {
+            const colorFilter = document.getElementById('color-filter');
+            categories.forEach(function (category) {
+                if (category.color !== 'null') {
+                    const option = document.createElement('option');
+                    option.value = category.color;
+                    option.textContent = category.text;
+                    colorFilter.appendChild(option);
+                }
+            });
+        });
+    }
+
+    function filterObjects() {
+        const searchQuery = document.getElementById('search-box').value.toLowerCase();
+        const colorFilter = document.getElementById('color-filter').value;
+        const typeFilter = document.getElementById('type-filter').value;
+
+        fetch('/api/shapes')
+            .then(response => response.json())
+            .then(data => {
+                let filteredObjects = data.shapes;
+
+                if (colorFilter) {
+                    filteredObjects = filteredObjects.filter(object => object.shape_color === colorFilter);
+                }
+
+                if (typeFilter) {
+                    filteredObjects = filteredObjects.filter(object => object.shape_type === typeFilter);
+                }
+
+                if (searchQuery) {
+                    filteredObjects = filteredObjects.filter(object => object.shape_note.toLowerCase().includes(searchQuery));
+                }
+
+                displayObjects(filteredObjects);
+            });
+    }
+});
 </script>
+
 
 
 <?php // DARK AND LIGHT MODE SWITCH END ?>
@@ -2605,13 +2783,12 @@ document.addEventListener('DOMContentLoaded', function() {
            </div><br>
            <div class="desktop-only" style="display: flex; align-items: center; justify-content: space-between;">
                <div>
-                   <input type="checkbox" id="enableCookies" name="enableCookies" checked>
-                   <label for="enableCookies">Cookies zulassen</label>
+                   <input type="checkbox" id="enableCookies" name="enableCookies" style="display:none" checked>
+                   <label for="enableCookies" style="display:none">Cookies zulassen</label>
                </div>
                <div id="dontShowAgainContainer" style="display: block; margin-left: 5px;">
                    <button id="dontShowAgain" style="padding: 8px; border-radius: 30px; background-color: #2d9cd9; border: none; cursor: pointer; color: white;">
-                       Nicht mehr anzeigen
-                   </button>
+Nicht mehr anzeigen                   </button>
                </div>
            </div>`,
     color: '#f77f00',
@@ -2811,78 +2988,76 @@ adjustFontSizeForMobile();
 	
 	
 	 
-   
-    // Function to set a cookie
-    function setCookie(name, value, days) {
-        var expires = "";
-        if (days) {
-            var date = new Date();
-            date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
-            expires = "; expires=" + date.toUTCString();
-        }
-        document.cookie = name + "=" + (value || "") + expires + "; path=/";
+// COOKIE 1 Functions
+function setCookie1(name, value, days) {
+    var expires = "";
+    if (days) {
+        var date = new Date();
+        date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+        expires = "; expires=" + date.toUTCString();
     }
+    document.cookie = name + "=" + (value || "") + expires + "; path=/";
+}
 
-    // Function to get a cookie value
-    function getCookie(name) {
-        var nameEQ = name + "=";
-        var ca = document.cookie.split(';');
-        for (var i = 0; i < ca.length; i++) {
-            var c = ca[i];
-            while (c.charAt(0) === ' ') c = c.substring(1, c.length);
-            if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
-        }
-        return null;
+function getCookie1(name) {
+    var nameEQ = name + "=";
+    var ca = document.cookie.split(';');
+    for (var i = 0; i < ca.length; i++) {
+        var c = ca[i];
+        while (c.charAt(0) === ' ') c = c.substring(1, c.length);
+        if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
     }
+    return null;
+}
 
-    // Function to show the test popup on page load
-       function showTestPopup() {
-        if (!getCookie('noTestPopup')) {
-            const info = popupTexts['Stimmungskompass grüßt Sie!'];
-            showPopup(info);
+	// COOKIES ENABLING FEATURE, CURRENTLY ONLY SUPPORTS COOKIE 1
+ // Function to show the test popup on page load
+function showTestPopup() {
+    if (!getCookie1('noTestPopup')) {
+        const info = popupTexts['Stimmungskompass grüßt Sie!'];
+        showPopup(info);
 
-            setTimeout(() => {
-                const dontShowButton = document.getElementById("dontShowAgain");
-                const enableCookiesCheckbox = document.getElementById("enableCookies");
-                const dontShowAgainContainer = document.getElementById("dontShowAgainContainer");
+        setTimeout(() => {
+            const dontShowButton = document.getElementById("dontShowAgain");
+            const enableCookiesCheckbox = document.getElementById("enableCookies");
+            const dontShowAgainContainer = document.getElementById("dontShowAgainContainer");
 
-                // Function to toggle the display of "Don't show again" button
-                function toggleDontShowButton() {
-                    dontShowAgainContainer.style.display = enableCookiesCheckbox.checked ? "block" : "none";
-                }
+            // Function to toggle the display of "Don't show again" button
+            function toggleDontShowButton() {
+                dontShowAgainContainer.style.display = enableCookiesCheckbox.checked ? "block" : "none";
+            }
 
-                // Initial toggle on popup display
-                toggleDontShowButton();
+            // Initial toggle on popup display
+            toggleDontShowButton();
 
-                // Event listener for the "Enable Cookies" checkbox
-                if (enableCookiesCheckbox) {
-                    enableCookiesCheckbox.addEventListener('change', function() {
-                        console.log("Enable Cookies Checkbox is now " + (this.checked ? "checked" : "unchecked"));
-                        toggleDontShowButton();
-                    });
-                }
+            // Event listener for the "Enable Cookies" checkbox
+            if (enableCookiesCheckbox) {
+                enableCookiesCheckbox.addEventListener('change', function() {
+                    console.log("Enable Cookies Checkbox is now " + (this.checked ? "checked" : "unchecked"));
+                    toggleDontShowButton();
+                });
+            }
 
-                // Event listener for the "Don't show again" button
-                if (dontShowButton) {
-                    dontShowButton.addEventListener('click', function() {
-                        if (enableCookiesCheckbox && enableCookiesCheckbox.checked) {
-                            setCookie('noTestPopup', 'true', 7); // Set the cookie for 7 days
-                        } else {
-                            console.log("Cookies are disabled. Not setting the cookie.");
-                        }
-                        const popup = document.getElementById("info-popup");
-                        if (popup) {
-                            popup.style.opacity = "0";
-                            setTimeout(() => {
-                                popup.remove();
-                            }, 500);
-                        }
-                    });
-                }
-            }, 0);
-        }
+            // Event listener for the "Don't show again" button
+            if (dontShowButton) {
+                dontShowButton.addEventListener('click', function() {
+                    if (enableCookiesCheckbox && enableCookiesCheckbox.checked) {
+                        setCookie1('noTestPopup', 'true', 7); // Set the cookie for 7 days
+                    } else {
+                        console.log("Cookies are disabled. Not setting the cookie.");
+                    }
+                    const popup = document.getElementById("info-popup");
+                    if (popup) {
+                        popup.style.opacity = "0";
+                        setTimeout(() => {
+                            popup.remove();
+                        }, 500);
+                    }
+                });
+            }
+        }, 0);
     }
-
+}
     // Call the showTestPopup function to display the popup
     showTestPopup();
 
@@ -3604,34 +3779,35 @@ document.addEventListener('DOMContentLoaded', function() {
 
     fetchCategories();
 
-    // Map initialization and functionalities
-    var map = L.map('admin-map').setView([48.4102, 15.6022], 15);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        maxZoom: 19,
-		tap: true, // Enable tap support for touch devices
-		tapTolerance: 30 // Tap tolerance in pixels (default is 15)
-        attribution: 'Stimmungskompass boundary editing tool | © OpenStreetMap contributors'
-    }).addTo(map);
+ // Map initialization and functionalities
+var map = L.map('admin-map').setView([48.4102, 15.6022], 15);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19,
+    tap: true, // Enable tap support for touch devices
+    tapTolerance: 30, // Tap tolerance in pixels (default is 15)
+    attribution: 'Stimmungskompass boundary editing tool | © OpenStreetMap contributors'
+}).addTo(map);
+
 
     var drawnItems = new L.FeatureGroup();
     map.addLayer(drawnItems);
 
-    var drawControl = new L.Control.Draw({
-        edit: {
-            featureGroup: drawnItems
-        },
-        draw: {
-            polyline: true,
-            polygon: true,
-            circle: true,
-            marker: false,
-            rectangle: false,
-            circlemarker: false
-        }
-		    touchIcon: new L.Icon({ /* Your touch-specific icon configuration */ })
-
-    });
-    map.addControl(drawControl);
+ 
+var drawControl = new L.Control.Draw({
+    edit: {
+        featureGroup: drawnItems
+    },
+    draw: {
+        polyline: true,
+        polygon: true,
+        circle: true,
+        marker: false,
+        rectangle: false,
+        circlemarker: false
+    }, // Added comma here
+    touchIcon: new L.Icon({ /* Your touch-specific icon configuration */ })
+});
+map.addControl(drawControl);
 
     var currentLayer = null;
     map.on(L.Draw.Event.CREATED, function (e) {
@@ -3897,209 +4073,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 </script>
 <script>
-document.addEventListener('DOMContentLoaded', function () {
-    let isLightMode = getCookie('lightMode') === 'true';
 
-    fetch('/api/all-shapes')
-        .then(response => response.json())
-        .then(data => {
-            displayObjects(data.shapes);
-            updateObjectItemTextColor(isLightMode ? 'light' : 'dark');
-        });
-
-    document.getElementById('lightswitchDiv').addEventListener('click', toggleLightMode);
-
-    function displayObjects(objects) {
-        const objectList = document.getElementById('object-list');
-        objectList.innerHTML = '';
-        objects.forEach(object => {
-            const objectDiv = createObjectDiv(object, isLightMode ? 'light' : 'dark');
-            objectDiv.addEventListener('click', function () {
-                handleClickOnObjectItem(object.id);
-            });
-            objectList.appendChild(objectDiv);
-        });
-    }
-
-    function createObjectDiv(object, mode) {
-        const objectDiv = document.createElement('div');
-        objectDiv.classList.add('object-item');
-        objectDiv.setAttribute('data-object-id', object.id);
-        objectDiv.style.display = 'flex';
-        objectDiv.style.alignItems = 'center';
-
-        const colorCircle = createColorCircle(object.shape_color);
-        const shapeTypeEmoji = createShapeTypeEmoji(object.shape_type);
-        const shapeNote = createShapeNote(object.shape_note, mode);
-
-        objectDiv.appendChild(colorCircle);
-        objectDiv.appendChild(shapeTypeEmoji);
-        objectDiv.appendChild(shapeNote);
-
-        return objectDiv;
-    }
-
-   function createColorCircle(color) {
-        const circleElement = document.createElement('span');
-        circleElement.style.width = '20px';
-        circleElement.style.height = '20px';
-        circleElement.style.borderRadius = '50%';
-        circleElement.style.backgroundColor = color;
-        circleElement.style.display = 'inline-block';
-        circleElement.style.marginRight = '5px';
-        circleElement.style.flexShrink = '0';
-
-        // Set border color based on the isLightMode variable
-        circleElement.style.border = `2px solid ${isLightMode ? 'black' : 'white'}`;
-
-        return circleElement;
-    }
-
-
-    function createShapeTypeEmoji(shapeType) {
-        const shapeTypeEmoji = document.createElement('span');
-        shapeTypeEmoji.style.marginRight = '5px';
-        shapeTypeEmoji.style.fontSize = '20px';
-        switch (shapeType) {
-            case 'marker':
-                shapeTypeEmoji.textContent = '📍';
-                break;
-            case 'rectangle':
-                shapeTypeEmoji.textContent = '◼️';
-                break;
-            case 'circle':
-                shapeTypeEmoji.textContent = '⚪';
-                break;
-            case 'polygon':
-                shapeTypeEmoji.textContent = '🔺';
-                break;
-        }
-        return shapeTypeEmoji;
-    }
-
-    function createShapeNote(note, mode) {
-        const shapeNote = document.createElement('span');
-        shapeNote.textContent = note;
-        shapeNote.style.color = mode === 'light' ? 'black' : 'white';
-        return shapeNote;
-    }
-
-    function handleClickOnObjectItem(objectID) {
-        var layer = leafletLayers[objectID];
-        if (layer) {
-            // centerMapOnObject(layer);
-            if (layer.openPopup) {
-                layer.openPopup();
-            }
-        } else {
-            console.error('No Leaflet layer found for object ID:', objectID);
-        }
-    }
-
-    function centerMapOnObject(layer) {
-        if (layer.getLatLng) {
-            map.panTo(layer.getLatLng());
-        } else if (layer.getBounds) {
-            map.fitBounds(layer.getBounds());
-        }
-    }
-
-    function toggleLightMode() {
-    isLightMode = !isLightMode;
-    setCookie('lightMode', isLightMode, 7);
-    setThemeStyles(isLightMode ? 'light' : 'dark');
-    updateObjectItemTextColor();
-    applyCloseButtonColor();
-    window.dispatchEvent(new CustomEvent('themeChanged', { detail: { isLightMode } }));
-
-    // Refresh elements that depend on the light mode
-    refreshCircleElements();
-}
-// Function to provide the current theme state
-window.getCurrentTheme = function() {
-    let currentTheme = localStorage.getItem('lightMode') === 'true';
-    console.log("Current theme is light mode:", currentTheme);
-    return currentTheme;
-};
-
-function refreshCircleElements() {
-    // Assuming your objects are stored and can be retrieved again
-    // You might need to adjust this to fit your application's structure
-    fetch('/api/all-shapes')
-        .then(response => response.json())
-        .then(data => {
-            displayObjects(data.shapes);
-        });
-}
-
-    function setThemeStyles(mode) {
-        // Set the theme styles based on the mode
-    }
-
-
-    function setCookie(name, value, days) {
-        var expires = "";
-        if (days) {
-            var date = new Date();
-            date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
-            expires = "; expires=" + date.toUTCString();
-        }
-        document.cookie = name + "=" + (value || "") + expires + "; path=/";
-    }
-
-    function getCookie(name) {
-        var nameEQ = name + "=";
-        var ca = document.cookie.split(';');
-        for (var i = 0; i < ca.length; i++) {
-            var c = ca[i];
-            while (c.charAt(0) == ' ') c = c.substring(1, c.length);
-            if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length, c.length);
-        }
-        return null;
-    }
-
-    populateColorFilterWithCategories();
-
-    function populateColorFilterWithCategories() {
-        $.getJSON('/get-categories', function (categories) {
-            const colorFilter = document.getElementById('color-filter');
-            categories.forEach(function (category) {
-                if (category.color !== 'null') {
-                    const option = document.createElement('option');
-                    option.value = category.color;
-                    option.textContent = category.text;
-                    colorFilter.appendChild(option);
-                }
-            });
-        });
-    }
-
-    function filterObjects() {
-        const searchQuery = document.getElementById('search-box').value.toLowerCase();
-        const colorFilter = document.getElementById('color-filter').value;
-        const typeFilter = document.getElementById('type-filter').value;
-
-        fetch('/api/shapes')
-            .then(response => response.json())
-            .then(data => {
-                let filteredObjects = data.shapes;
-
-                if (colorFilter) {
-                    filteredObjects = filteredObjects.filter(object => object.shape_color === colorFilter);
-                }
-
-                if (typeFilter) {
-                    filteredObjects = filteredObjects.filter(object => object.shape_type === typeFilter);
-                }
-
-                if (searchQuery) {
-                    filteredObjects = filteredObjects.filter(object => object.shape_note.toLowerCase().includes(searchQuery));
-                }
-
-                displayObjects(filteredObjects);
-            });
-    }
-});
 </script>
 
 
@@ -4186,18 +4160,19 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 <script>
 
-document.addEventListener('DOMContentLoaded', function() {
-    const iframe = document.getElementById('categories-iframe');
+// Define checkOverlayVisibility in the global scope
+function checkOverlayVisibility() {
     const overlay = document.getElementById('mobileCategoryOverlay');
-	
-    const hamburgerButton = document.getElementById('hamburgerButton');
-
-   function checkOverlayVisibility() {
     if (window.innerWidth > 768) {
         overlay.style.display = 'none';
         console.log("Overlay hidden because screen size is larger than 768px");
     }
-	}
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    const iframe = document.getElementById('categories-iframe');
+    const overlay = document.getElementById('mobileCategoryOverlay');
+    const hamburgerButton = document.getElementById('hamburgerButton');
 	  // Event listener for window resize
     window.addEventListener('resize', checkOverlayVisibility);
 	
@@ -4330,6 +4305,12 @@ window.addEventListener("resize", updateBlockerVisibility, false);
 document.addEventListener("DOMContentLoaded", updateBlockerVisibility);
 </script>
 
+<script>
+// Global function to check if cookies are enabled
+function areCookiesEnabled() {
+    return document.getElementById("enableCookies")?.checked;
+}
+</script>
 
 
 </body>

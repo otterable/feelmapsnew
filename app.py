@@ -46,7 +46,6 @@ class Shape(db.Model):
 def before_request():
     if not hasattr(g, 'db_initialized'):
         db.create_all()
-        print("Database and tables created")
         g.db_initialized = True
 
 @app.route('/')
