@@ -646,7 +646,9 @@ display: none !important;
         max-width: 500px;
         font-size: 14px;
         z-index: 1000;  /* Make sure the popup appears above the map */
-    }
+     background-color: var(--popup-bg-color);
+    color: var(--popup-text-color);
+}
 #info-popup.admin-pindelete-popup {
     max-width: 300px;
 }
@@ -879,8 +881,11 @@ display: none !important;
     --button-close-color-light: black; /* Color for light mode */
 	 --outline-hover-color-dark: white; /* Outline color for dark mode */
     --outline-hover-color-light: black; /* Outline color for light mode */
+  --popup-bg-color-light: rgba(244, 244, 237, 1);
+    --popup-text-color-light: black;
+    --popup-bg-color-dark: rgba(17, 17, 17, 1);
+    --popup-text-color-dark: white;
 }
-
 
 .light-mode {
     /* Define light mode colors */
@@ -1388,10 +1393,14 @@ margin-bottom: 50px;
 </div>
 <?php SIDEBAR BODY END ?>
 
-
 <script>
 // Initialize the map
-var map = L.map('map').setView([48.4102, 15.6022], 15);
+var map = L.map('map', {
+    center: [48.4102, 15.6022],
+    zoom: 15,
+    tap: !L.Browser.mobile, // Disable tap handling if running on mobile
+    touchZoom: true // Enable touch zoom on mobile devices
+});
 var currentDrawnLayer = null;
 var selectedToolButton = null;
 
@@ -1602,36 +1611,24 @@ function onCategoryChange(newCategory) {
 
 
 
-// Function to create or update the custom cursor icon
-function createOrUpdateCustomCursorIcon(color) {
-    // Remove the existing custom cursor icon if it exists
-    removeCustomCursorIcon();
-
-    // Create a new custom cursor icon with the specified color
-    customCursorIcon = L.DomUtil.create('div', 'custom-cursor-icon');
-    customCursorIcon.innerHTML = '<div style="width: 24px; height: 24px; border-radius: 50%; background-color: ' + color + ';"></div>';
-    customCursorIcon.style.position = 'absolute';
-    customCursorIcon.style.pointerEvents = 'none';
-    customCursorIcon.style.zIndex = '1000'; // Set high z-index
-    customCursorIcon.style.display = 'none'; // Initially hidden
-    document.body.appendChild(customCursorIcon);
-}
-
-// Update the position of the custom cursor icon
+// Function to update the position of the custom cursor icon
 function updateCustomCursorIconPosition(e) {
-    var iconWidth = 24; // Width of the icon
-    var iconHeight = 24; // Height of the icon
-    customCursorIcon.style.left = (e.clientX - iconWidth / 2) + 'px';
-    customCursorIcon.style.top = (e.clientY - iconHeight / 2) + 'px';
-    customCursorIcon.style.display = 'block'; // Show the cursor icon
-}
+    var mapDiv = map.getContainer(); // Get the map container
+    var mapRect = mapDiv.getBoundingClientRect();
 
-// Add mouseenter event listener to the map container
-map.getContainer().addEventListener('mouseenter', function(e) {
-    if (customCursorIcon && isDrawing) {
-        updateCustomCursorIconPosition(e);
+    // Check if the cursor is inside the map div
+    if (e.clientX >= mapRect.left && e.clientX <= mapRect.right && e.clientY >= mapRect.top && e.clientY <= mapRect.bottom) {
+        customCursorIcon.style.display = 'block'; // Show the cursor icon
+
+        // Center the icon over the cursor
+        var iconWidth = 24; // Width of the icon
+        var iconHeight = 24; // Height of the icon
+        customCursorIcon.style.left = (e.clientX - iconWidth / 2) + 'px';
+        customCursorIcon.style.top = (e.clientY - iconHeight / 2) + 'px';
+    } else {
+        customCursorIcon.style.display = 'none'; // Hide the cursor icon outside the map
     }
-});
+}
 
 
 
@@ -1934,10 +1931,10 @@ var isDrawing = false;
 var currentLayer = null;
 
 // Event listener for when the marker tool is selected
-map.on(L.Draw.Event.DRAWSTART, function (event) {
+map.on(L.Draw.Event.DRAWSTART, function(event) {
     setActiveToolButton(event.layerType);
     console.log('Draw start:', event.layerType);
-    isDrawing = true; // Set the flag to indicate that drawing has started
+	  isDrawing = true; // Set the flag to indicate that drawing has started
     currentLayer = null; // Reset the current layer
     resetWarningFlag(); // Reset the warning flag
     if (!isCategorySelected()) {
@@ -1948,6 +1945,7 @@ map.on(L.Draw.Event.DRAWSTART, function (event) {
         return;
     }
 
+
     if (event.layerType === 'marker') {
         createCustomCursorIcon(currentCategory);
         document.addEventListener('mousemove', updateCustomCursorIconPosition);
@@ -1956,14 +1954,14 @@ map.on(L.Draw.Event.DRAWSTART, function (event) {
 });
 
 // Update event listener for when drawing is stopped
-map.on(L.Draw.Event.DRAWSTOP, function (event) {
+map.on(L.Draw.Event.DRAWSTOP, function(event) {
     clearSelectedTools();
 
     console.log('Draw stop:', event.layerType);
     if (currentLayer) {
         var type = currentLayer instanceof L.Marker ? 'marker' : ''; // Check if currentLayer is a Marker
         var isWithinBounds;
-
+        
         if (type === 'marker') {
             isWithinBounds = bounds.contains(currentLayer.getLatLng());
         } else if (currentLayer.getBounds) {
@@ -1987,53 +1985,6 @@ map.on(L.Draw.Event.DRAWSTOP, function (event) {
         resetCursorStyleForMap();
     }
 });
-
-// Touch event listener for when the marker tool is selected
-map.on('touchstart', function (event) {
-    if (event.originalEvent.touches.length === 1) {
-        setActiveToolButton('marker');
-        console.log('Draw start: marker (touch)');
-        isDrawing = true; // Set the flag to indicate that drawing has started
-        currentLayer = null; // Reset the current layer
-        resetWarningFlag(); // Reset the warning flag
-        if (!isCategorySelected()) {
-            showWarningMessage('Select a category first');
-            if (drawControl._toolbars.draw._activeMode) {
-                drawControl._toolbars.draw._activeMode.handler.disable();
-            }
-            return;
-        }
-
-        createCustomCursorIcon(currentCategory);
-        setCursorStyleForMap('none');
-    }
-});
-
-// Touch event listener for when drawing is stopped
-map.on('touchend', function (event) {
-    if (!isDrawing) {
-        return;
-    }
-
-    console.log('Draw stop: marker (touch)');
-    if (currentLayer) {
-        var isWithinBounds = bounds.contains(currentLayer.getLatLng());
-
-        if (!isWithinBounds) {
-            map.removeLayer(currentLayer); // Remove the layer if it's outside the boundaries
-        } else {
-            drawnItems.addLayer(currentLayer); // Add the layer if it's within the boundaries
-        }
-    }
-    isDrawing = false; // Reset the drawing flag
-    currentLayer = null; // Reset the current layer
-    resetSelectedToolButton();
-
-    resetWarningFlag(); // Reset the warning flag
-    removeCustomCursorIcon();
-    resetCursorStyleForMap();
-});
-
 
 
 
@@ -2311,6 +2262,7 @@ map.on('draw:deletestop', function(event) {
 
   </script>
 
+
   
 <script>
    console.log("Dark and light mode switcher successfully loaded.");
@@ -2373,12 +2325,13 @@ function refreshCircleElements() {
     }
 
     function updatePopupStyles() {
-        const popup = document.getElementById("info-popup");
-        if (popup) {
-            popup.style.backgroundColor = isLightMode ? "rgba(244, 244, 237, 1)" : "rgba(17, 17, 17, 1)";
-            popup.style.color = isLightMode ? "black" : "white";
-        }
+    const popup = document.getElementById("info-popup");
+    if (popup) {
+        popup.style.backgroundColor = isLightMode ? "rgba(244, 244, 237, 1)" : "rgba(17, 17, 17, 1)";
+        popup.style.color = isLightMode ? "black" : "white";
     }
+}
+
 
     function getDarkModeProperties() {
         return {
@@ -2432,11 +2385,17 @@ function refreshCircleElements() {
         };
     }
 
-    function setThemeStyles(mode) {
-        var themeProperties = mode === 'light' ? getLightModeProperties() : getDarkModeProperties();
-        for (var property in themeProperties) {
-            document.documentElement.style.setProperty(property, themeProperties[property]);
-        }
+function setThemeStyles(mode) {
+    var themeProperties = mode === 'light' ? getLightModeProperties() : getDarkModeProperties();
+    for (var property in themeProperties) {
+        document.documentElement.style.setProperty(property, themeProperties[property]);
+    }
+	
+	   // Additional logic for setting popup-specific properties
+    document.documentElement.style.setProperty('--popup-bg-color', mode === 'light' ? 'var(--popup-bg-color-light)' : 'var(--popup-bg-color-dark)');
+    document.documentElement.style.setProperty('--popup-text-color', mode === 'light' ? 'var(--popup-text-color-light)' : 'var(--popup-text-color-dark)');
+
+
         // Update the hover outline color based on the mode
         var hoverOutlineColor = mode === 'light' ? 'var(--outline-hover-color-light)' : 'var(--outline-hover-color-dark)';
         document.documentElement.style.setProperty('--outline-hover-color', hoverOutlineColor);
@@ -2445,7 +2404,6 @@ function refreshCircleElements() {
         updateImageSources(mode); // Ensure this function is called to update images
         applyCloseButtonColor();
         updateObjectItemTextColor(); // Update text color immediately after setting theme
-        updateCircleElementBorders(); // Update circle borders immediately after setting theme
 		updatePopupStyles(); // Added updatePopupStyles here
 
 	}
@@ -2466,12 +2424,6 @@ function refreshCircleElements() {
         });
     }
 
-    function updateCircleElementBorders() {
-        const circleElements = document.querySelectorAll('.circle-element');
-        circleElements.forEach(circleElement => {
-            circleElement.style.border = isLightMode ? '2px solid black' : '2px solid white';
-        });
-    }
 
     function updateObjectItemTextColor() {
         const objectItems = document.querySelectorAll('.object-item span');
@@ -2480,34 +2432,50 @@ function refreshCircleElements() {
         });
     }
 
-    function toggleLightMode() {
-        isLightMode = !isLightMode;
-        localStorage.setItem('lightMode', isLightMode);
-        setThemeStyles(isLightMode ? 'light' : 'dark');
+function toggleLightMode() {
+    isLightMode = !isLightMode;
+    localStorage.setItem('lightMode', isLightMode);
+    setThemeStyles(isLightMode ? 'light' : 'dark');
 
-		
+    // Directly update the popup's style
+    const popup = document.getElementById("info-popup");
+    if (popup) {
+        popup.style.backgroundColor = isLightMode ? "rgba(244, 244, 237, 1)" : "rgba(17, 17, 17, 1)";
+        popup.style.color = isLightMode ? "black" : "white";
     }
+}
 
-    document.addEventListener('DOMContentLoaded', function () {
-        isLightMode = localStorage.getItem('lightMode') === 'true';
-        setThemeStyles(isLightMode ? 'light' : 'dark');
-    });
 
-    document.getElementById('lightswitchDiv').addEventListener('click', toggleLightMode);
+
+    // Moved filterObjects function to the global scope
+    function filterObjects() {
+        const searchQuery = document.getElementById('search-box').value.toLowerCase();
+        const colorFilter = document.getElementById('color-filter').value;
+        const typeFilter = document.getElementById('type-filter').value;
+
+        fetch('/api/shapes')
+            .then(response => response.json())
+            .then(data => {
+                let filteredObjects = data.shapes;
+
+                if (colorFilter) {
+                    filteredObjects = filteredObjects.filter(object => object.shape_color === colorFilter);
+                }
+
+                if (typeFilter) {
+                    filteredObjects = filteredObjects.filter(object => object.shape_type === typeFilter);
+                }
+
+                if (searchQuery) {
+                    filteredObjects = filteredObjects.filter(object => object.shape_note.toLowerCase().includes(searchQuery));
+                }
+
+                displayObjects(filteredObjects);
+            });
+    }
 	
-	document.addEventListener('DOMContentLoaded', function () {
-    let isLightMode = getCookie('lightMode') === 'true';
-
-    fetch('/api/all-shapes')
-        .then(response => response.json())
-        .then(data => {
-            displayObjects(data.shapes);
-            updateObjectItemTextColor(isLightMode ? 'light' : 'dark');
-        });
-
-    document.getElementById('lightswitchDiv').addEventListener('click', toggleLightMode);
-
-    function displayObjects(objects) {
+	   // Define displayObjects in the global scope
+   function displayObjects(objects) {
         const objectList = document.getElementById('object-list');
         objectList.innerHTML = '';
         objects.forEach(object => {
@@ -2518,7 +2486,8 @@ function refreshCircleElements() {
             objectList.appendChild(objectDiv);
         });
     }
-
+	
+	
     function createObjectDiv(object, mode) {
         const objectDiv = document.createElement('div');
         objectDiv.classList.add('object-item');
@@ -2536,6 +2505,8 @@ function refreshCircleElements() {
 
         return objectDiv;
     }
+	
+	
 
    function createColorCircle(color) {
         const circleElement = document.createElement('span');
@@ -2548,11 +2519,10 @@ function refreshCircleElements() {
         circleElement.style.flexShrink = '0';
 
         // Set border color based on the isLightMode variable
-        circleElement.style.border = isLightMode ? '2px solid black' : '2px solid white';
+        circleElement.style.border = isLightMode ? '2px solid white' : '2px solid white';
 
         return circleElement;
     }
-
 
     function createShapeTypeEmoji(shapeType) {
         const shapeTypeEmoji = document.createElement('span');
@@ -2601,27 +2571,47 @@ function refreshCircleElements() {
             map.fitBounds(layer.getBounds());
         }
     }
+
+    // DOMContentLoaded Event Listener
+
+    document.addEventListener('DOMContentLoaded', function () {
+        isLightMode = localStorage.getItem('lightMode') === 'true';
+        setThemeStyles(isLightMode ? 'light' : 'dark');
+    });
+
+    document.getElementById('lightswitchDiv').addEventListener('click', toggleLightMode);
 	
-	    if (areCookiesEnabled()) {
+	document.addEventListener('DOMContentLoaded', function () {
+    let isLightMode = getCookie('lightMode') === 'true';
+
+   fetch('/api/all-shapes')
+        .then(response => response.json())
+        .then(data => {
+            displayObjects(data.shapes);
+            updateObjectItemTextColor(isLightMode ? 'light' : 'dark');
+        });
+
+    document.getElementById('lightswitchDiv').addEventListener('click', toggleLightMode);
+
+
+
+
+    if (areCookiesEnabled()) {
         isLightMode = getCookie2('lightMode') === 'true';
     }
 
-
-// Function to provide the current theme state
-window.getCurrentTheme = function() {
-    let currentTheme = localStorage.getItem('lightMode') === 'true';
-    console.log("Current theme is light mode:", currentTheme);
-    return currentTheme;
-};
-
-
+    // Function to provide the current theme state
+    window.getCurrentTheme = function() {
+        let currentTheme = localStorage.getItem('lightMode') === 'true';
+        console.log("Current theme is light mode:", currentTheme);
+        return currentTheme;
+    };
 
     function setThemeStyles(mode) {
         // Set the theme styles based on the mode
     }
 
-// COOKIE 2 Functions
-
+    // COOKIE 2 Functions
 
     populateColorFilterWithCategories();
 
@@ -2639,31 +2629,7 @@ window.getCurrentTheme = function() {
         });
     }
 
-    function filterObjects() {
-        const searchQuery = document.getElementById('search-box').value.toLowerCase();
-        const colorFilter = document.getElementById('color-filter').value;
-        const typeFilter = document.getElementById('type-filter').value;
-
-        fetch('/api/shapes')
-            .then(response => response.json())
-            .then(data => {
-                let filteredObjects = data.shapes;
-
-                if (colorFilter) {
-                    filteredObjects = filteredObjects.filter(object => object.shape_color === colorFilter);
-                }
-
-                if (typeFilter) {
-                    filteredObjects = filteredObjects.filter(object => object.shape_type === typeFilter);
-                }
-
-                if (searchQuery) {
-                    filteredObjects = filteredObjects.filter(object => object.shape_note.toLowerCase().includes(searchQuery));
-                }
-
-                displayObjects(filteredObjects);
-            });
-    }
+   
 });
 </script>
 
@@ -2831,27 +2797,31 @@ document.addEventListener('DOMContentLoaded', function() {
      
  
 'Stimmungskompass grüßt Sie!': {
-    title: 'Stimmungskompass grüßt Sie!',
-    text: `<div class="desktop-only">Der Kompass ist eine nette Möglichkeit, Ihre Meinung über Ihre Stadt zu äußern.</div>
-           <div class="desktop-only">Für weitere Informationen klicken Sie auf „Video ansehen“ oder auf die Hilfeschaltflächen.</div><br>
+    title: '<div style="text-align: center;">Stimmungskompass grüßt Sie!</div>',
+    text: `<div class="desktop-only" style="text-align: center;">Der Kompass ist eine nette Möglichkeit, Ihre Meinung über Ihre Stadt zu äußern.</div>
+           <div class="desktop-only" style="text-align: center;">Für weitere Informationen klicken Sie auf „Video ansehen“ oder auf die Hilfeschaltflächen.</div><br>
            <div class="iframe-container">
               <iframe src="https://www.youtube.com/embed/RnCeDG0wzy4" frameborder="0" 
                       allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
                       allowfullscreen style="border-radius: 30px;"></iframe>
            </div><br>
-           <div class="desktop-only" style="display: flex; align-items: center; justify-content: space-between;">
+           <div class="desktop-only" style="display: flex; align-items: center; justify-content: center;">
+               <div id="dontShowAgainContainer" style="display: block;">
+                   <button id="dontShowAgain" style="padding: 8px; border-radius: 30px; background-color: #2d9cd9; border: none; cursor: pointer; color: white;">
+Nicht mehr anzeigen                   </button>
+               </div>
                <div>
                    <input type="checkbox" id="enableCookies" name="enableCookies" style="display:none" checked>
                    <label for="enableCookies" style="display:none">Cookies zulassen</label>
                </div>
-               <div id="dontShowAgainContainer" style="display: block; margin-left: 5px;">
-                   <button id="dontShowAgain" style="padding: 8px; border-radius: 30px; background-color: #2d9cd9; border: none; cursor: pointer; color: white;">
-Nicht mehr anzeigen                   </button>
-               </div>
            </div>`,
     color: '#f77f00',
-    persist: true
+    persist: true,
 },
+
+
+
+
 		<!-- CATEGORY EDITING AREA END -->
 
     };
@@ -2949,7 +2919,7 @@ adjustFontSizeForMobile();
             popup.style.opacity = "1";
         }, 0);
 
-        let timeout = 5000;  // Default timeout in milliseconds
+        let timeout = 15000;  // Default timeout in milliseconds
         if (info.title === 'Willkommen beim Stimmungskompass!!') {
             timeout = 15000;  // 15 seconds for 'Willkommen' popup
         } else if (info.title === 'Dieses Bild wird ersetzt:') {
