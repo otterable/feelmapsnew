@@ -637,7 +637,14 @@ display: none !important;
              filter: brightness(115%) !important;
     outline: 3px solid var(--outline-hover-color) !important; /* Use custom property */
 }
+.leaflet-touch .leaflet-control-layers {
+    width: auto; /* Adjust as needed */
+    height: auto; /* Adjust as needed */
+}
 
+.leaflet-control {
+    z-index: 10000; /* Make sure this is higher than other page elements */
+}
 
 /* INFO-POPUP CONTAINER CSS START */
 /* Takes care of how big the info-popup is gonna be. This popup shows information about each element on the website. */
@@ -1455,6 +1462,8 @@ var innerBounds = [
 // Create a polygon with a hole (inverted polygon)
 var invertedPolygon = L.polygon([outerBounds, innerBounds], {color: 'grey', fillColor: 'grey', fillOpacity: 0.5}).addTo(map);
 
+L.Browser.touch = L.Browser.android; // Ensure that Leaflet recognizes Android touch events
+
 // Draw the boundary rectangle
 L.rectangle(bounds, {color: "#808080", weight: 2, fill: false}).addTo(map);
         console.log("Boundary rectangle drawn");
@@ -1533,6 +1542,13 @@ var baseLayers = {
 map.on('baselayerchange', function(e) {
     console.log('Map base layer switched to:', e.name);
 });
+
+
+document.getElementById('map').addEventListener('touchstart', function(e) {
+    e.preventDefault();
+});
+
+L.DomEvent.disableClickPropagation(L.DomUtil.get('leaflet-control-layers'));
 
 function createIcon(pinSize, outlineSize, strokeColor) {
     var svgIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="${pinSize}" height="${pinSize}" viewBox="0 0 ${pinSize} ${pinSize}">
