@@ -38,6 +38,9 @@
         width: 100%;
     }
 	
+	.leaflet-draw-edit-remove, .leaflet-draw-edit-edit {
+	display: none!important;
+	]
 	
 </style>
 
@@ -92,7 +95,20 @@
             <input type="text" id="create-category-name" placeholder="Neuer Kategoriename" />
             <input type="color" id="create-category-color" />
             <button id="create-category">Erstellen</button>
+			   <div id="object-type-restriction-content" style="display: block;">
+        <h3>Objekttypauswahl einschränken:</h3>
+        <form id="object-type-restriction-form">
+            <div style="margin: auto; display: inline-block; text-align: left;">
+                <input type="checkbox" id="allow-marker" name="marker" checked> <label for="allow-marker">Marker</label><br>
+                <input type="checkbox" id="allow-rectangle" name="rectangle" checked> <label for="allow-rectangle">Rechteck</label><br>
+                <input type="checkbox" id="allow-circle" name="circle" checked> <label for="allow-circle">Kreis</label><br>
+                <input type="checkbox" id="allow-polygon" name="polygon" checked> <label for="allow-polygon">Polygon</label><br>
+                <button type="submit" style="margin-top: 20px;">Einschränken</button>
+            </div>
+        </form>
+    </div>
         </div>
+		
     </div>
 
     <script>
@@ -419,17 +435,17 @@ $(document).ready(function() {
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        var searchFilterSection = document.getElementById('search-filter-section');
-        var toggleButton = document.getElementById('toggle-search-filter');
+        var managementFilterSection = document.getElementById('management-filter-section');
+        var toggleButton = document.getElementById('toggle-management-filter');
 
         // Initially hide the search filter section
-        searchFilterSection.style.display = 'none';
+        managementFilterSection.style.display = 'none';
 
         toggleButton.addEventListener('click', function() {
-            if (searchFilterSection.style.display === 'none') {
-                searchFilterSection.style.display = 'block';
+            if (managementFilterSection.style.display === 'none') {
+                managementFilterSection.style.display = 'block';
             } else {
-                searchFilterSection.style.display = 'none';
+                managementFilterSection.style.display = 'none';
             }
         });
     });
@@ -536,18 +552,24 @@ document.getElementById('object-type-restriction-form').addEventListener('submit
     });
 });
 </script>
+<div style="text-align: center; margin: auto; width: 97%;">
+    <button class="toggle-button" id="toggle-management-filter">Wichtigen Ort markieren / Benutzerbeiträge verwalten</button>
+ 
+</div>
 
 
-<div id="search-filter-section" style="display: block; max-height: 350px; overflow-y: auto; max-width: 97%; margin-left:auto; margin-bottom: 0; margin-top: 3px; margin-right: auto;">
-    <div class="filter-container">
-        <input id="search-box" style="border-radius: 30px; padding: 5px; border: 1.5px solid black;" oninput="filterObjects()" placeholder="Notiztext..." type="text" />
-        <select id="color-filter" style="border-radius: 30px; padding: 5px; border: 1.5px solid black;" onchange="filterObjects()">
+<div id="management-filter-sectionx" style="display: block; overflow-y: auto; max-width: 97%; margin-left:auto; margin-bottom: 0; margin-top: 3px; margin-right: auto;">
+
+
+    <div class="filterx-container">
+        <input id="search-boxx" style="border-radius: 30px; padding: 5px; border: 1.5px solid black;" oninput="filterObjects()" placeholder="Notiztext..." type="text" />
+        <select id="color-filterx" style="border-radius: 30px; display:none; padding: 5px; border: 1.5px solid black;" onchange="filterObjects()">
             <option style="border-radius: 30px; padding: 5px;" value="">
                 Alle Kategorien
             </option>
             <!-- Dynamically populate color options here -->
         </select>
-        <select id="type-filter" style="border-radius: 30px; padding: 5px; margin-bottom: 7.5px; border: 1.5px solid black;" onchange="filterObjects()">
+        <select id="type-filterx" style="border-radius: 30px; padding: 5px; margin-bottom: 7.5px; border: 1.5px solid black;" onchange="filterObjects()">
             <option value="">
                 Alle Markierungsarten
             </option>
@@ -568,7 +590,7 @@ document.getElementById('object-type-restriction-form').addEventListener('submit
     </div>
 
     <!-- Object List Section -->
-    <div id="object-list" style="position: relative;" class="custom-scrollbar">
+    <div id="object-list" style="position: relative; max-height: 200px; overflow-y: auto;" class="custom-scrollbar">
         <!-- Dynamically populated object list will go here -->
         <!-- Sidebar -->
     </div>
@@ -696,7 +718,7 @@ function displayObjects(objects) {
         const shapeNote = document.createElement('span');
         shapeNote.textContent = `${object.shape_note}`;
         const currentMode = document.documentElement.classList.contains('light-mode') ? 'light' : 'dark';
-        shapeNote.style.color = currentMode === 'light' ? 'black' : 'white';
+        shapeNote.style.color = currentMode === 'light' ? 'black' : 'black';
         objectDiv.appendChild(shapeNote);
 
         // Debugging to check if objectDiv is present
@@ -735,7 +757,7 @@ function displayObjects(objects) {
 
         // Add delete button
         const deleteButton = document.createElement('button');
-        deleteButton.textContent = 'Delete';
+        deleteButton.textContent = 'Löschen';
         deleteButton.addEventListener('click', function() {
             const objectID = object.id;
             deleteObject(objectID);
@@ -794,9 +816,9 @@ function deleteObject(objectId) {
 
 
 function filterObjects() {
-    const searchQuery = document.getElementById('search-box').value.toLowerCase();
-    const colorFilter = document.getElementById('color-filter').value;
-    const typeFilter = document.getElementById('type-filter').value;
+    const searchQuery = document.getElementById('search-boxx').value.toLowerCase();
+    const colorFilter = document.getElementById('color-filterx').value;
+    const typeFilter = document.getElementById('type-filterx').value;
 
     fetch('/api/shapes').then(response => response.json()).then(data => {
         let filteredObjects = data.shapes;
@@ -819,26 +841,12 @@ function filterObjects() {
 </script>
  <div id="admin-map"></div>
 
-<div style="text-align: center; margin: auto; width: 97%;">
-    <button class="toggle-button" id="toggle-search-filter">Andere Einstellungen</button>
-    <div id="object-type-restriction-content" style="display: none;">
-        <h3>Objekttypauswahl einschränken:</h3>
-        <form id="object-type-restriction-form">
-            <div style="margin: auto; display: inline-block; text-align: left;">
-                <input type="checkbox" id="allow-marker" name="marker" checked> <label for="allow-marker">Marker</label><br>
-                <input type="checkbox" id="allow-rectangle" name="rectangle" checked> <label for="allow-rectangle">Rechteck</label><br>
-                <input type="checkbox" id="allow-circle" name="circle" checked> <label for="allow-circle">Kreis</label><br>
-                <input type="checkbox" id="allow-polygon" name="polygon" checked> <label for="allow-polygon">Polygon</label><br>
-                <button type="submit" style="margin-top: 20px;">Einschränken</button>
-            </div>
-        </form>
-    </div>
-</div>
 
     <style>
         #admin-map {
-            height: 400px;
-            width: 600px;
+            height: 1000px;
+            width: auto;
+			border-radius: 30px;
         }
     </style>
 

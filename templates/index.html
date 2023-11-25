@@ -67,6 +67,9 @@ body, html {
     /* Add other styles as needed */
 }
 
+.filterx-container {
+display:none !important;
+}
 
 #landscape-blocker {
     display: none; /* Initially hidden */
@@ -210,6 +213,7 @@ body {
 }
 
 /* Custom Scrollbar CSS End */
+
 
 /* CITY PICTURE CSS START */
 .logo-img {
@@ -637,14 +641,7 @@ display: none !important;
              filter: brightness(115%) !important;
     outline: 3px solid var(--outline-hover-color) !important; /* Use custom property */
 }
-.leaflet-touch .leaflet-control-layers {
-    width: auto; /* Adjust as needed */
-    height: auto; /* Adjust as needed */
-}
 
-.leaflet-control {
-    z-index: 10000; /* Make sure this is higher than other page elements */
-}
 
 /* INFO-POPUP CONTAINER CSS START */
 /* Takes care of how big the info-popup is gonna be. This popup shows information about each element on the website. */
@@ -1056,8 +1053,8 @@ margin-bottom: 50px;
     display: none;
 	
 	      #admin-map {
-            height: 400px;
-            width: 600px;
+          display:none !Important;
+			
         }
  </style>
 <style>
@@ -1402,12 +1399,7 @@ margin-bottom: 50px;
 
 <script>
 // Initialize the map
-var map = L.map('map', {
-    center: [48.4102, 15.6022],
-    zoom: 15,
-    tap: !L.Browser.mobile, // Disable tap handling if running on mobile
-    touchZoom: true // Enable touch zoom on mobile devices
-});
+var map = L.map('map').setView([48.4102, 15.6022], 15);
 var currentDrawnLayer = null;
 var selectedToolButton = null;
 
@@ -1461,8 +1453,6 @@ var innerBounds = [
 
 // Create a polygon with a hole (inverted polygon)
 var invertedPolygon = L.polygon([outerBounds, innerBounds], {color: 'grey', fillColor: 'grey', fillOpacity: 0.5}).addTo(map);
-
-L.Browser.touch = L.Browser.android; // Ensure that Leaflet recognizes Android touch events
 
 // Draw the boundary rectangle
 L.rectangle(bounds, {color: "#808080", weight: 2, fill: false}).addTo(map);
@@ -1542,13 +1532,6 @@ var baseLayers = {
 map.on('baselayerchange', function(e) {
     console.log('Map base layer switched to:', e.name);
 });
-
-
-document.getElementById('map').addEventListener('touchstart', function(e) {
-    e.preventDefault();
-});
-
-L.DomEvent.disableClickPropagation(L.DomUtil.get('leaflet-control-layers'));
 
 function createIcon(pinSize, outlineSize, strokeColor) {
     var svgIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="${pinSize}" height="${pinSize}" viewBox="0 0 ${pinSize} ${pinSize}">
@@ -2277,7 +2260,6 @@ map.on('draw:deletestop', function(event) {
 });
 
   </script>
-
 
   
 <script>
@@ -3683,6 +3665,24 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
     </script>
+	
+<script>
+    // Other script contents...
+
+    document.addEventListener('DOMContentLoaded', function() {
+        // Other initialization code...
+
+        // Event delegation to listen for click on the dynamically inserted button
+        document.addEventListener('click', function(event) {
+            if (event.target.id === 'toggle-management-filter') {
+                console.log('Redirecting to /admintools');
+                window.location.href = '/admintools';
+            }
+        });
+    });
+
+    // Rest of your script...
+</script>
 	
 
 <script>
