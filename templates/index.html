@@ -1602,24 +1602,36 @@ function onCategoryChange(newCategory) {
 
 
 
-// Function to update the position of the custom cursor icon
-function updateCustomCursorIconPosition(e) {
-    var mapDiv = map.getContainer(); // Get the map container
-    var mapRect = mapDiv.getBoundingClientRect();
+// Function to create or update the custom cursor icon
+function createOrUpdateCustomCursorIcon(color) {
+    // Remove the existing custom cursor icon if it exists
+    removeCustomCursorIcon();
 
-    // Check if the cursor is inside the map div
-    if (e.clientX >= mapRect.left && e.clientX <= mapRect.right && e.clientY >= mapRect.top && e.clientY <= mapRect.bottom) {
-        customCursorIcon.style.display = 'block'; // Show the cursor icon
-
-        // Center the icon over the cursor
-        var iconWidth = 24; // Width of the icon
-        var iconHeight = 24; // Height of the icon
-        customCursorIcon.style.left = (e.clientX - iconWidth / 2) + 'px';
-        customCursorIcon.style.top = (e.clientY - iconHeight / 2) + 'px';
-    } else {
-        customCursorIcon.style.display = 'none'; // Hide the cursor icon outside the map
-    }
+    // Create a new custom cursor icon with the specified color
+    customCursorIcon = L.DomUtil.create('div', 'custom-cursor-icon');
+    customCursorIcon.innerHTML = '<div style="width: 24px; height: 24px; border-radius: 50%; background-color: ' + color + ';"></div>';
+    customCursorIcon.style.position = 'absolute';
+    customCursorIcon.style.pointerEvents = 'none';
+    customCursorIcon.style.zIndex = '1000'; // Set high z-index
+    customCursorIcon.style.display = 'none'; // Initially hidden
+    document.body.appendChild(customCursorIcon);
 }
+
+// Update the position of the custom cursor icon
+function updateCustomCursorIconPosition(e) {
+    var iconWidth = 24; // Width of the icon
+    var iconHeight = 24; // Height of the icon
+    customCursorIcon.style.left = (e.clientX - iconWidth / 2) + 'px';
+    customCursorIcon.style.top = (e.clientY - iconHeight / 2) + 'px';
+    customCursorIcon.style.display = 'block'; // Show the cursor icon
+}
+
+// Add mouseenter event listener to the map container
+map.getContainer().addEventListener('mouseenter', function(e) {
+    if (customCursorIcon && isDrawing) {
+        updateCustomCursorIconPosition(e);
+    }
+});
 
 
 
@@ -1943,6 +1955,8 @@ map.on(L.Draw.Event.DRAWSTART, function(event) {
         setCursorStyleForMap('none');
     }
 });
+
+
 
 // Update event listener for when drawing is stopped
 map.on(L.Draw.Event.DRAWSTOP, function(event) {
@@ -3789,25 +3803,28 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 }).addTo(map);
 
 
-    var drawnItems = new L.FeatureGroup();
-    map.addLayer(drawnItems);
+ // Initialize the drawing toolbar
+var drawnItems = new L.FeatureGroup();
+map.addLayer(drawnItems);
 
- 
 var drawControl = new L.Control.Draw({
     edit: {
         featureGroup: drawnItems
     },
     draw: {
-        polyline: true,
-        polygon: true,
-        circle: true,
+        polygon: {
+            allowIntersection: false, // Disable intersection to simplify touch drawing
+        },
+        rectangle: true,
+        circle: false,
         marker: false,
-        rectangle: false,
-        circlemarker: false
-    }, // Added comma here
-    touchIcon: new L.Icon({ /* Your touch-specific icon configuration */ })
+        circlemarker: false,
+        polyline: false
+    }
 });
+
 map.addControl(drawControl);
+
 
     var currentLayer = null;
     map.on(L.Draw.Event.CREATED, function (e) {
