@@ -1934,10 +1934,10 @@ var isDrawing = false;
 var currentLayer = null;
 
 // Event listener for when the marker tool is selected
-map.on(L.Draw.Event.DRAWSTART, function(event) {
+map.on(L.Draw.Event.DRAWSTART, function (event) {
     setActiveToolButton(event.layerType);
     console.log('Draw start:', event.layerType);
-	  isDrawing = true; // Set the flag to indicate that drawing has started
+    isDrawing = true; // Set the flag to indicate that drawing has started
     currentLayer = null; // Reset the current layer
     resetWarningFlag(); // Reset the warning flag
     if (!isCategorySelected()) {
@@ -1948,7 +1948,6 @@ map.on(L.Draw.Event.DRAWSTART, function(event) {
         return;
     }
 
-
     if (event.layerType === 'marker') {
         createCustomCursorIcon(currentCategory);
         document.addEventListener('mousemove', updateCustomCursorIconPosition);
@@ -1956,17 +1955,15 @@ map.on(L.Draw.Event.DRAWSTART, function(event) {
     }
 });
 
-
-
 // Update event listener for when drawing is stopped
-map.on(L.Draw.Event.DRAWSTOP, function(event) {
+map.on(L.Draw.Event.DRAWSTOP, function (event) {
     clearSelectedTools();
 
     console.log('Draw stop:', event.layerType);
     if (currentLayer) {
         var type = currentLayer instanceof L.Marker ? 'marker' : ''; // Check if currentLayer is a Marker
         var isWithinBounds;
-        
+
         if (type === 'marker') {
             isWithinBounds = bounds.contains(currentLayer.getLatLng());
         } else if (currentLayer.getBounds) {
@@ -1990,6 +1987,53 @@ map.on(L.Draw.Event.DRAWSTOP, function(event) {
         resetCursorStyleForMap();
     }
 });
+
+// Touch event listener for when the marker tool is selected
+map.on('touchstart', function (event) {
+    if (event.originalEvent.touches.length === 1) {
+        setActiveToolButton('marker');
+        console.log('Draw start: marker (touch)');
+        isDrawing = true; // Set the flag to indicate that drawing has started
+        currentLayer = null; // Reset the current layer
+        resetWarningFlag(); // Reset the warning flag
+        if (!isCategorySelected()) {
+            showWarningMessage('Select a category first');
+            if (drawControl._toolbars.draw._activeMode) {
+                drawControl._toolbars.draw._activeMode.handler.disable();
+            }
+            return;
+        }
+
+        createCustomCursorIcon(currentCategory);
+        setCursorStyleForMap('none');
+    }
+});
+
+// Touch event listener for when drawing is stopped
+map.on('touchend', function (event) {
+    if (!isDrawing) {
+        return;
+    }
+
+    console.log('Draw stop: marker (touch)');
+    if (currentLayer) {
+        var isWithinBounds = bounds.contains(currentLayer.getLatLng());
+
+        if (!isWithinBounds) {
+            map.removeLayer(currentLayer); // Remove the layer if it's outside the boundaries
+        } else {
+            drawnItems.addLayer(currentLayer); // Add the layer if it's within the boundaries
+        }
+    }
+    isDrawing = false; // Reset the drawing flag
+    currentLayer = null; // Reset the current layer
+    resetSelectedToolButton();
+
+    resetWarningFlag(); // Reset the warning flag
+    removeCustomCursorIcon();
+    resetCursorStyleForMap();
+});
+
 
 
 
