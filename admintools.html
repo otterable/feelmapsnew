@@ -363,6 +363,18 @@ function fetchCategories() {
     }
 </script>
 
+<script>
+    function toggletitelbildMenu() {
+        var titelbildMenu = document.getElementById('titelbild-menu');
+        if (titelbildMenu.style.display === 'none') {
+            titelbildMenu.style.display = 'block';
+        } else {
+            titelbildMenu.style.display = 'none';
+        }
+    }
+</script>
+
+
 <div style="text-align: center; margin: auto; width: 97%;">
     <button class="toggle-button" id="toggle-geojson-options">Geojson-Menü</button>
     <div id="geojson-options-content" style="display: none;">
@@ -375,6 +387,22 @@ function fetchCategories() {
         </form>
     </div>
 </div>
+
+<div style="text-align: center; margin: auto; width: 97%;">
+
+<button class="toggle-button"" id="titelbild-menu-button" onclick="toggletitelbildMenu()" style="background-color: #35b7ff">Titelbild</button>
+<div id="titelbild-menu" style="display:none;">
+    <div id="hoverDiv" style="display: flex; justify-content: center; flex-direction: column; align-items: center; margin-top: 10px">
+        <h3 style="margin-top: 2px; margin-bottom: 2px;">Titelbild ersetzen:</h3>
+        <form action="/upload_overlay_image" enctype="multipart/form-data" method="post" style="text-align: left;">
+            <label for="file"></label>
+            <input accept="image/*" id="file" name="file" required="" type="file"/>
+            <input class="delete-button" type="submit" value="Ändern"/>
+        </form>
+    </div>
+</div>
+</div>
+
 
 
 

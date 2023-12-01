@@ -1642,8 +1642,7 @@ function removeCustomCursorIcon() {
 // Layers control
 L.control.layers(baseLayers).addTo(map);
 
-// Feature group for drawn items
-// Feature group for drawn items
+
 // Feature group for drawn items
 var drawnItems = new L.FeatureGroup();
 map.addLayer(drawnItems);
@@ -2189,7 +2188,6 @@ function saveShapeWithData(shapeData, shapeType, radius, note, layer) {
         }
     });
 }
-// Load shapes from server
 
 
 // This function will handle the deletion of shapes
@@ -2258,6 +2256,7 @@ map.on('draw:deletestop', function(event) {
         });
     }
 });
+
 
   </script>
 
@@ -3371,6 +3370,7 @@ function initializeCategoryRenameFunctionality() {
             })
             .then(result => {
                 console.log('Category renamed successfully:', result);
+				alert(`The category was successfully renamed!`);
                 // Optionally refresh the categories in the dropdown and other related UI
             })
             .catch(error => {
@@ -3397,35 +3397,82 @@ function initializeRecolorFunctionality() {
     });
 
     // Event listener for the recolor button
-    const recolorButton = document.getElementById('update-color');
-    if (recolorButton) {
-        recolorButton.addEventListener('click', function() {
-            var selectedCategory = document.getElementById('category-select').value;
-            var newColor = document.getElementById('color-picker').value;
+   const recolorButton = document.getElementById('update-color');
+if (recolorButton) {
+    recolorButton.addEventListener('click', function() {
+        var selectedCategory = document.getElementById('category-select').value;
+        var newColor = document.getElementById('color-picker').value;
 
-            fetch('/update-category', { // Ensure this matches your Flask route
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ oldColor: selectedCategory, newColor: newColor })
-            })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                }
-                return response.json();
-            })
-            .then(result => {
-                console.log('Category recolored:', result);
-                // Optionally update the UI to reflect the color change
-            })
-            .catch(error => {
-                console.error('Error recoloring category:', error);
-            });
+        fetch('/update-category', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ oldColor: selectedCategory, newColor: newColor })
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+    .then(result => {
+    console.log('Category recolored:', result);
+    alert(`The category was successfully recolored!`);
+    // Reload shapes from the server
+// After successful recoloring
+fetchAndDisplayShapes();
+})
+        .catch(error => {
+            console.error('Error recoloring category:', error);
         });
-    }
+    });
 }
+}
+
+function fetchAndDisplayShapes() {
+    // Remove existing shapes from the map
+    drawnItems.clearLayers();
+
+    // Fetch the updated shapes from the server
+    $.ajax({
+        url: '/api/shapes',
+        method: 'GET',
+        success: function(response) {
+            response.shapes.forEach(function(shapeData) {
+                var layer;
+                var shapeOptions = {
+                    color: shapeData.shape_color,  // Use the color from the database
+                    fillColor: shapeData.shape_color,  // Fill color for polygons and circles
+                    fillOpacity: 0.5
+                };
+
+                switch (shapeData.shape_type) {
+                    case 'marker':
+                        layer = L.marker([shapeData.shape_data.coordinates[1], shapeData.shape_data.coordinates[0]]);
+                        break;
+                    case 'circle':
+                        layer = L.circle([shapeData.shape_data.coordinates[1], shapeData.shape_data.coordinates[0]], {
+                            radius: shapeData.radius
+                        });
+                        break;
+                    // Add other cases for different shape types (e.g., polygon, polyline, etc.)
+                }
+
+                if (layer) {
+                    layer.setStyle(shapeOptions);
+                    layer.bindPopup(shapeData.shape_note);
+                    drawnItems.addLayer(layer);
+                }
+            });
+            console.log('Shapes updated on the map.');
+        },
+        error: function(error) {
+            console.error('Error fetching shapes:', error);
+        }
+    });
+}
+
 function initializeCategoryCreationFunctionality() {
     // Event listener for the create category button
     const createCategoryButton = document.getElementById('create-category'); // Adjust the ID as needed
@@ -3454,6 +3501,7 @@ function initializeCategoryCreationFunctionality() {
             })
             .then(result => {
                 console.log('Category created successfully:', result);
+				alert(`The category was successfully created!`);
                 // Optionally update the UI to reflect the new category
             })
             .catch(error => {
@@ -3503,6 +3551,7 @@ function initializeCategoryDeletionFunctionality() {
             })
             .then(result => {
                 console.log('Category deleted successfully:', result);
+				alert(`The category was successfully deleted!`);
                 fetchCategoriesForDeletion(); // Refresh the dropdown
             })
             .catch(error => {
@@ -3772,36 +3821,72 @@ document.addEventListener('DOMContentLoaded', function() {
 	
 	   
 
-    // Event listener for form submission
-    document.body.addEventListener('submit', function(event) {
-        if (event.target.id === 'object-type-restriction-form') {
-            event.preventDefault();
+// Function to update the checkbox states
+function updateCheckboxStates() {
+    fetch('/get-allowed-object-types')
+        .then(response => response.json())
+        .then(data => {
+            if (document.getElementById('allow-marker')) {
+                document.getElementById('allow-marker').checked = data.marker;
+            }
+            if (document.getElementById('allow-rectangle')) {
+                document.getElementById('allow-rectangle').checked = data.rectangle;
+            }
+            if (document.getElementById('allow-circle')) {
+                document.getElementById('allow-circle').checked = data.circle;
+            }
+            if (document.getElementById('allow-polygon')) {
+                document.getElementById('allow-polygon').checked = data.polygon;
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching allowed object types:', error);
+        });
+}
 
-            var formData = {
-                marker: document.getElementById('allow-marker').checked,
-                rectangle: document.getElementById('allow-rectangle').checked,
-                circle: document.getElementById('allow-circle').checked,
-                polygon: document.getElementById('allow-polygon').checked
-            };
+// Event listener for form submission
+document.body.addEventListener('submit', function(event) {
+    if (event.target.id === 'object-type-restriction-form') {
+        event.preventDefault();
 
-            console.log('Submitting allowed object types:', formData);
+        var formData = {
+            marker: document.getElementById('allow-marker').checked,
+            rectangle: document.getElementById('allow-rectangle').checked,
+            circle: document.getElementById('allow-circle').checked,
+            polygon: document.getElementById('allow-polygon').checked
+        };
 
-            fetch('/update-allowed-object-types', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(formData)
-            })
-            .then(response => response.json())
-            .then(result => {
-                console.log('Allowed object types updated:', result);
-            })
-            .catch(error => {
-                console.error('Error updating allowed object types:', error);
-            });
-        }
-    });
+        console.log('Submitting allowed object types:', formData);
+
+        var enabledTypes = [];
+        if (formData.marker) enabledTypes.push("Marker");
+        if (formData.rectangle) enabledTypes.push("Rechteck");
+        if (formData.circle) enabledTypes.push("Kreis");
+        if (formData.polygon) enabledTypes.push("Polygon");
+
+        var message = "Erfolg. Zulässige Markierungsarten sind: " + enabledTypes.join(", ") + ".";
+
+        fetch('/update-allowed-object-types', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(formData)
+        })
+        .then(response => response.json())
+        .then(result => {
+            console.log('Allowed object types updated (src: index.html):', result);
+            alert(message);
+        })
+        .catch(error => {
+            console.error('Error updating allowed object types (src: index.html):', error);
+        });
+    }
+});
+
+// Call updateCheckboxStates when the DOM content is loaded
+document.addEventListener('DOMContentLoaded', updateCheckboxStates);
+
 
     function fetchCategories() {
         fetch('/get-categories')
@@ -3986,9 +4071,16 @@ map.addControl(drawControl);
         });
     }
 
-    function addLayer(shape, color, shapeNote, imagelink) {
-        var shapeLayer;
-        var shapeType = shape.shape_type;
+function addLayer(shape, color, shapeNote, imagelink) {
+    console.log("Adding layer with shape data:", shape);
+
+    if (!shape || !shape.shape_data || !shape.shape_data.geometry) {
+        console.error("Invalid shape data received:", shape);
+        return;
+    }
+
+    var shapeLayer;
+    var shapeType = shape.shape_type;
 
         if (shapeType === 'marker') {
             var center = L.GeoJSON.coordsToLatLng(shape.shape_data.geometry.coordinates);
@@ -4051,6 +4143,54 @@ map.addControl(drawControl);
 
         console.log('Adjusted popup and image width to:', newWidth + 'px', 'Mobile:', isMobile);
     }
+}
+
+function fetchShapesAndUpdateMap() {
+    console.log("Fetching shapes to update the map...");
+
+    fetch('/api/all-shapes')
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log("Shapes fetched, transforming data...", data);
+            const transformedShapes = data.features.map(feature => ({
+                id: feature.properties.id,
+                shape_type: feature.properties.type,
+                shape_color: feature.properties.color,
+                shape_note: feature.properties.note,
+                shape_imagelink: feature.properties.imagelink,
+                shape_data: feature.geometry  // Check if this format is correct
+            }));
+            console.log("Transformed shapes:", transformedShapes);
+            updateMapWithShapes(transformedShapes);
+        })
+        .catch(error => {
+            console.error('Error fetching shapes for map update:', error);
+        });
+}
+
+
+
+function updateMapWithShapes(shapes) {
+    if (typeof map === 'undefined' || !map) {
+        console.error("Map object is undefined or not available.");
+        return;
+    }
+
+    console.log("Updating map with shapes...", shapes);
+    shapes.forEach(shape => {
+        console.log("Adding layer for shape:", shape);
+        try {
+            addLayer(shape, shape.shape_color, shape.shape_note, shape.shape_imagelink);
+        } catch (error) {
+            console.error("Error adding layer for shape:", shape, error);
+        }
+    });
+    console.log("Map updated with new shapes.");
 }
 
 

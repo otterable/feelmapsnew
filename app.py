@@ -305,8 +305,6 @@ def get_categories():
 
 
 
-
-
 @app.route('/update-category', methods=['POST'])
 def update_category():
     logging.basicConfig(level=logging.DEBUG)
@@ -320,11 +318,9 @@ def update_category():
             logging.error(f"Invalid color data: oldColor={color_to_update}, newColor={new_color}")
             return jsonify(success=False, message="Invalid color data"), 400
 
-        # Reading the HTML content with UTF-8 encoding
+        # Reading and updating the HTML content
         with open('templates/categories.html', 'r', encoding='utf-8') as file:
             content = file.read()
-
-        logging.debug(f"Original HTML content: {content}")
 
         soup = BeautifulSoup(content, 'html.parser')
         updated = False
@@ -335,13 +331,16 @@ def update_category():
                 button['onclick'] = f"parent.setCategory('{new_color}')"
                 updated = True
 
-        # Writing the updated content back to the file with UTF-8 encoding, if necessary
         if updated:
-            updated_html = str(soup)
-            logging.debug(f"Updated HTML content: {updated_html}")
             with open('templates/categories.html', 'w', encoding='utf-8') as file:
-                file.write(updated_html)
-            return jsonify(success=True)
+                file.write(str(soup))
+            
+            # Update shapes in the database
+            updated_shapes = Shape.query.filter_by(shape_color=color_to_update).update({'shape_color': new_color})
+            db.session.commit()
+            logging.debug(f"Updated {updated_shapes} shapes to new color {new_color}")
+
+            return jsonify(success=True, message="Category and shapes updated successfully")
         else:
             return jsonify(success=False, message="Color not found"), 404
 
@@ -351,6 +350,7 @@ def update_category():
     except Exception as e:
         logging.exception("Unexpected error occurred")
         return jsonify(success=False, error=str(e)), 500
+
 
     
 @app.route('/update-shape-colors', methods=['POST'])
